@@ -1,7 +1,7 @@
 {
   "id": "/saradnik-app",
-  "name": "Hit Creator Saradnik",
-  "short_name": "Kreator",
+  "name": "Kreator - Gaming 2 Hiking Saradnik",
+  "short_name": "Kreator G2H",
   "start_url": "/kreator.html",
   "scope": "./kreator.html",
   "display": "standalone",
