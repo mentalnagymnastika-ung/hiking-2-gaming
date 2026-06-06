@@ -1,6 +1,6 @@
 // 👇 OVO JE JEDINA LINIJA KOJU MIJENJAŠ KADA AŽURIRAŠ APLIKACIJU 👇
 // Kada promijeniš nešto u HTML-u ili manifest.json, promijeni broj ovdje (npr. u 'v12', pa 'v13'...)
-const CACHE_NAME = 'potraga-oflajn-v31.50'; 
+const CACHE_NAME = 'potraga-oflajn-v31.51'; 
 // 👆 ----------------------------------------------------------- 👆
 
 // Kad se instalira, odmah preuzima kontrolu
