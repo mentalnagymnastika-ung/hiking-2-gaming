@@ -523,20 +523,21 @@
             <input type="text" id="qr_kod_vrednost" placeholder="Ključ" style="background:white;">
         </div>
         
-        <div id="sekcija_multi_kombinator" class="zadatak-sekcija" style="display:none; background: #f0fdfa; border-color: #86efac;">
-            <label style="color:#047857; margin-top:0; font-size: 16px;">🧩 Izaberite koje zadatke kombinujete na ovoj lokaciji:</label>
-            <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:15px; margin-bottom:20px; background:white; padding:15px; border-radius:8px; border:1px solid #a7f3d0;">
-                <label style="font-weight:normal; display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chk_multi_zlatnik" onchange="window.switchZadatak()" style="width:18px;height:18px;margin:0; accent-color:#059669;"> 🪙 Zlatnik</label>
-                <label style="font-weight:normal; display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chk_multi_zagonetka" onchange="window.switchZadatak()" style="width:18px;height:18px;margin:0; accent-color:#059669;"> 🧠 Zagonetka</label>
-                <label style="font-weight:normal; display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chk_multi_kviz" onchange="window.switchZadatak()" style="width:18px;height:18px;margin:0; accent-color:#059669;"> 📝 Kviz</label>
-                <label style="font-weight:normal; display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chk_multi_kreativni" onchange="window.switchZadatak()" style="width:18px;height:18px;margin:0; accent-color:#059669;"> 📸 Foto</label>
-                <label style="font-weight:normal; display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chk_multi_pronadji" onchange="window.switchZadatak()" style="width:18px;height:18px;margin:0; accent-color:#059669;"> 🔍 Pronađi</label>
-                <label style="font-weight:normal; display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chk_multi_qr" onchange="window.switchZadatak()" style="width:18px;height:18px;margin:0; accent-color:#059669;"> 📱 QR Kod</label>
-            </div>
-            
-            <label style="color:#1d4ed8; margin-top:0;">Zajedničko uputstvo za ovu multi-lokaciju (Opciono)</label>
-            <textarea id="multi_uputstvo" rows="2" placeholder="Npr. Dete rešava zagonetku, a zatim roditelj skenira QR kod..."></textarea>
-        </div>
+<div id="sekcija_multi_kombinator" class="zadatak-sekcija" style="display:none; background: #f0fdfa; border-color: #86efac;">
+    <label style="color:#047857; margin-top:0; font-size: 16px;">🧩 Izaberite koje zadatke kombinujete na ovoj lokaciji:</label>
+    <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:15px; margin-bottom:20px; background:white; padding:15px; border-radius:8px; border:1px solid #a7f3d0;">
+        <label style="font-weight:normal; display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chk_multi_zlatnik" onchange="window.switchZadatak()" style="width:18px;height:18px;margin:0; accent-color:#059669;"> 🪙 Zlatnik</label>
+        <label style="font-weight:normal; display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chk_multi_zagonetka" onchange="window.switchZadatak()" style="width:18px;height:18px;margin:0; accent-color:#059669;"> 🧠 Zagonetka</label>
+        <label style="font-weight:normal; display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chk_multi_kviz" onchange="window.switchZadatak()" style="width:18px;height:18px;margin:0; accent-color:#059669;"> 📝 Kviz</label>
+        <label style="font-weight:normal; display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chk_multi_kreativni" onchange="window.switchZadatak()" style="width:18px;height:18px;margin:0; accent-color:#059669;"> 📸 Foto</label>
+        <label style="font-weight:normal; display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chk_multi_pronadji" onchange="window.switchZadatak()" style="width:18px;height:18px;margin:0; accent-color:#059669;"> 🔍 Pronađi</label>
+        <label style="font-weight:normal; display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chk_multi_qr" onchange="window.switchZadatak()" style="width:18px;height:18px;margin:0; accent-color:#059669;"> 📱 QR Kod</label>
+        <label style="font-weight:normal; display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chk_multi_igrica" onchange="window.switchZadatak()" style="width:18px;height:18px;margin:0; accent-color:#059669;"> 🎮 Igrica</label>
+    </div>
+    
+    <label style="color:#1d4ed8; margin-top:0;">Zajedničko uputstvo za ovu multi-lokaciju (Opciono)</label>
+    <textarea id="multi_uputstvo" rows="2" placeholder="Npr. Dete rešava zagonetku, a zatim roditelj skenira QR kod..."></textarea>
+</div>
 
         <div style="background:#fffbeb; padding:15px; border-radius:8px; border:1px dashed #f59e0b; margin-top:15px;">
             <label id="lblNagradniDeo" style="margin-top:0; color:#b45309; font-size:15px;">🧩 Deo slagalice / Nagradni trag</label>
@@ -1243,6 +1244,7 @@ window.azurirajKompas = function(e) {
         document.getElementById('chk_multi_kreativni').checked = false;
         document.getElementById('chk_multi_pronadji').checked = false;
         document.getElementById('chk_multi_qr').checked = false;
+        document.getElementById('chk_multi_igrica').checked = false;
         document.getElementById('multi_uputstvo').value = '';
         let multiPreview = document.getElementById('multi_slika_preview');
         if(multiPreview) { multiPreview.style.display = 'none'; multiPreview.src = ''; }
@@ -1270,6 +1272,13 @@ window.azurirajKompas = function(e) {
                 document.getElementById('chk_multi_pronadji').checked = elovi.includes('pronadji');
                 document.getElementById('chk_multi_qr').checked = elovi.includes('qr');
 
+               // 👇 OVDE UBACUJEŠ OVE DVE LINUJE ZA IGRICU 👇
+               document.getElementById('chk_multi_igrica').checked = elovi.includes('igrica');
+               if(elovi.includes('igrica')) { 
+               document.getElementById('zag_tekst').value = p.zadatak.igrica_kod || ''; 
+               }
+               // 👆 -------------------------------------- 👆
+                
                 if(elovi.includes('zagonetka')) {
                     document.getElementById('zag_tekst').value = p.zadatak.zag_tekst || '';
                     document.getElementById('zag_odgovor').value = p.zadatak.zag_odgovor || '';
@@ -1347,9 +1356,10 @@ window.azurirajKompas = function(e) {
 
     window.azurirajRadijusIzPanela = function() { aktivniPin.rad = document.getElementById('kRad').value; document.getElementById('vRad').innerText = aktivniPin.rad; aktivniPin.krug.setRadius(aktivniPin.rad); promeneNisuSnimljene = true; }
     
-    window.switchZadatak = function() { 
+window.switchZadatak = function() { 
         document.querySelectorAll('.zadatak-sekcija').forEach(s => s.style.display='none'); 
         let tip = document.getElementById('tipZadatka').value;
+        
         if (tip === 'multi') {
             document.getElementById('sekcija_multi_kombinator').style.display='block';
             if(document.getElementById('chk_multi_zlatnik').checked) document.getElementById('sekcija_zlatnik').style.display='block';
@@ -1358,6 +1368,11 @@ window.azurirajKompas = function(e) {
             if(document.getElementById('chk_multi_kreativni').checked) document.getElementById('sekcija_kreativni').style.display='block';
             if(document.getElementById('chk_multi_pronadji').checked) document.getElementById('sekcija_pronadji').style.display='block';
             if(document.getElementById('chk_multi_qr').checked) document.getElementById('sekcija_qr').style.display='block';
+            // Ako je unutar multija čekirana igrica, otvaramo polje zagonetke da tu upiše šifru igre!
+            if(document.getElementById('chk_multi_igrica').checked) document.getElementById('sekcija_zagonetka').style.display='block';
+        } else if (tip === 'igrica') {
+            // Ako je izabrana čista igrica, prikazujemo polje zagonetke da u njega upišeš npr: memorija1, skocko2
+            document.getElementById('sekcija_zagonetka').style.display='block'; 
         } else {
             document.getElementById('sekcija_' + tip).style.display='block'; 
         }
@@ -1389,8 +1404,14 @@ window.azurirajKompas = function(e) {
         let tipZ = document.getElementById('tipZadatka').value;
         let podaciZadatka = { tip: tipZ, tekst: '', odgovor: '', usmeravanje: document.getElementById('smernica_tekst').value, tekst_zadatka: '', isKrajnjaPoruka: isZavrsna };
 
-        if(tipZ === 'zlatnik') { podaciZadatka.tekst_zadatka = "Pokupi zlatnik"; podaciZadatka.tekst = "Zlatnik"; podaciZadatka.odgovor = "zlatnik"; }
+if(tipZ === 'zlatnik') { podaciZadatka.tekst_zadatka = "Pokupi zlatnik"; podaciZadatka.tekst = "Zlatnik"; podaciZadatka.odgovor = "zlatnik"; }
         else if(tipZ === 'zagonetka') { podaciZadatka.tekst_zadatka = document.getElementById('zag_tekst').value; podaciZadatka.tekst = podaciZadatka.tekst_zadatka; podaciZadatka.odgovor = document.getElementById('zag_odgovor').value; } 
+        else if(tipZ === 'igrica') { 
+            // ČISTA IGRICA: tekst_zadatka postaje npr. 'memorija1' ili 'skocko2'
+            podaciZadatka.tekst_zadatka = document.getElementById('zag_tekst').value.trim(); 
+            podaciZadatka.tekst = podaciZadatka.tekst_zadatka; 
+            podaciZadatka.odgovor = "G2H_Igra"; 
+        }
         else if(tipZ === 'kreativni') { podaciZadatka.tekst_zadatka = document.getElementById('kre_uputstvo').value; podaciZadatka.tekst = podaciZadatka.tekst_zadatka; podaciZadatka.odgovor = window.trenutniJezik==='sr'?'Fotografija lokacije':'Location photo'; } 
         else if(tipZ === 'pronadji') { podaciZadatka.tekst_zadatka = document.getElementById('pronadji_opis').value; podaciZadatka.tekst = podaciZadatka.tekst_zadatka; podaciZadatka.slika = slikeZadatakaMap[aktivniPin.id] || ""; podaciZadatka.odgovor = window.trenutniJezik==='sr'?'Lokacija pronađena':'Location found'; } 
         else if(tipZ === 'qr') { podaciZadatka.tekst_zadatka = document.getElementById('qr_uputstvo').value; podaciZadatka.tekst = podaciZadatka.tekst_zadatka; podaciZadatka.odgovor = document.getElementById('qr_kod_vrednost').value; } 
@@ -1405,7 +1426,14 @@ window.azurirajKompas = function(e) {
                 podaciZadatka.zag_tekst = document.getElementById('zag_tekst').value;
                 podaciZadatka.zag_odgovor = document.getElementById('zag_odgovor').value;
             }
+            // 👇 LOGIKA DA IGRICA BUDE UPISANA U MULTI NIZ 👇
+            if(document.getElementById('chk_multi_igrica').checked) {
+                multiEl.push('igrica');
+                // Smeštamo naziv igrice iz polja tekst zagonetke u namenska polja
+                podaciZadatka.igrica_kod = document.getElementById('zag_tekst').value.trim();
+            }
             if(document.getElementById('chk_multi_kviz').checked) {
+                
                 multiEl.push('kviz');
                 let kvizPodaci = []; 
                 document.querySelectorAll('.kviz-blok').forEach((blok) => {
