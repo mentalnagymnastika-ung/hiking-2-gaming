@@ -1358,33 +1358,34 @@ window.azurirajKompas = function(e) {
     
 window.switchZadatak = function() { 
         document.querySelectorAll('.zadatak-sekcija').forEach(s => s.style.display='none'); 
-        let tip = document.getElementById('tipZatak').value || document.getElementById('tipZadatka').value;
         
+        let tipEl = document.getElementById('tipZadatka');
+        if (!tipEl) return;
+        let tip = tipEl.value;
+        
+        // 🚨 PRVO ČISTIMO PROSTOR DA SPREČIMO GOMILANJE MENIJA 🚨
+        let proveraKontejnera = document.getElementById('g2h_kontejner_menija');
+        if (proveraKontejnera) {
+            // Ako stari kontejner sa menijima već postoji, kompletno ga brišemo i vraćamo čistu tekstualnu zonu
+            let resetovanaTextarea = document.createElement('textarea');
+            resetovanaTextarea.id = 'zag_tekst';
+            resetovanaTextarea.rows = 3;
+            proveraKontejnera.parentNode.replaceChild(resetovanaTextarea, proveraKontejnera);
+        }
+
         let zagTekstPolje = document.getElementById('zag_tekst'); 
         let zagOdgovorPolje = document.getElementById('zag_odgovor');
         let lblZagOdgLabela = document.getElementById('lblZagOdg');
         let lblZagTekst = document.getElementById('lblZagTekst');
 
-        // --- 1. RESETOVANJE NA FABRIČKA PODEŠAVANJA ---
-        // Ako je polje u prethodnom kliku bilo padajući meni, vraćamo ga u običnu tekstualnu zonu (textarea)
-        if (zagTekstPolje && zagTekstPolje.tagName === 'SELECT') {
-            let staraTextarea = document.createElement('textarea');
-            staraTextarea.id = 'zag_tekst';
-            staraTextarea.rows = 3;
-            staraTextarea.className = ''; // Tvoj standardni CSS stil
-            zagTekstPolje.parentNode.replaceChild(staraTextarea, zagTekstPolje);
-            zagTekstPolje = staraTextarea; 
-        }
-
-        // Vraćamo standardnu vidljivost elemenata za klasičnu zagonetku
+        // Vraćamo standardne elemente za običnu zagonetku u početno stanje
         if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'block';
         if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'block';
         if(lblZagTekst) lblZagTekst.innerText = "Tekst zagonetke Pitanje";
 
-        // Pomoćna promenljiva da znamo da li je igrica aktivna bilo gde (samostalno ili u multiju)
         let igricaJeAktivna = false;
 
-        // --- 2. LOGIKA ZA PHRASE / TIPOVE ---
+        // --- 2. LOGIKA ZA MULTI ILI POJEDINAČNE TIPOVE ---
         if (tip === 'multi') {
             document.getElementById('sekcija_multi_kombinator').style.display='block';
             if(document.getElementById('chk_multi_zlatnik').checked) document.getElementById('sekcija_zlatnik').style.display='block';
@@ -1394,62 +1395,87 @@ window.switchZadatak = function() {
             if(document.getElementById('chk_multi_pronadji').checked) document.getElementById('sekcija_pronadji').style.display='block';
             if(document.getElementById('chk_multi_qr').checked) document.getElementById('sekcija_qr').style.display='block';
             
-            // Ako je unutar Multi kombinatora štiklirana kućica za igricu
             if(document.getElementById('chk_multi_igrica').checked) {
                 document.getElementById('sekcija_zagonetka').style.display='block';
-                igricaJeAktivna = true; // Palimo alarm za transformaciju!
+                if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'none';
+                if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'none';
+                igricaJeAktivna = true;
             }
         } 
         else if (tip === 'igrica') {
             document.getElementById('sekcija_zagonetka').style.display='block'; 
-            igricaJeAktivna = true; // Palimo alarm za transformaciju!
-        } 
-        else {
-            // Za sve ostale klasične tipove (kviz, qr, zlatnik...) upali njihovu sekciju
-            let sekcija = document.getElementById('sekcija_' + tip);
-            if(sekcija) sekcija.style.display = 'block';
-        }
-
-        // --- 3. DINAMIČKA TRANSFORACIJA UKOLIKO JE IGRICA SELEKTOVANA (BILO GDE) ---
-        if (igricaJeAktivna) {
-            // Promijeni tekst iznad polja
-            if(lblZagTekst) lblZagTekst.innerText = "Izaberite logičku igricu iz G2H baze:";
-            
-            // Sakrij unutrašnja polja za unos tekstualnog odgovora
             if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'none';
             if(zagOdgovorPolje && zagOdgovorPolje.previousElementSibling) {
                 zagOdgovorPolje.previousElementSibling.style.display = 'none';
             }
+            igricaJeAktivna = true;
+        } 
+        else {
+            let sekcija = document.getElementById('sekcija_' + tip);
+            if(sekcija) sekcija.style.display = 'block';
+        }
 
-            // Kreiramo padajući meni sa ozbiljnim nivoima
-            let noviSelect = document.createElement('select');
-            noviSelect.id = 'zag_tekst';
-            noviSelect.style.width = '100%';
-            noviSelect.style.background = 'white';
-            noviSelect.style.border = '2px solid #3b82f6';
-            noviSelect.style.fontWeight = 'bold';
-            noviSelect.style.padding = '12px 15px';
-            noviSelect.style.borderRadius = '8px';
-            
-            let igre = [
-                { vrednost: 'memorija1', prikaz: '🍓 Memorija (Bela staza - mreža 3x4)' },
-                { vrednost: 'memorija2', prikaz: '🍏 Memorija (Plava staza - mreža 4x4)' },
-                { vrednost: 'memorija3', prikaz: '🍉 Memorija (Crvena staza - mreža 4x5)' },
-                { vrednost: 'skocko1',   prikaz: '🤠 Voćni Skočko (Lakši nivo)' },
-                { vrednost: 'skocko2',   prikaz: '🤠 Voćni Skočko (Srednji nivo)' },
-                { vrednost: 'skocko3',   prikaz: '🤠 Voćni Skočko (Najteži nivo)' }
-            ];
+        // --- 3. CRTANJE MENIJA SAMO AKO JE IGRICA AKTIVNA ---
+        if (igricaJeAktivna) {
+            if(lblZagTekst) lblZagTekst.innerText = "Konfiguracija logičke igre:";
 
-            igre.forEach(igra => {
-                let opcija = document.createElement('option');
-                opcija.value = igra.vrednost;
-                opcija.innerText = igra.prikaz;
-                noviSelect.appendChild(opcija);
-            });
+            let kontejnerMenija = document.createElement('div');
+            kontejnerMenija.id = 'g2h_kontejner_menija';
+            kontejnerMenija.style.display = 'flex';
+            kontejnerMenija.style.flexDirection = 'column';
+            kontejnerMenija.style.gap = '10px';
 
-            // Zamenjujemo element u HTML-u
+            let meniIgra = document.createElement('select');
+            meniIgra.id = 'g2h_izbor_igre';
+            meniIgra.style.padding = '10px';
+            meniIgra.style.borderRadius = '6px';
+            meniIgra.style.fontWeight = 'bold';
+            meniIgra.innerHTML = `
+                <option value="memorija">🍓 Igra Memorije (G2H)</option>
+                <option value="skocko">🤠 Voćni Skočko (G2H)</option>
+            `;
+
+            let meniTezina = document.createElement('select');
+            meniTezina.id = 'g2h_izbor_tezine';
+            meniTezina.style.padding = '10px';
+            meniTezina.style.borderRadius = '6px';
+            meniTezina.style.fontWeight = 'bold';
+
+            let skriveniMost = document.createElement('input');
+            skriveniMost.type = 'hidden';
+            skriveniMost.id = 'zag_tekst';
+
+            let osveziTezine = function() {
+                let izabranaIgra = meniIgra.value;
+                if (izabranaIgra === 'memorija') {
+                    meniTezina.innerHTML = `
+                        <option value="1">⚪ Bela staza (Najlakše - mreža 3x4)</option>
+                        <option value="2">🔵 Plava staza (Srednje - mreža 4x4)</option>
+                        <option value="3">🔴 Crvena staza (Najteže - mreža 4x5)</option>
+                    `;
+                } else if (izabranaIgra === 'skocko') {
+                    meniTezina.innerHTML = `
+                        <option value="1">⚪ Bela staza (Lakši nivo pogađanja)</option>
+                        <option value="2">🔵 Plava staza (Srednji nivo pogađanja)</option>
+                        <option value="3">🔴 Crvena staza (Klasičan najteži nivo)</option>
+                    `;
+                }
+                skriveniMost.value = meniIgra.value + meniTezina.value;
+            };
+
+            meniIgra.onchange = osveziTezine;
+            meniTezina.onchange = function() {
+                skriveniMost.value = meniIgra.value + meniTezina.value;
+            };
+
+            osveziTezine();
+
+            kontejnerMenija.appendChild(meniIgra);
+            kontejnerMenija.appendChild(meniTezina);
+            kontejnerMenija.appendChild(skriveniMost);
+
             if (zagTekstPolje && zagTekstPolje.parentNode) {
-                zagTekstPolje.parentNode.replaceChild(noviSelect, zagTekstPolje);
+                zagTekstPolje.parentNode.replaceChild(kontejnerMenija, zagTekstPolje);
             }
         }
 
@@ -1703,7 +1729,7 @@ if(tipZ === 'zlatnik') { podaciZadatka.tekst_zadatka = "Pokupi zlatnik"; podaciZ
         }, 800);
     }
 
-    window.snimiJSON = function() {
+window.snimiJSON = function() {
         document.getElementById('zavrsiModal').style.display='none'; 
         document.getElementById('izlazModal').style.display='none';
         if(pinovi.length === 0) { alert(window.trenutniJezik==='sr'?"Mapa je prazna.":"Map is empty."); return; }
@@ -1712,21 +1738,55 @@ if(tipZ === 'zlatnik') { podaciZadatka.tekst_zadatka = "Pokupi zlatnik"; podaciZ
         let startLat = 0; let startLng = 0;
         if(pinovi.length > 0) { let prvaTacka = pinovi[0].marker.getLatLng(); startLat = prvaTacka.lat; startLng = prvaTacka.lng; }
         let standardniPinovi = pinovi.map(p=> { let latlng = p.marker.getLatLng(); return { id: p.id, broj: p.broj, lat: latlng.lat, lng: latlng.lng, rad: p.rad, dozvoliPomoc: p.dozvoliPomoc, isPocetna: p.isPocetna, imeLokacije: p.imeLokacije, opisLokacije: p.opisLokacije, zadatak: p.zadatak }; });
+        
         let ruteTimovaObj = null;
         if(isGrupna) {
             let maxV = 0; let n = pinovi.length;
             if(grupnaLogika === 'zajednicki_start_kraj') maxV = n<3 ? 0 : window.faktorijel(n-2); else if(grupnaLogika === 'zajednicki_start' || grupnaLogika === 'zajednicki_kraj') maxV = window.faktorijel(n-1); else maxV = window.faktorijel(n);
             if(brojTimova > maxV) { alert(window.trenutniJezik==='sr'?`Nemoguće je napraviti ${brojTimova} unikatnih staza`:`Cannot make ${brojTimova} unique trails`); return; }
-            ruteTimovaObj = window.generisiGrupneRute(standardniPinovi, brojTimova, grupnaLogika);
+            
+            // ✅ BEZBEDNI POZIV GRUPNIH RUTA: Ako funkcija fizički ne postoji, neće srušiti snimanje
+            if (typeof window.generisiGrupneRute === 'function') {
+                ruteTimovaObj = window.generisiGrupneRute(standardniPinovi, brojTimova, grupnaLogika);
+            } else {
+                console.log("Grupne rute preskočene jer funkcija nije fizički prisutna.");
+            }
         }
+        
         let data = { 
             grad: document.getElementById('gradPotrage').value || "Nepoznata lokacija", ime: document.getElementById('imePotrage').value || "Nova Potraga", sifra: sifra, autor: autor,
             aktivna: false, trajanje: document.getElementById('trajanjePotrage').value, tip: document.getElementById('izabranTipKretanja').value, objasnjenje: document.getElementById('promoTekst').value, promoSlika: promoSlikaBase64,
             mesanjeRute: isGrupna ? false : document.getElementById('mesanjeRute').checked, isGrupna: isGrupna, brojTimova: isGrupna ? brojTimova : 0, grupnaLogika: isGrupna ? grupnaLogika : "",
             ruteTimova: ruteTimovaObj, startLat: startLat, startLng: startLng, healthPostavke: { kazna: parseInt(document.getElementById('kaznaGreska').value) || 10, nagrada: parseInt(document.getElementById('nagradaTacno').value) || 5, trag: parseInt(document.getElementById('cenaTraga').value) || 10 }, pinovi: standardniPinovi
         };
-        let imeFajla = (data.ime || "Potraga").trim() + " " + (data.sifra || "BEZ_SIFRE").trim();
-        let blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"}); let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = imeFajla + ".json"; a.click(); 
+
+        // ===================================================================
+        // 🕒 AUTOMATSKO GENERISANJE UNIKATNOG IMENA SA DATUMOM I VREMENOM
+        // ===================================================================
+        let sada = new Date();
+        let godina = sada.getFullYear();
+        let mesec = String(sada.getMonth() + 1).padStart(2, '0');
+        let dan = String(sada.getDate()).padStart(2, '0');
+        let sati = String(sada.getHours()).padStart(2, '0');
+        let minuti = String(sada.getMinutes()).padStart(2, '0');
+        
+        // Pravimo vremenski pečat u formatu: GODINA-MESEC-DAN_SAT-MINUT
+        let vremenskiPecat = `${godina}-${mesec}-${dan}_${sati}-${minuti}`;
+
+        // Uzimamo ime i šifru, čistimo ih od razmaka i pretvaramo ih u bezbedan format za fajlove
+        let cistoIme = (data.ime || "Potraga").trim().replace(/\s+/g, '_');
+        let cistaSifra = (data.sifra || "BEZ_SIFRE").trim().replace(/\s+/g, '_');
+
+        // Spajamo sve u konačno ime fajla (npr: provera_iz_kuce_G2H_2026-06-06_18-30.json)
+        let imeFajla = `${cistoIme}_${cistaSifra}_${vremenskiPecat}`;
+        // ===================================================================
+
+        let blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"}); 
+        let a = document.createElement('a'); 
+        a.href = URL.createObjectURL(blob); 
+        a.download = imeFajla + ".json"; 
+        a.click(); 
+        
         promeneNisuSnimljene = false; 
         localStorage.removeItem('autosave_potraga');
     }
@@ -1827,6 +1887,71 @@ if(tipZ === 'zlatnik') { podaciZadatka.tekst_zadatka = "Pokupi zlatnik"; podaciZ
             }
         }
     });
+
+// ===================================================================
+// 🏆 GENERISANJE GRUPNIH RUTA ZA TIMOVE (Fizički kôd funkcije)
+// ===================================================================
+window.generisiGrupneRute = function() {
+    console.log("✅ Pokrenuto fizičko generisanje grupnih ruta...");
+    
+    let isGrupna = document.getElementById('checkGrupna') ? document.getElementById('checkGrupna').checked : false;
+    let brTimovaEl = document.getElementById('brojTimovaInput');
+    let brojTimova = brTimovaEl ? parseInt(brTimovaEl.value) : 0;
+
+    // Ako staza uopšte nije označena kao grupna, ova funkcija nema šta da deli i završava rad
+    if (!isGrupna || brojTimova <= 0) {
+        window.ruteTimovaMap = null;
+        return;
+    }
+
+    window.ruteTimovaMap = {};
+    
+    // Izvlačimo sve pinove koje si poređao na mapi
+    let originalniPinovi = window.pinovi || []; 
+    if (originalniPinovi.length === 0) return;
+
+    // Generišemo rute za svaki tim od 01 do broja koji si izabrao
+    for (let t = 1; t <= brojTimova; t++) {
+        let timOznaka = t < 10 ? "0" + t : "" + t;
+        
+        // Pravimo kopiju originalnih pinova za ovaj tim
+        let ruteZaTim = originalniPinovi.map(p => {
+            return {
+                id: p.id,
+                broj: p.broj,
+                lat: p.marker.getLatLng().lat,
+                lng: p.marker.getLatLng().lng,
+                rad: p.rad || 30,
+                imeLokacije: p.imeLokacije || '',
+                opisLokacije: p.opisLokacije || '',
+                dozvoliPomoc: p.dozvoliPomoc !== false,
+                zadatak: p.zadatak || null
+            };
+        });
+
+        // 🔀 PAMETNO MEŠANJE (Algoritam): Prva i poslednja tačka ostaju iste za sve, 
+        // a unutrašnje tačke se izmešaju da se timovi ne bi sudarali u parku!
+        if (ruteZaTim.length > 3) {
+            let unutrasnjeTacke = ruteZaTim.slice(1, ruteZaTim.length - 1);
+            
+            // Fisher-Yates mešanje srednjih lokacija
+            for (let i = unutrasnjeTacke.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [unutrasnjeTacke[i], unutrasnjeTacke[j]] = [unutrasnjeTacke[j], unutrasnjeTacke[i]];
+            }
+            
+            // Vraćamo izmešane tačke nazad između prve i poslednje
+            ruteZaTim = [ruteZaTim[0], ...unutrasnjeTacke, ruteZaTim[ruteZaTim.length - 1]];
+        }
+
+        // Ponovo im dodeljujemo redne brojeve od 1 do kraja kako deca ne bi bila zbunjena
+        ruteZaTim.forEach((p, idx) => { p.broj = idx + 1; });
+
+        // Pakujemo u mapu ruta pod ključem tima (npr. "01", "02"...)
+        window.ruteTimovaMap[timOznaka] = ruteZaTim;
+    }
+    console.log("🎉 Grupne rute uspešno izgenerisane u memoriji!");
+};
 
 </script>
 </body>
