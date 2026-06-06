@@ -1368,6 +1368,17 @@ window.prikaziZadatak = function() {
                 tekstZaPrikaz += `<div style="font-size:16px; color:#1a4d54; margin-bottom:12px; font-weight:bold;">📋 Zajedničko uputstvo: ${pin.zadatak.tekst_zadatka}</div>`;
             }
             let elovi = pin.zadatak?.multi_elementi || [];
+// 👇 DODATAK KOJI JE FALIO: Provera i ispis za zlatnik unutar Multi kombinacije 👇
+            if (elovi.includes('zlatnik')) {
+                tekstZaPrikaz += `
+                <div style="background:#fff9db; border-left:4px solid #f59e0b; padding:12px; margin-bottom:10px; text-align:left; display:flex; align-items:center; gap:10px; border-radius:8px;">
+                    <span style="font-size:24px;">🪙</span>
+                    <div>
+                        <b style="color:#b45309;">Zlatnik i energija na lokaciji!</b><br>
+                        <span style="font-size:14px; color:#78350f;">Zlatnik će biti automatski pokupljen i energija povećana nakon provere odgovora.</span>
+                    </div>
+                </div>`;
+            }
             
             if(elovi.includes('zagonetka')) {
                 let zagTekst = pin.zadatak?.zag_tekst ? pin.zadatak.zag_tekst : "Rešite zagonetku:";
