@@ -1,8 +1,7 @@
-// 👇 OVO JE JEDINA LINIJA KOJU MIJENJAŠ KADA AŽURIRAŠ APLIKACIJU 👇
-const CACHE_NAME = 'potraga-oflajn-v100'; 
+// 👇 NOVA SERIJA IGARA - KREĆEMO OD STOTKE 👇
+const CACHE_NAME = 'potraga-oflajn-v100.00'; 
 // 👆 ----------------------------------------------------------- 👆
 
-// Spisak ključnih fajlova koje aplikacija mora odmah da zapamti
 const OBAVEZNI_FAJLOVI = [
     './',
     './index.html',
@@ -10,7 +9,7 @@ const OBAVEZNI_FAJLOVI = [
     './logo_test.png'
 ];
 
-// Kad se instalira, odmah preuzima kontrolu i kešira osnovne fajlove
+// 1. INSTALACIJA: Čim legne novi fajl, preuzmi ga odmah bez čekanja
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
@@ -19,10 +18,10 @@ self.addEventListener('install', (event) => {
             });
         })
     );
-    self.skipWaiting();
+    self.skipWaiting(); // Skok pravo u aktivaciju bez zadržavanja
 });
 
-// Brisanje starih verzija keša
+// 2. AKTIVACIJA: Čim se novi digne, brišemo apsolutno sve prethodne verzije keša
 self.addEventListener('activate', (event) => {
     const cacheWhitelist = [CACHE_NAME];
     event.waitUntil(
@@ -30,19 +29,19 @@ self.addEventListener('activate', (event) => {
             return Promise.all(
                 listaKeševa.map((keš) => {
                     if (keš.startsWith('potraga-oflajn') && cacheWhitelist.indexOf(keš) === -1) {
+                        console.log('Brisanje starog keša:', keš);
                         return caches.delete(keš);
                     }
                 })
             );
-        })
+        }).then(() => self.clients.claim()) // Istog trenutka preuzmi kontrolu nad aplikacijom
     );
 });
 
-/////////// "Network First" strategija sa dinamičkim dopunjavanjem keša
+/////////// "Network First" strategija
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
 
-    // Ignorišemo Firebase i Google Auth da aplikacija ne puca
     if (event.request.url.includes('firestore.googleapis.com') || 
         event.request.url.includes('identitytoolkit.googleapis.com') || 
         event.request.url.includes('firebase')) {
