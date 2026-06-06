@@ -1,8 +1,8 @@
 // 👇 OVO JE JEDINA LINIJA KOJU MIJENJAŠ KADA AŽURIRAŠ APLIKACIJU 👇
-const CACHE_NAME = 'potraga-oflajn-v31.53'; 
+const CACHE_NAME = 'potraga-oflajn-v31.52'; 
 // 👆 ----------------------------------------------------------- 👆
 
-// Spisak ključnih fajlova koje aplikacija mora odmah da zapamti (uključujući novu JPG ikonicu)
+// Spisak ključnih fajlova koje aplikacija mora odmah da zapamti
 const OBAVEZNI_FAJLOVI = [
     './',
     './index.html',
@@ -14,7 +14,7 @@ const OBAVEZNI_FAJLOVI = [
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(OBABAVEZNI_FAJLOVI).catch((err) => {
+            return cache.addAll(OBAVEZNI_FAJLOVI).catch((err) => {
                 console.log('Neki fajl fali na serveru, ali nastavljamo dalje...', err);
             });
         })
