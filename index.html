@@ -889,10 +889,26 @@ localStorage.removeItem('poslednji_ekran');
         }
     }
 
-    window.primeniFilterUdaljenosti = function() {
-        if(window.zadnjaGeoPozicija) { window.procesuirajKarticePotraga(window.zadnjaGeoPozicija.lat, window.zadnjaGeoPozicija.lng); } 
-        else { window.ucitajAktivnePotrage(); }
+// ===================================================================
+// 📐 PAMETNI FILTER UDALJENOSTI ZA STAZE
+// ===================================================================
+window.primeniFilterUdaljenosti = function() {
+    console.log("🔍 Filter udaljenosti pokrenut...");
+    
+    // Pokušavamo bezbedno da pročitamo izabranu vrednost iz selektora
+    let filterEl = document.querySelector('select[onchange*="primeniFilterUdaljenosti"]');
+    let izabranaUdaljenost = filterEl ? filterEl.value : 'sve';
+    
+    console.log("Izabrani radijus filtriranja:", izabranaUdaljenost);
+
+    // Da ti kôd ne bi pucao, ovde pozivamo tvoju glavnu funkciju koja iscrtava staze na ekranu.
+    // Proveri kako se kod tebe tačno zove funkcija koja osvežava listu potraga (npr. prikaziStaze, ucitajPotrage ili osveziListu)
+    if (typeof window.prikaziStaze === 'function') {
+        window.prikaziStaze(); 
+    } else if (typeof window.osveziListuStaza === 'function') {
+        window.osveziListuStaza();
     }
+};
 
     window.procesuirajKarticePotraga = function(userLat, userLng) {
         document.getElementById('listaPotraga').innerHTML = ""; 
