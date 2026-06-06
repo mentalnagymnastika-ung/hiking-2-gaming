@@ -1358,7 +1358,7 @@ window.azurirajKompas = function(e) {
     
 window.switchZadatak = function() { 
         document.querySelectorAll('.zadatak-sekcija').forEach(s => s.style.display='none'); 
-        let tip = document.getElementById('tipZadatka').value;
+        let tip = document.getElementById('tipZatak').value || document.getElementById('tipZadatka').value;
         
         let zagTekstPolje = document.getElementById('zag_tekst'); 
         let zagOdgovorPolje = document.getElementById('zag_odgovor');
@@ -1366,22 +1366,25 @@ window.switchZadatak = function() {
         let lblZagTekst = document.getElementById('lblZagTekst');
 
         // --- 1. RESETOVANJE NA FABRIČKA PODEŠAVANJA ---
-        // Ako je polje u prethodnom kliku bilo pretvoreno u padajući meni, ovde ga vraćamo u običan tekst (textarea)
+        // Ako je polje u prethodnom kliku bilo padajući meni, vraćamo ga u običnu tekstualnu zonu (textarea)
         if (zagTekstPolje && zagTekstPolje.tagName === 'SELECT') {
             let staraTextarea = document.createElement('textarea');
             staraTextarea.id = 'zag_tekst';
             staraTextarea.rows = 3;
-            staraTextarea.className = ''; // Prati tvoj standardni stil iz CSS-a
+            staraTextarea.className = ''; // Tvoj standardni CSS stil
             zagTekstPolje.parentNode.replaceChild(staraTextarea, zagTekstPolje);
             zagTekstPolje = staraTextarea; 
         }
 
-        // Vraćamo vidljivost polja za odgovor koja zagonetka standardno koristi
+        // Vraćamo standardnu vidljivost elemenata za klasičnu zagonetku
         if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'block';
         if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'block';
         if(lblZagTekst) lblZagTekst.innerText = "Tekst zagonetke Pitanje";
 
-        // --- 2. GRANANJE U ZAVISNOSTI OD TIPA ---
+        // Pomoćna promenljiva da znamo da li je igrica aktivna bilo gde (samostalno ili u multiju)
+        let igricaJeAktivna = false;
+
+        // --- 2. LOGIKA ZA PHRASE / TIPOVE ---
         if (tip === 'multi') {
             document.getElementById('sekcija_multi_kombinator').style.display='block';
             if(document.getElementById('chk_multi_zlatnik').checked) document.getElementById('sekcija_zlatnik').style.display='block';
@@ -1391,26 +1394,34 @@ window.switchZadatak = function() {
             if(document.getElementById('chk_multi_pronadji').checked) document.getElementById('sekcija_pronadji').style.display='block';
             if(document.getElementById('chk_multi_qr').checked) document.getElementById('sekcija_qr').style.display='block';
             
+            // Ako je unutar Multi kombinatora štiklirana kućica za igricu
             if(document.getElementById('chk_multi_igrica').checked) {
                 document.getElementById('sekcija_zagonetka').style.display='block';
-                if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'none';
-                if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'none';
+                igricaJeAktivna = true; // Palimo alarm za transformaciju!
             }
         } 
         else if (tip === 'igrica') {
-            // Palimo beli okvir zagonetke
             document.getElementById('sekcija_zagonetka').style.display='block'; 
-            
-            // Menjamo glavni natpis
+            igricaJeAktivna = true; // Palimo alarm za transformaciju!
+        } 
+        else {
+            // Za sve ostale klasične tipove (kviz, qr, zlatnik...) upali njihovu sekciju
+            let sekcija = document.getElementById('sekcija_' + tip);
+            if(sekcija) sekcija.style.display = 'block';
+        }
+
+        // --- 3. DINAMIČKA TRANSFORACIJA UKOLIKO JE IGRICA SELEKTOVANA (BILO GDE) ---
+        if (igricaJeAktivna) {
+            // Promijeni tekst iznad polja
             if(lblZagTekst) lblZagTekst.innerText = "Izaberite logičku igricu iz G2H baze:";
             
-            // Sakrivamo unutrašnja polja za odgovor i natpis "Tačan odgovor"
+            // Sakrij unutrašnja polja za unos tekstualnog odgovora
             if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'none';
             if(zagOdgovorPolje && zagOdgovorPolje.previousElementSibling) {
                 zagOdgovorPolje.previousElementSibling.style.display = 'none';
             }
 
-            // --- 3. STVARANJE PADAJUĆEG MENIJA SA OZBILJNIM DIMENZIJAMA ---
+            // Kreiramo padajući meni sa ozbiljnim nivoima
             let noviSelect = document.createElement('select');
             noviSelect.id = 'zag_tekst';
             noviSelect.style.width = '100%';
@@ -1420,7 +1431,6 @@ window.switchZadatak = function() {
             noviSelect.style.padding = '12px 15px';
             noviSelect.style.borderRadius = '8px';
             
-            // Tvoje nove, poboljšane dimenzije mreža:
             let igre = [
                 { vrednost: 'memorija1', prikaz: '🍓 Memorija (Bela staza - mreža 3x4)' },
                 { vrednost: 'memorija2', prikaz: '🍏 Memorija (Plava staza - mreža 4x4)' },
@@ -1437,13 +1447,12 @@ window.switchZadatak = function() {
                 noviSelect.appendChild(opcija);
             });
 
-            // Zamenjujemo staru tekstualnu zonu ovim novim, bezbednim menijem
-            zagTekstPolje.parentNode.replaceChild(noviSelect, zagTekstPolje);
-        } 
-        else {
-            // Za sve ostale tipove (zagonetka, kviz, qr) pali njihove uobičajene sekcije
-            document.getElementById('sekcija_' + tip).style.display='block'; 
+            // Zamenjujemo element u HTML-u
+            if (zagTekstPolje && zagTekstPolje.parentNode) {
+                zagTekstPolje.parentNode.replaceChild(noviSelect, zagTekstPolje);
+            }
         }
+
         window.osveziPinove(); 
     }
 
