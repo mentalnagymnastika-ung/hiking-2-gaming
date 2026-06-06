@@ -1,0 +1,42 @@
+{
+  "id": "/kreator-app",
+  "name": "HIT-Zdrava Potraga", 
+
+  // Ovdje mijenjaš PUNO IME aplikacije. To je ono što se vidi u prodavnici ili kod instalacije.
+
+  "short_name": "Tajna i Blaga", 
+
+  // Ovdje mijenjaš KRATKO IME. To je ime koje će pisati na ekranu telefona direktno ISPOD tvoje ikonice.
+
+  "start_url": "./index.html", 
+  // Ovo je "početna tačka". Govori telefonu koju stranicu prvu da otvori kada neko klikne na ikonicu.
+
+"scope": "./",
+  // Ovo je za instalaciju na  telefonu. 
+
+  "display": "standalone", 
+  // OVO JE NAJVAŽNIJE. "standalone" znači da će aplikacija raditi bez onog gornjeg dijela pretraživača (gdje se kuca adresa). 
+  // Zbog ovoga tvoj sajt izgleda kao prava aplikacija.
+
+  "background_color": "#347C17", 
+  // BOJA POZADINE zelena  Green4 dok se aplikacija pali. To je ona sekunda dok se sve učitava (tzv. Splash Screen). 
+  // Možeš staviti bilo koji HEX kod (npr. #ffffff je bijela).
+
+  "theme_color": "#1abc9c", 
+  // BOJA TEME. Ovo je boja trake na samom vrhu telefona (tamo gdje stoji sat, jačina signala i baterija). 
+  // Bilo bi dobro da ova boja ovdje bude ISTA kao ona koju smo stavili u HTML kod unutar <meta name="theme-color">.
+
+  "icons": [ 
+    // Ovdje definišeš IKONICE koje će telefon koristiti.
+    {
+      "src": "logo.png",
+      "sizes": "192x192", // Ikonica srednje veličine
+      "type": "image/png"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512", // Velika ikonica visoke rezolucije
+      "type": "image/png"
+    }
+  ]
+}

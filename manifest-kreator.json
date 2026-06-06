@@ -1,0 +1,22 @@
+{
+  "id": "/saradnik-app",
+  "name": "Hit Creator Saradnik",
+  "short_name": "Kreator",
+  "start_url": "/kreator.html",
+  "scope": "./kreator.html",
+  "display": "standalone",
+  "background_color": "#e3f2fd",
+  "theme_color": "#1565c0",
+  "icons": [
+    {
+      "src": "https://i.ibb.co/ybWXLWh/location.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://i.ibb.co/ybWXLWh/location.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

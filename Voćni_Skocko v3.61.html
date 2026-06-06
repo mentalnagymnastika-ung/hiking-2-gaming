@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mentalna Gimnastika - Voćni Skočko</title>
+
+    <meta property="og:title" content="Voćni Skočko - Mentalna Gimnastika" />
+    <meta property="og:description" content="Besplatna igra za razvoj logike i oštar um. Pogodno za decu i odrasle!" />
+    <meta property="og:image" content="https://i.ibb.co/dJ7HLqRL/Logo-Vocni-Skocko.webp" />
+    <meta property="og:type" content="website" />
+
+    <style>
+        :root {
+            --logo-tirkizna: #f2f7f7; 
+            --bg-color-main: var(--logo-tirkizna); 
+            --board-color: #1a4d54; 
+            --accent-orange: #f39c12; 
+            --accent-green: #2ecc71; 
+            --accent-purple: #9b59b6; 
+            --slot-empty: #e6eded; 
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color-main);
+            color: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 5px;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* 1. POČETNI EKRAN */
+        #splash-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 480px;
+            min-height: 90vh;
+            padding: 15px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .huge-logo-container {
+            width: 100%;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .huge-logo-container img {
+            width: 100%;
+            max-width: 380px;
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0px 8px 16px rgba(0,0,0,0.18));
+        }
+
+        .intro-instructions-box {
+            background-color: #fff;
+            padding: 16px;
+            border-radius: 16px;
+            text-align: left;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            border-left: 5px solid var(--accent-orange);
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 30px;
+        }
+
+        .intro-instructions-box h3 {
+            margin: 0 0 10px 0;
+            color: var(--board-color);
+            text-transform: uppercase;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+            font-weight: 800;
+        }
+
+        .intro-instructions-box ul { margin: 0; padding-left: 18px; }
+        .intro-instructions-box li { margin-bottom: 8px; color: #34495e; line-height: 1.45; }
+
+        .start-btn {
+            background-color: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 320px;
+            box-shadow: 0 6px 18px rgba(46, 204, 113, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .start-btn:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+        }
+
+        /* 2. GLAVNI EKRAN IGRE */
+        #game-screen {
+            display: none;
+            width: 100%;
+            max-width: 480px;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 5px;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            background-color: var(--board-color);
+            padding: 16px;
+            border-radius: 24px;
+            box-shadow: 0 12px 35px rgba(26, 77, 84, 0.3);
+            width: 100%;
+            box-sizing: border-box;
+            border: 4px solid #13393e;
+        }
+
+        .board-controls-wrapper {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            margin-bottom: 12px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .menu-trigger-btn {
+            background: none;
+            border: none;
+            color: #a3c1c4;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .board-controls {
+            display: none; 
+            flex-direction: column; 
+            gap: 10px;
+            padding: 12px;
+            box-sizing: border-box;
+        }
+
+        .board-controls-row {
+            display: flex;
+            width: 100%;
+            gap: 10px;
+            justify-content: space-between;
+        }
+
+        .board-control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1; 
+        }
+
+        .board-control-group label {
+            font-weight: bold;
+            font-size: 11px;
+            color: #a3c1c4;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .board-control-group select {
+            padding: 10px 8px;
+            border-radius: 10px;
+            border: 2px solid #102e32;
+            font-size: 14px;
+            font-weight: bold;
+            background-color: #fff;
+            color: #1a4d54;
+            width: 100%;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        .bottom-action-btn {
+            background-color: #2980b9; 
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(41, 128, 185, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .secret-container {
+            margin-bottom: 12px;
+            background-color: rgba(0,0,0,0.25);
+            padding: 10px;
+            border-radius: 14px;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+            color: white;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .secret-slots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 6px;
+            min-height: 46px;
+        }
+
+        .secret-slots .slot {
+            background-color: #102e32;
+            color: #fff;
+        }
+
+        .board {
+            display: flex;
+            flex-direction: column; 
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .row {
+            display: none; 
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+            padding: 6px 8px;
+            border-radius: 12px;
+            background-color: rgba(0,0,0,0.18);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .row.active {
+            background-color: rgba(255,255,255,0.12);
+        }
+
+        .row-number {
+            width: 20px;
+            font-weight: bold;
+            color: #a3c1c4;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .slots {
+            display: flex;
+            gap: 6px; 
+        }
+
+        .slot {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: var(--slot-empty);
+            border: 2px solid #102e32;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.15); 
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34px; 
+            line-height: 1;
+            transition: transform 0.1s, border-color 0.2s;
+            overflow: visible; 
+        }
+
+        .row.active .slot.focused {
+            border-color: #f1c40f !important; 
+            transform: scale(1.06);
+            box-shadow: 0 0 8px #f1c40f;
+        }
+
+        .slot.filled-pop {
+            box-shadow: none !important;
+            background-color: transparent !important;
+            border-color: transparent !important;
+            filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.3)); 
+        }
+
+        .hints {
+            display: grid;
+            gap: 4px;
+            min-width: 42px;
+            justify-items: center;
+        }
+
+        .hint-peg {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            background-color: #102e32;
+            box-shadow: inset 0 2px 3px rgba(0,0,0,0.6);
+        }
+
+        .hint-peg.correct { background-color: #ff4757; } 
+        .hint-peg.wrong-pos { background-color: #ffffff; } 
+
+        .palette-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            margin-top: 2px;
+            padding-top: 12px;
+            border-top: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .palette-text {
+            color: #fff;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .palette {
+            display: flex;
+            gap: 8px;
+            background: rgba(0,0,0,0.25);
+            padding: 8px 14px;
+            border-radius: 25px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .palette .slot {
+            background-color: var(--slot-empty);
+            border-color: #fff;
+            font-size: 34px; 
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+        }
+
+        .palette .slot.hidden-fruit {
+            display: none; 
+        }
+
+        button.primary-btn {
+            background-color: var(--accent-green);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(46, 204, 113, 0.3);
+        }
+
+        button.secondary-btn {
+            background-color: var(--accent-orange);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button.secondary-btn:disabled {
+            background-color: #7f8c8d !important;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .quit-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stone-logo-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 12px 8px;
+            margin-top: 12px;
+            background-color: rgba(255,255,255,0.08); 
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stone-logo-area img {
+            height: 46px;
+            object-fit: contain;
+            filter: drop-shadow(1px 1px 0px #fff) drop-shadow(-1px -1px 0px #fff);
+        }
+
+        .stone-logo-area h2 {
+            margin: 0;
+            font-size: 14px;
+            color: #fff; 
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 0px #102e32;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .message {
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            min-height: 22px;
+            color: #fff;
+        }
+
+        .bottom-promo-box {
+            display: none; 
+            background-color: #fff;
+            padding: 14px;
+            border-radius: 16px;
+            margin-top: 14px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-top: 5px solid var(--accent-purple);
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            0% { transform: translateY(20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .bottom-promo-box h4 {
+            margin: 0 0 6px 0;
+            font-size: 18px;
+            font-weight: 800;
+        }
+
+        .bottom-promo-box p {
+            font-size: 13px;
+            line-height: 1.45;
+            color: #4f6f72;
+            margin: 0 0 12px 0;
+            font-weight: 500;
+        }
+
+        .bottom-promo-box p strong {
+            color: var(--board-color);
+        }
+
+        .purple-restart-btn {
+            background-color: var(--accent-purple);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(155, 89, 182, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        @media (max-width: 430px) {
+            .slot { width: 40px; height: 40px; font-size: 30px; }
+            .slots { gap: 4px; }
+            .palette .slot { width: 42px; height: 42px; font-size: 32px; }
+            .palette { gap: 6px; padding: 6px 10px; }
+            .board-control-group select { font-size: 12px; padding: 8px 4px; }
+        }
+        @media (max-width: 360px) {
+            .slot { width: 34px; height: 34px; font-size: 24px; }
+            .slots { gap: 3px; }
+            .palette .slot { width: 36px; height: 36px; font-size: 26px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="splash-screen">
+        <div class="huge-logo-container">
+            <img src="https://i.ibb.co/dJ7HLqRL/Logo-Vocni-Skocko.webp" alt="Voćni Skočko Veliki Logo">
+        </div>
+        
+        <div class="intro-instructions-box">
+            <h3>Pravila igre:</h3>
+            <ul>
+                <li>Cilj igre je da otkrijete skrivenu kombinaciju voćkica.</li>
+                <li><span style="color: #ff4757; font-weight: bold;">Crveni kružić</span> sa desne strane = Voćka je na tačnom mestu.</li>
+                <li><span style="color: #7f8c8d; font-weight: bold;">Beli kružić</span> sa desne strane = Voćka postoji **u kombinaciji**, ali je na lošem mestu.</li>
+                <li>Prazno polje sa strane znači da te voćkice uopšte nema u šifri.</li>
+            </ul>
+        </div>
+
+        <button class="start-btn" id="btn-start-game">Pokreni Novu Igru</button>
+    </div>
+
+    <div id="game-screen">
+        <div class="game-container">
+            
+            <div class="board-controls-wrapper">
+                <button class="menu-trigger-btn" id="btn-toggle-menu">⚙ Podešavanja nivoa i pokušaja ▾</button>
+                
+                <div class="board-controls" id="board-controls-menu">
+                    <div class="board-controls-row">
+                        <div class="board-control-group">
+                            <label>Režim:</label>
+                            <select id="game-mode-board">
+                                <option value="1" selected>1 Igrač</option>
+                                <option value="2">2 Igrača</option>
+                            </select>
+                        </div>
+                        <div class="board-control-group">
+                            <label>Pokušaji:</label>
+                            <select id="difficulty-attempts-board">
+                                <option value="10">10 pok.</option>
+                                <option value="8">8 pok.</option>
+                                <option value="6" selected>6 pok.</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="board-controls-row">
+                        <div class="board-control-group">
+                            <label>Nivo težine / Broj polja:</label>
+                            <select id="difficulty-length-board">
+                                <option value="4-kids">4 Polja / 4 Voćke (Deca)</option>
+                                <option value="4" selected>4 Polja / 5 Voćki</option>
+                                <option value="4-full">4 Polja / 6 Voćki (Klasični Skočko)</option>
+                                <option value="5">5 Polja / 6 Voćki</option>
+                                <option value="6">6 Polja / 6 Voćki (Teško)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="secret-container" id="secret-panel">
+                <div id="secret-title">Zadata kombinacija (skrivena):</div>
+                <div class="secret-slots">
+                    <div class="slot" id="secret-slot-0">?</div>
+                    <div class="slot" id="secret-slot-1">?</div>
+                    <div class="slot" id="secret-slot-2">?</div>
+                    <div class="slot" id="secret-slot-3">?</div>
+                    <div class="slot" id="secret-slot-4" style="display:none;">?</div>
+                    <div class="slot" id="secret-slot-5" style="display:none;">?</div>
+                </div>
+                <button id="btn-reveal" class="secondary-btn" style="margin-top: 8px; width: 100%; padding: 6px; font-size: 12px; border-radius: 6px;">Pogledaj šifru (0.5s) 👁 <span id="reveal-counter">(2 preostalo)</span></button>
+            </div>
+
+            <div class="board" id="board">
+                <script>
+                    for(let i=0; i<10; i++) {
+                        document.write(`
+                        <div class="row" id="row-${i}">
+                            <div class="row-number">${i+1}</div>
+                            <div class="slots">
+                                <div class="slot" id="slot-${i}-0" onclick="handleSlotClick(${i}, 0)"></div>
+                                <div class="slot" id="slot-${i}-1" onclick="handleSlotClick(${i}, 1)"></div>
+                                <div class="slot" id="slot-${i}-2" onclick="handleSlotClick(${i}, 2)"></div>
+                                <div class="slot" id="slot-${i}-3" onclick="handleSlotClick(${i}, 3)"></div>
+                                <div class="slot" id="slot-${i}-4" style="display:none;" onclick="handleSlotClick(${i}, 4)"></div>
+                                <div class="slot" id="slot-${i}-5" style="display:none;" onclick="handleSlotClick(${i}, 5)"></div>
+                            </div>
+                            <div class="hints" id="hints-layout-${i}" style="grid-template-columns: repeat(2, 1fr);">
+                                <div class="hint-peg" id="hint-${i}-0"></div>
+                                <div class="hint-peg" id="hint-${i}-1"></div>
+                                <div class="hint-peg" id="hint-${i}-2"></div>
+                                <div class="hint-peg" id="hint-${i}-3"></div>
+                                <div class="hint-peg" id="hint-${i}-4" style="display:none;"></div>
+                                <div class="hint-peg" id="hint-${i}-5" style="display:none;"></div>
+                            </div>
+                        </div>
+                        `);
+                    }
+                </script>
+            </div>
+
+            <div class="palette-container">
+                <div class="palette-text" id="palette-instruction">Dodirni voćku za unos:</div>
+                <div class="palette" id="fruit-palette">
+                    <div class="slot" id="p-fruit-0" onclick="handlePaletteClick(0)">🍓</div>
+                    <div class="slot" id="p-fruit-1" onclick="handlePaletteClick(1)">🍌</div>
+                    <div class="slot" id="p-fruit-2" onclick="handlePaletteClick(2)">🍏</div>
+                    <div class="slot" id="p-fruit-3" onclick="handlePaletteClick(3)">🍇</div>
+                    <div class="slot" id="p-fruit-4" onclick="handlePaletteClick(4)">🍊</div>
+                    <div class="slot" id="p-fruit-5" onclick="handlePaletteClick(5)">🍉</div>
+                </div>
+                <button id="btn-submit" class="primary-btn" style="margin-top: 6px; width: 100%; padding: 10px; font-size: 15px; border-radius: 8px;">Potvrdi Potez 🗸</button>
+                
+                <button id="btn-reset-board" class="bottom-action-btn">Nova Igra / Osveži Tablu 🔄</button>
+            </div>
+
+            <div class="stone-logo-area">
+                <img src="https://i.ibb.co/XkMkjLng/Krila-iz-Glavelogo-net-1.png" alt="Logo Udruženja">
+                <h2>Udruženje Mentalna Gimnastika<br>& Centar Mentalne Gimnastike</h2>
+            </div>
+            
+            <div class="message" id="game-message"></div>
+
+            <div class="bottom-promo-box" id="promo-finish-area">
+                <h4 id="promo-result-title">Bravo! 🎉</h4>
+                <p>Ovu igru Vam donose <strong>Udruženje Mentalna Gimnastika</strong> i <strong>Centar Mentalne Gimnastike</strong>.<br><em>Redovan trening mozga poboljšava pamćenje kod dece i održava um oštrim u zlatnom dobu!</em></p>
+                <button class="purple-restart-btn" id="btn-bottom-restart">Igraj Ponovo 🔄</button>
+                <button class="quit-btn" id="btn-quit-game">Prekini igru ❌</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const FRUIT_LIST = ["🍓", "🍌", "🍏", "🍇", "🍊", "🍉"];
+
+        let codeLength = 4;
+        let maxAttempts = 6; 
+        let gameMode = 1; 
+        let difficultyMode = "4"; 
+        
+        let secretCode = [];
+        let currentAttempt = 0;
+        let currentSlotIndex = 0;
+        let currentGuess = [];
+        let activeLevelFruits = []; 
+        
+        let isGameOver = false;
+        let isRevealing = false;
+        let isSettingSecret = false; 
+        let remainingReveals = 2;
+        let promoTimeout = null; 
+
+        const splashScreen = document.getElementById('splash-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const btnStartGame = document.getElementById('btn-start-game');
+        const btnResetBoard = document.getElementById('btn-reset-board');
+        const btnSubmit = document.getElementById('btn-submit');
+        const btnReveal = document.getElementById('btn-reveal');
+        const revealCounterEl = document.getElementById('reveal-counter');
+        const msgEl = document.getElementById('game-message');
+        
+        const promoFinishArea = document.getElementById('promo-finish-area');
+        const promoResultTitle = document.getElementById('promo-result-title');
+        const btnBottomRestart = document.getElementById('btn-bottom-restart');
+        const btnQuitGame = document.getElementById('btn-quit-game');
+
+        const btnToggleMenu = document.getElementById('btn-toggle-menu');
+        const boardControlsMenu = document.getElementById('board-controls-menu');
+
+        const difficultySelect = document.getElementById('difficulty-length-board');
+        const attemptsSelect = document.getElementById('difficulty-attempts-board');
+        const modeSelect = document.getElementById('game-mode-board');
+        
+        const secretTitleEl = document.getElementById('secret-title');
+        const paletteInstructionEl = document.getElementById('palette-instruction');
+
+        btnStartGame.addEventListener('click', () => {
+            splashScreen.style.display = 'none';
+            gameScreen.style.display = 'flex';
+            initGame();
+        });
+
+        btnToggleMenu.addEventListener('click', () => {
+            if (boardControlsMenu.style.display === 'flex') {
+                boardControlsMenu.style.display = 'none';
+                btnToggleMenu.textContent = "⚙ Podešavanja nivoa i pokušaja ▾";
+            } else {
+                boardControlsMenu.style.display = 'flex';
+                btnToggleMenu.textContent = "⚙ Zatvori podešavanja ▴";
+            }
+        });
+
+        btnResetBoard.addEventListener('click', () => {
+            boardControlsMenu.style.display = 'none';
+            btnToggleMenu.textContent = "⚙ Podešavanja nivoa i pokušaja ▾";
+            initGame();
+        });
+
+        btnBottomRestart.addEventListener('click', () => {
+            initGame();
+        });
+
+        btnQuitGame.addEventListener('click', () => {
+            if(promoTimeout) clearTimeout(promoTimeout);
+            promoFinishArea.style.display = "none";
+            gameScreen.style.display = 'none';
+            splashScreen.style.display = 'flex';
+        });
+
+        difficultySelect.addEventListener('change', initGame);
+        attemptsSelect.addEventListener('change', initGame);
+        modeSelect.addEventListener('change', initGame);
+
+        btnSubmit.addEventListener('click', submitAction);
+        btnReveal.addEventListener('click', revealSecretTemporarily);
+
+        function handleSlotClick(rowIdx, slotIdx) {
+            if (currentAttempt === rowIdx && !isGameOver && !isSettingSecret) {
+                highlightSlot(slotIdx);
+            }
+        }
+
+        function handlePaletteClick(fruitId) {
+            if (isGameOver) return;
+            if (isSettingSecret) {
+                selectFruitForSecret(fruitId);
+            } else {
+                selectFruitForGuess(fruitId);
+            }
+        }
+
+        function initGame() {
+            if(promoTimeout) clearTimeout(promoTimeout); 
+
+            difficultyMode = difficultySelect.value;
+            maxAttempts = parseInt(attemptsSelect.value);
+            gameMode = parseInt(modeSelect.value);
+            
+            // NOVO: Prepoznavanje dužine za novi nivo "4-full" (4 polja)
+            if (difficultyMode === "4-kids" || difficultyMode === "4" || difficultyMode === "4-full") {
+                codeLength = 4; 
+            } else if (difficultyMode === "5") {
+                codeLength = 5;
+            } else if (difficultyMode === "6") {
+                codeLength = 6; 
+            }
+
+            currentAttempt = 0;
+            currentSlotIndex = 0;
+            currentGuess = Array(codeLength).fill(null);
+            secretCode = Array(codeLength).fill(null);
+            isGameOver = false;
+            msgEl.textContent = "";
+
+            remainingReveals = 2;
+            btnReveal.disabled = false;
+            revealCounterEl.textContent = `(${remainingReveals} preostalo)`;
+
+            promoFinishArea.style.display = "none";
+
+            setupActiveFruits();
+            adjustTableVisibility();
+
+            if (gameMode === 2) {
+                btnReveal.style.display = 'none'; 
+                isSettingSecret = true;
+                secretTitleEl.textContent = "IGRAČ 1: ZADAJTE TAJNU ŠIFRU";
+                paletteInstructionEl.textContent = "Igrač 1 bira tajnu kombinaciju:";
+                btnSubmit.textContent = "Potvrdi tajnu kombinaciju 🔑";
+            } else {
+                btnReveal.style.display = 'block'; 
+                isSettingSecret = false;
+                secretTitleEl.textContent = "Zadata kombinacija (skrivena):";
+                paletteInstructionEl.textContent = "Dodirni voćku za unos:";
+                btnSubmit.textContent = "Potvrdi Potez 🗸";
+                
+                secretCode = [];
+                for (let i = 0; i < codeLength; i++) {
+                    let randomActiveIndex = Math.floor(Math.random() * activeLevelFruits.length);
+                    secretCode.push(FRUIT_LIST.indexOf(activeLevelFruits[randomActiveIndex]));
+                }
+            }
+
+            clearBoardUI();
+
+            if (!isSettingSecret) {
+                setActiveRow();
+            } else {
+                document.querySelectorAll('.row').forEach(r => r.classList.remove('active'));
+                highlightSecretSlot(0);
+            }
+        }
+
+        function setupActiveFruits() {
+            if (difficultyMode === "4-kids") {
+                activeLevelFruits = FRUIT_LIST.slice(0, 4); 
+            } else if (difficultyMode === "4") {
+                activeLevelFruits = FRUIT_LIST.slice(0, 5); 
+            } else if (difficultyMode === "4-full" || difficultyMode === "5" || difficultyMode === "6") {
+                // NOVO: Za nivoe 4-full, 5 i 6 u paleti je aktivno svih 6 voćkica
+                activeLevelFruits = [...FRUIT_LIST]; 
+            }
+
+            for(let i=0; i<6; i++) {
+                let pFruit = document.getElementById(`p-fruit-${i}`);
+                if (activeLevelFruits.includes(FRUIT_LIST[i])) {
+                    pFruit.style.display = 'flex';
+                } else {
+                    pFruit.style.display = 'none';
+                }
+            }
+        }
+
+        function adjustTableVisibility() {
+            for (let i = 0; i < 10; i++) {
+                let row = document.getElementById(`row-${i}`);
+                if (i < maxAttempts) {
+                    row.style.display = 'flex';
+                } else {
+                    row.style.display = 'none';
+                }
+
+                let hintLayout = document.getElementById(`hints-layout-${i}`);
+                hintLayout.style.gridTemplateColumns = codeLength > 4 ? `repeat(3, 1fr)` : `repeat(2, 1fr)`;
+
+                for (let j = 0; j < 6; j++) {
+                    let slot = document.getElementById(`slot-${i}-${j}`);
+                    let hint = document.getElementById(`hint-${i}-${j}`);
+                    
+                    if (j < codeLength) {
+                        slot.style.display = 'flex';
+                        hint.style.display = 'block';
+                    } else {
+                        slot.style.display = 'none';
+                        hint.style.display = 'none';
+                    }
+                }
+            }
+
+            for (let j = 0; j < 6; j++) {
+                let secretSlot = document.getElementById(`secret-slot-${j}`);
+                if (j < codeLength) {
+                    secretSlot.style.display = 'flex';
+                } else {
+                    secretSlot.style.display = 'none';
+                }
+            }
+        }
+
+        function clearBoardUI() {
+            for (let i = 0; i < 10; i++) {
+                for (let j = 0; j < 6; j++) {
+                    let slot = document.getElementById(`slot-${i}-${j}`);
+                    let hint = document.getElementById(`hint-${i}-${j}`);
+                    if (slot) { 
+                        slot.textContent = ''; 
+                        slot.classList.remove('focused', 'filled-pop'); 
+                    }
+                    if (hint) { hint.className = 'hint-peg'; }
+                }
+            }
+            for (let j = 0; j < 6; j++) {
+                let secretSlot = document.getElementById(`secret-slot-${j}`);
+                if (secretSlot) {
+                    secretSlot.textContent = '?';
+                    secretSlot.classList.remove('filled-pop');
+                }
+            }
+        }
+
+        function setActiveRow() {
+            document.querySelectorAll('.row').forEach(r => r.classList.remove('active'));
+            if (currentAttempt < maxAttempts && !isGameOver) {
+                const activeRow = document.getElementById(`row-${currentAttempt}`);
+                if (activeRow) {
+                    activeRow.classList.add('active');
+                    highlightSlot(0);
+                }
+            }
+        }
+
+        function highlightSlot(index) {
+            for (let j = 0; j < codeLength; j++) {
+                const slot = document.getElementById(`slot-${currentAttempt}-${j}`);
+                if (slot) slot.classList.remove('focused');
+            }
+            currentSlotIndex = index;
+            const currentSlot = document.getElementById(`slot-${currentAttempt}-${currentSlotIndex}`);
+            if (currentSlot) currentSlot.classList.add('focused');
+        }
+
+        function highlightSecretSlot(index) {
+            for (let j = 0; j < codeLength; j++) {
+                const slot = document.getElementById(`secret-slot-${j}`);
+                if (slot) slot.classList.remove('focused');
+            }
+            currentSlotIndex = index;
+            const currentSlot = document.getElementById(`secret-slot-${currentSlotIndex}`);
+            if (currentSlot) currentSlot.classList.add('focused');
+        }
+
+        function selectFruitForGuess(fruitId) {
+            currentGuess[currentSlotIndex] = fruitId;
+            const slot = document.getElementById(`slot-${currentAttempt}-${currentSlotIndex}`);
+            if (slot) {
+                slot.textContent = FRUIT_LIST[fruitId];
+                slot.classList.add('filled-pop'); 
+            }
+
+            if (currentSlotIndex < codeLength - 1) {
+                highlightSlot(currentSlotIndex + 1);
+            }
+        }
+
+        function selectFruitForSecret(fruitId) {
+            secretCode[currentSlotIndex] = fruitId;
+            const slot = document.getElementById(`secret-slot-${currentSlotIndex}`);
+            if (slot) {
+                slot.textContent = "⭐"; 
+                slot.classList.remove('filled-pop');
+            }
+
+            if (currentSlotIndex < codeLength - 1) {
+                highlightSecretSlot(currentSlotIndex + 1);
+            }
+        }
+
+        function submitAction() {
+            if (isSettingSecret) {
+                submitSecretCode();
+            } else {
+                submitGuess();
+            }
+        }
+
+        function submitSecretCode() {
+            if (secretCode.slice(0, codeLength).includes(null)) {
+                msgEl.textContent = "Popunite sva mesta za tajnu kombinaciju!";
+                msgEl.style.color = "#e74c3c";
+                return;
+            }
+
+            isSettingSecret = false;
+            msgEl.textContent = "Šifra zadata! Igrač 2 pogađa.";
+            
+            secretTitleEl.textContent = "Zadata kombinacija (skrivena):";
+            paletteInstructionEl.textContent = "Dodirni voćku za unos:";
+            btnSubmit.textContent = "Potvrdi Potez 🗸";
+
+            for (let i = 0; i < codeLength; i++) {
+                document.getElementById(`secret-slot-${i}`).textContent = '?';
+                document.getElementById(`secret-slot-${i}`).classList.remove('focused', 'filled-pop');
+            }
+
+            setActiveRow();
+        }
+
+        function submitGuess() {
+            if (isGameOver || isSettingSecret) return;
+
+            if (currentGuess.slice(0, codeLength).includes(null)) {
+                msgEl.textContent = "Popunite sva mesta voćkicama!";
+                return;
+            }
+
+            msgEl.textContent = "";
+
+            let redPegs = 0;
+            let whitePegs = 0;
+            let secretCopy = secretCode.slice(0, codeLength);
+            let guessCopy = currentGuess.slice(0, codeLength);
+
+            for (let i = 0; i < codeLength; i++) {
+                if (guessCopy[i] === secretCopy[i]) {
+                    redPegs++;
+                    secretCopy[i] = null;
+                    guessCopy[i] = null;
+                }
+            }
+
+            for (let i = 0; i < codeLength; i++) {
+                if (guessCopy[i] !== null) {
+                    let indexInSecret = secretCopy.indexOf(guessCopy[i]);
+                    if (indexInSecret !== -1) {
+                        whitePegs++;
+                        secretCopy[indexInSecret] = null;
+                    }
+                }
+            }
+
+            let hintIndex = 0;
+            for (let i = 0; i < redPegs; i++) {
+                document.getElementById(`hint-${currentAttempt}-${hintIndex}`).classList.add('correct');
+                hintIndex++;
+            }
+            for (let i = 0; i < whitePegs; i++) {
+                document.getElementById(`hint-${currentAttempt}-${hintIndex}`).classList.add('wrong-pos');
+                hintIndex++;
+            }
+
+            if (redPegs === codeLength) {
+                endGame(true);
+                return;
+            }
+
+            currentAttempt++;
+
+            if (currentAttempt >= maxAttempts) {
+                endGame(false);
+                return;
+            }
+
+            currentGuess = Array(codeLength).fill(null);
+            setActiveRow();
+        }
+
+        function revealSecretTemporarily() {
+            if (isGameOver || isRevealing || isSettingSecret || remainingReveals <= 0) return;
+            
+            isRevealing = true;
+            remainingReveals--; 
+            
+            revealCounterEl.textContent = `(${remainingReveals} preostalo)`;
+            if (remainingReveals <= 0) {
+                btnReveal.disabled = true; 
+            }
+
+            let indexesToReveal = [];
+            // POPRAVLJENO: Pravilo o sakrivanju 2 voćke (prikazivanju 4 nasumične) važi isključivo za najteži nivo (6 mesta)
+            if (codeLength === 6) {
+                while(indexesToReveal.length < 4) {
+                    let r = Math.floor(Math.random() * 6);
+                    if(!indexesToReveal.includes(r)) indexesToReveal.push(r);
+                }
+            } else {
+                for(let i = 0; i < codeLength; i++) indexesToReveal.push(i);
+            }
+            
+            for (let i = 0; i < codeLength; i++) {
+                let sSlot = document.getElementById(`secret-slot-${i}`);
+                if (indexesToReveal.includes(i)) {
+                    sSlot.textContent = FRUIT_LIST[secretCode[i]];
+                    sSlot.classList.add('filled-pop'); 
+                } else {
+                    sSlot.textContent = '?';
+                    sSlot.classList.remove('filled-pop');
+                }
+            }
+
+            setTimeout(() => {
+                if (!isGameOver) {
+                    for (let i = 0; i < codeLength; i++) {
+                        let sSlot = document.getElementById(`secret-slot-${i}`);
+                        sSlot.textContent = '?';
+                        sSlot.classList.remove('filled-pop');
+                    }
+                }
+                isRevealing = false;
+            }, 500); 
+        }
+
+        function endGame(isWin) {
+            isGameOver = true;
+            document.querySelectorAll('.row').forEach(r => r.classList.remove('active'));
+
+            for (let i = 0; i < codeLength; i++) {
+                const sSlot = document.getElementById(`secret-slot-${i}`);
+                sSlot.textContent = FRUIT_LIST[secretCode[i]];
+                sSlot.classList.add('filled-pop'); 
+                sSlot.classList.remove('focused');
+            }
+
+            if (isWin) {
+                promoResultTitle.textContent = "Sjajno! Uspešna gimnastika uma! 🎉";
+                promoResultTitle.style.color = "#2ecc71";
+            } else {
+                promoResultTitle.textContent = "Dobar pokušaj! Vežba čini majstora. 🧠";
+                promoResultTitle.style.color = "#e67e22";
+            }
+
+            promoFinishArea.style.display = "block";
+            promoFinishArea.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

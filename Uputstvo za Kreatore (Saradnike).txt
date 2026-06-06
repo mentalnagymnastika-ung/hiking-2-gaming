@@ -1,0 +1,41 @@
+SRB_HR_BIH_MN
+
+Uputstvo za Kreatore (Saradnike)
+Ovo uputstvo je namenjeno edukatorima i saradnicima koji dizajniraju nove rute.
+
+Pokretanje alata: Otvorite link aplikacije Hit Creator na svom uređaju. Preporučujemo da instalirate aplikaciju na početni ekran kada vam pretraživač to ponudi.
+
+Osnovni podaci: Kliknite na dugme Nova i popunite polja. Upišite grad, naziv vaše staze i smislite neku lepu glavnu šifru.
+
+Crtanje po mapi: Pronađite željenu lokaciju na mapi i kliknite na ekran kako biste postavili prvu tačku. Alternativno, možete kliknuti na dugme Preuzmi moju trenutnu lokaciju ako se već nalazite na tom mestu uživo.
+
+Osmišljavanje zadataka: Kada se otvori prozor za podešavanje tačke, izaberite vrstu zadatka. Možete birati zagonetke, kvizove ili opciju Pronađi ovo uz postavljanje adekvatne fotografije.
+
+Putokazi za dalje: U polju Kuda dalje obavezno napišite jasnu smernicu koja će igrače odvesti do sledeće tačke.
+
+Kraj igre: Kada postavljate poslednju tačku, obavezno štiklirajte kućicu koja označava da je to cilj. Tada ćete dobiti polje da upišete završnu čestitku.
+
+Čuvanje i slanje: Kliknite na dugme Završi i izaberite opciju Preuzmi na Disk. Taj fajl zatim prosledite Master Administratoru na mejl ili preko neke druge aplikacije.
+
+Savet za oflajn igru: Dok ste još na kućnom internetu, otvorite mapu i prstom prelistajte ulice gde ćete igrati. Aplikacija će zapamtiti mapu, tako da ćete uvek videti ulice čak i kada ostanete bez interneta!
+
+ENG
+
+Instructions for Creators (Collaborators)
+This guide is for educators and collaborators who design new routes.
+
+Launching the tool: Open the Hit Creator app link on your device. We recommend installing the app on your home screen when your browser prompts you.
+
+Basic details: Click the New button and fill in the fields. Enter the city, the name of your trail, and come up with a nice main code.
+
+Drawing on the map: Find the desired location on the map and click on the screen to set the first point. Alternatively, you can click the Get my current location button if you are already there in person.
+
+Designing tasks: When the point settings window opens, choose the task type. You can select riddles, quizzes, or the Find this option with an appropriate photo attached.
+
+Directions for the next step: In the Where to next field, be sure to write clear directions that will lead players to the following point.
+
+End of the game: When placing the last point, make sure to check the box indicating that this is the finish line. You will then get a field to type in your final congratulatory message.
+
+Saving and sending: Click the Finish button and select the Download to Disk option. Forward that file to the Master Administrator via email or another app.
+
+Pro tip for offline play: While still on your home internet, open the map and scroll through the streets where you will be playing. The app will cache the map, so you will always see the streets even when you lose internet connection!
