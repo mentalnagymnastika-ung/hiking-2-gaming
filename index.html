@@ -436,6 +436,8 @@ localStorage.removeItem('poslednji_ekran');
             <img id="slikaZadatkaUUI" src="" style="display:none; width:100%; border-radius:12px; margin-bottom:15px; max-height:250px; object-fit:contain; border: 2px solid #1abc9c; background:#f8fafc;">
             <div class="zadatak-napomena" id="txtNapomena" style="display:none;">Napomena: odgovor možete upisati brojem ili slovima (veličina slova nije bitna).</div>
             <div id="kvizUI" style="display:none; width:100%;"></div>
+
+            <div id="g2hIgreUI" style="display:none; width:100%; background:#fff; border-radius:12px; padding:10px; box-sizing:border-box; margin-bottom:15px;"></div>
             
             <input type="text" id="unosOdgovor" placeholder="Vaš odgovor..." style="display:none; flex-shrink: 0;">
             <input type="file" accept="image/*" capture="environment" id="skrivenaKamera" style="display:none;" onchange="window.slikaNapravljena()">
@@ -1255,7 +1257,7 @@ window.ucitajTacku = function(ind) {
     };
 
     // --- PRIKAZ ZADATKA I NOVIH POLJA ---
-    window.prikaziZadatak = function() {
+window.prikaziZadatak = function() {
         try {
             document.getElementById('lokacijaKontejner').style.display = 'none';
             document.getElementById('zadatakKontejner').style.display = 'flex';
@@ -1264,23 +1266,15 @@ window.ucitajTacku = function(ind) {
             
             document.getElementById('unosOdgovor').value = '';
             document.getElementById('unosOdgovor').style.display = 'none';
+            document.getElementById('g2hIgreUI').style.display = 'none'; // Resetuj prostor za igre
+            document.getElementById('g2hIgreUI').innerHTML = ''; // Očisti prethodnu igru
             
             let staraKameraBtn = document.getElementById('btnKamera');
-            if (staraKameraBtn) {
-                staraKameraBtn.style.display = 'none';
-                staraKameraBtn.style.background = '#ff9800';
-            }
-            let staraKameraTxt = document.getElementById('txtDugmeKamera');
-            if (staraKameraTxt) staraKameraTxt.innerText = "📸 OTVORI KAMERU";
-
-            window.slikaSlikanaSada = false;
+            if (staraKameraBtn) staraKameraBtn.style.display = 'none';
             
+            window.slikaSlikanaSada = false;
             document.getElementById('kvizUI').style.display = 'none';
             document.getElementById('txtNapomena').style.display = 'none';
-            
-            if(document.getElementById('multiInputsUI')) document.getElementById('multiInputsUI').style.display = 'none';
-            if(document.getElementById('multi_zag_odg')) document.getElementById('multi_zag_odg').style.display = 'none';
-            if(document.getElementById('multi_qr_odg')) document.getElementById('multi_qr_odg').style.display = 'none';
             
             let btnProveri = document.getElementById('btnProveri');
             if(btnProveri) {
@@ -1296,6 +1290,32 @@ window.ucitajTacku = function(ind) {
             let tip = pin.zadatak?.tip || 'zagonetka';
             let slikaUI = document.getElementById('slikaZadatkaUUI');
             
+            // =======================================================
+            // 🚨 NOVA G2H CENTRALA ZA POKRETANJE LOGIČKIH IGRICA 🚨
+            // =======================================================
+            if (tip === 'igrica') {
+                let sifraIgre = pin.zadatak?.tekst_zadatka || ''; // Čita npr. 'memorija1'
+                
+                // 1. Sakrivamo nepotrebne delove interfejsa
+                document.getElementById('tekstZadatkaUUI').style.display = 'none';
+                if(btnProveri) btnProveri.style.display = 'none'; // Igra se proverava unutar sebe, ne preko ovog dugmeta
+                
+                // 2. Palimo prostor za igru
+                let kontejnerIgre = document.getElementById('g2hIgreUI');
+                kontejnerIgre.style.display = 'block';
+                
+                // 3. Skretnica: Šaljemo komandu tačnoj fioci
+                if (sifraIgre.startsWith('memorija')) {
+                    window.G2H_FabrikaIgara.pokreniMemoriju(sifraIgre, kontejnerIgre);
+                } 
+                else if (sifraIgre.startsWith('skocko')) {
+                    window.G2H_FabrikaIgara.pokreniSkocka(sifraIgre, kontejnerIgre);
+                }
+                // Ovde ćemo u budućnosti samo nizati else if za tetris, slagalice...
+                return; // Prekidamo dalje izvršavanje jer igrica preuzima ekran!
+            }
+            // =======================================================
+
             if (tip === 'multi') {
                 let tekstZaPrikaz = "";
                 if(pin.zadatak?.tekst_zadatka && pin.zadatak?.tekst_zadatka.trim() !== '') {
@@ -2142,7 +2162,48 @@ window.pokreniOtkljucavanje = function() {
             document.getElementById('qrSkenerKontejner').style.display = 'none';
         }
     };
+// ===================================================================
+// 🎮 G2H MODULARNA FABRIKA LOGIČKIH IGARA (Sve igre na jednom mestu)
+// ===================================================================
+window.G2H_FabrikaIgara = {
+    
+    // --- 🌍 1. IGRA: MEMORIJA (Nivoi 1, 2 i 3) ---
+    pokreniMemoriju: function(sifra, kontejner) {
+        kontejner.innerHTML = `<h3 style="text-align:center; color:#347C17; margin-top:0;">🎮 IGRA MEMORIJE</h3>
+                               <p style="font-size:14px; text-align:center; color:#666;">Spojite sve parove voćkica da otključate sledeću stazu!</p>
+                               <div id="mrezaMemorije" style="display:grid; gap:8px; margin:15px auto; max-width:320px;"></div>`;
+        
+        let mreza = document.getElementById('mrezaMemorije');
+        
+        // Određivanje težine staze na osnovu tvoje zamisli
+        if (sifra === 'memorija1') { // Bela staza: 2 para (4 kartice)
+            mreza.style.gridTemplateColumns = 'repeat(2, 1fr)';
+            // Tvoj kod za generisanje i crtanje 4 kartice ide ovde...
+        } 
+        else if (sifra === 'memorija2') { // Plava staza: 6 parova (12 kartica)
+            mreza.style.gridTemplateColumns = 'repeat(3, 1fr)';
+            // Tvoj kod za 12 kartica...
+        } 
+        else if (sifra === 'memorija3') { // Crvena staza: 8 parova (16 kartica)
+            mreza.style.gridTemplateColumns = 'repeat(4, 1fr)';
+            // Tvoj kod za 16 kartica...
+        }
+        
+        // 🎯 KADA DETE POBEDI U IGRI, UNUTAR KODA IGRICE SAMO DETEKTUJEMO USPEH:
+        // Primjer: if(pogodjeniSviParovi) { window.uspehZadatka(); }
+    },
 
+    // --- 🍏 2. IGRA: VOĆNI SKOČKO (Nivoi 1, 2 i 3) ---
+    pokreniSkocka: function(sifra, kontejner) {
+        kontejner.innerHTML = `<h3 style="text-align:center; color:#347C17; margin-top:0;">🍓 VOĆNI SKOČKO</h3>
+                               <p style="font-size:14px; text-align:center; color:#666;">Pogodite tačnu kombinaciju voćkica!</p>
+                               <div id="tablaSkocka" style="width:100%; min-height:150px; background:#f8fafc; border-radius:8px; padding:10px;"></div>`;
+        
+        // Logika i težina za Skočka 1, 2 ili 3...
+        // Kada dete pogodi kombinaciju: window.uspehZadatka();
+    }
+};
+            
 </script>
 </body>
 </html>
