@@ -1360,16 +1360,28 @@ window.switchZadatak = function() {
         document.querySelectorAll('.zadatak-sekcija').forEach(s => s.style.display='none'); 
         let tip = document.getElementById('tipZadatka').value;
         
-        // Pronalazimo tekstualno polje za odgovor i njegovu labelu (naslov) unutar zagonetke
+        let zagTekstPolje = document.getElementById('zag_tekst'); // To je gornje polje (textarea ili select)
         let zagOdgovorPolje = document.getElementById('zag_odgovor');
         let lblZagOdgLabela = document.getElementById('lblZagOdg');
         let lblZagTekst = document.getElementById('lblZagTekst');
 
-        // Prvo uvek sve vratimo na fabrička podešavanja za zagonetku
+        // --- RESETOVANJE NA FABRIČKA PODEŠAVANJA ---
+        // Ako je u prethodnom koraku polje bilo pretvoreno u padajući meni, vraćamo ga u običnu tekstualnu zonu
+        if (zagTekstPolje && zagTekstPolje.tagName === 'SELECT') {
+            let staraTextarea = document.createElement('textarea');
+            staraTextarea.id = 'zag_tekst';
+            staraTextarea.className = 'form-control';
+            staraTextarea.rows = 3;
+            staraTextarea.placeholder = 'Upišite tekst zagonetke ovde...';
+            zagTekstPolje.parentNode.replaceChild(staraTextarea, zagTekstPolje);
+            zagTekstPolje = staraTextarea; // Ponovo hvatamo novi element
+        }
+
         if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'block';
         if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'block';
         if(lblZagTekst) lblZagTekst.innerText = "Tekst zagonetke Pitanje";
 
+        // --- LOGIKA ZA TIP ZADATKA ---
         if (tip === 'multi') {
             document.getElementById('sekcija_multi_kombinator').style.display='block';
             if(document.getElementById('chk_multi_zlatnik').checked) document.getElementById('sekcija_zlatnik').style.display='block';
@@ -1378,28 +1390,52 @@ window.switchZadatak = function() {
             if(document.getElementById('chk_multi_kreativni').checked) document.getElementById('sekcija_kreativni').style.display='block';
             if(document.getElementById('chk_multi_pronadji').checked) document.getElementById('sekcija_pronadji').style.display='block';
             if(document.getElementById('chk_multi_qr').checked) document.getElementById('sekcija_qr').style.display='block';
+            
+            // Ako je u multiju izabrana igrica, primenićemo istu magiju za sakrivanje odgovora
             if(document.getElementById('chk_multi_igrica').checked) {
                 document.getElementById('sekcija_zagonetka').style.display='block';
-                // Sakrivamo odgovor unutar multija ako je štiklirana igrica
                 if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'none';
                 if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'none';
             }
-        } else if (tip === 'igrica') {
-            // Otvaramo ceo kontejner zagonetke
+        } 
+        else if (tip === 'igrica') {
             document.getElementById('sekcija_zagonetka').style.display='block'; 
+            if(lblZagTekst) lblZagTekst.innerText = "Izaberite logičku igricu iz G2H baze:";
             
-            // Menjamo naslov u gornjem polju da bude jasan kreatoru staze
-            if(lblZagTekst) lblZagTekst.innerText = "Šifra / Naziv logičke igrice (npr. memorija1)";
-            
-            // ✂️ HIRURŠKO GASENJE unutrašnjih elemenata za odgovor
+            // ✂️ Sakrivamo polje za tekstualni odgovor i njegovu labelu iznad
             if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'none';
-            
-            // Pošto labela "Tačan odgovor" nema svoj ID u tvom HTML-u, nalazimo je preko polja za odgovor!
             if(zagOdgovorPolje && zagOdgovorPolje.previousElementSibling) {
                 zagOdgovorPolje.previousElementSibling.style.display = 'none';
             }
-        } else {
-            // Za sve ostale standardne tipove (kviz, zagonetka, qr...) upali njihove sekcije
+
+            // 🎛️ PRETVARANJE POLJA U PADAJUĆI MENI (SELECT)
+            let noviSelect = document.createElement('select');
+            noviSelect.id = 'zag_tekst';
+            noviSelect.className = 'form-control';
+            noviSelect.style.width = '100%';
+            noviSelect.style.padding = '8px';
+            noviSelect.style.borderRadius = '6px';
+            
+            // Ovde definišemo naše tačne šifre igara iz Fabrike Igara
+            let igre = [
+                { vrednost: 'memorija1', prikaz: '🍓 Memorija (Bela staza - 2x2)' },
+                { vrednost: 'memorija2', prikaz: '🍏 Memorija (Plava staza - 3x4)' },
+                { vrednost: 'memorija3', prikaz: '🍉 Memorija (Crvena staza - 4x4)' },
+                { vrednost: 'skocko1',   prikaz: '🤠 Voćni Skočko (Lakši nivo)' },
+                { vrednost: 'skocko2',   prikaz: '🤠 Voćni Skočko (Teži nivo)' }
+            ];
+
+            igre.forEach(igra => {
+                let opcija = document.createElement('option');
+                opcija.value = igra.vrednost;
+                opcija.innerText = igra.prikaz;
+                noviSelect.appendChild(opcija);
+            });
+
+            // Zamenjujemo staru tekstualnu zonu sa novim čistim padajućim menijem
+            zagTekstPolje.parentNode.replaceChild(noviSelect, zagTekstPolje);
+        } 
+        else {
             document.getElementById('sekcija_' + tip).style.display='block'; 
         }
         window.osveziPinove(); 
