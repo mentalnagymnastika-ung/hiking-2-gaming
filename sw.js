@@ -1,12 +1,12 @@
 // 👇 NOVA SERIJA IGARA - KREĆEMO OD STOTKE 👇
-const CACHE_NAME = 'potraga-oflajn-v100.10'; 
+const CACHE_NAME = 'potraga-oflajn-v100.11'; 
 // 👆 ----------------------------------------------------------- 👆
 
 const OBAVEZNI_FAJLOVI = [
     './',
     './index.html',
     './manifest.json',
-    './logo_test.png'
+    './logo-test.png'
 ];
 
 // 1. INSTALACIJA: Čim legne novi fajl, preuzmi ga odmah bez čekanja
