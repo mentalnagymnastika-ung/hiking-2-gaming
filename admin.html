@@ -17,11 +17,14 @@
         }
     </script>
 
-    <title>Zdrava Potraga Kreator Staza V.31.00</title>
+    <title>Zdrava Potraga Kreator Staza V.40.01</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script> 
+   
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
       import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, updateDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -2643,211 +2646,220 @@
         }, 2500); 
     };
 
-    window.pripremiZaStampu = function() {
-        if (!window.rucnaMrezaGranice) {
-            alert("⚠️ Molimo vas da prvo podesite mrežu klikom na '📐 Podesi Mrežu' na dnu ekrana, pa je sačuvate.");
-            return;
+window.pripremiZaStampu = function() {
+    if (!window.rucnaMrezaGranice) {
+        alert("⚠️ Molimo vas da prvo podesite mrežu klikom na '📐 Podesi Mrežu' na dnu ekrana, pa je sačuvate.");
+        return;
+    }
+
+    document.getElementById('zavrsiModal').style.display = 'none';
+    let printArea = document.getElementById('printArea');
+    if (!printArea) return;
+
+    if (window.pinovi.length === 0) {
+        alert("Nema tačaka za štampu.");
+        return;
+    }
+
+    let imeStaze = document.getElementById('imePotrage').value || 'Nova Potraga';
+    let sifraStaze = document.getElementById('sifraPotrage').value || 'BEZ_SIFRE';
+    let ukupnaDistanca = document.getElementById('pDist').innerText || '0.00';
+    let isGrupna = document.getElementById('checkGrupna').checked;
+    
+    let prikaziOpis = confirm(window.trenutniJezik === 'sr' ? "Da li želite da se na papirima za igrače štampa i 'Detaljan opis lokacije'?" : "Do you want to print the 'Detailed location description'?");
+
+    let grid = window.izracunajMatematickuMrezu();
+    let koordinateMape = {};
+    window.pinovi.forEach(p => {
+        koordinateMape[p.id] = window.dobiGridKoordinatu(p.marker.getLatLng().lat, p.marker.getLatLng().lng, grid);
+    });
+
+    let ruteZaStampu = {};
+    let standardniPinovi = window.pinovi.map(p => { 
+        let latlng = p.marker.getLatLng(); 
+        return { id: p.id, broj: p.broj, lat: latlng.lat, lng: latlng.lng, rad: p.rad, dozvoliPomoc: p.dozvoliPomoc, isPocetna: p.isPocetna, imeLokacije: p.imeLokacije, opisLokacije: p.opisLokacije, opisLokacijeSlika: window.slikeLokacijaMap[p.id] || "", zadatak: p.zadatak }; 
+    });
+
+    ruteZaStampu["Master"] = standardniPinovi;
+
+    if (isGrupna) {
+        let brojTimova = parseInt(document.getElementById('brojTimovaGrupna').value);
+        let grupnaLogika = document.getElementById('logikaGrupna').value;
+        let generisaneRute = window.generisiGrupneRute(standardniPinovi, brojTimova, grupnaLogika);
+        for(let key in generisaneRute) { ruteZaStampu[key] = generisaneRute[key]; }
+    } else {
+        ruteZaStampu["1"] = standardniPinovi; 
+    }
+
+    let privremeniStil = document.createElement('style');
+    privremeniStil.id = 'stilUspravnaStampa';
+    privremeniStil.innerHTML = `
+        @media print { 
+            @page { size: A4 portrait !important; margin: 10mm !important; } 
+            *, *::before, *::after { box-sizing: border-box !important; }
+            body { background: white !important; margin: 0; padding: 0; width: 100%; font-family: Arial, sans-serif;}
+            body * { visibility: hidden; }
+            #printArea, #printArea * { visibility: visible; }
+            #printArea { position: absolute; left: 0; top: 0; width: 100%; }
+            .print-container { width: 100%; page-break-after: always; }
+            .print-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #000; padding-bottom: 12px; margin-bottom: 20px; }
+            .header-left { text-align: left; }
+            .header-left h1 { margin: 0; font-size: 24px; text-transform: uppercase; color: #000; }
+            .header-left .sub-info { font-size: 14px; font-weight: bold; color: #000; margin-top: 5px; }
+            .header-right { display: flex; flex-direction: column; align-items: flex-end; }
+            .header-right-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px;}
+            .header-right-text { text-align: right; }
+            .header-right-text h2 { margin: 0; font-size: 14px; font-weight: bold; color: #000; }
+            .header-right-text p { margin: 0; font-size: 11px; color: #333; }
+            .badge { display: inline-block; font-size: 14px; font-weight: bold; color: #e11d48; text-transform: uppercase; border: 2px solid #e11d48; border-radius: 6px; padding: 4px 8px; }
+            .tasks-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+            .task-card { page-break-inside: avoid; border: 2px solid #333; border-radius: 8px; padding: 12px; }
+            .task-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; margin-bottom: 8px; padding-bottom: 6px; }
+            .task-title { font-size: 14px; font-weight: bold; margin: 0; color: #000; display:flex; align-items:center; gap:8px;}
+            .task-label { font-size: 11px; text-transform: uppercase; color: #333; font-weight: bold; display: block; margin-bottom: 2px; margin-top:6px;}
+            .task-value { font-size: 13px; color: #000; display: block; line-height: 1.3; }
+            .task-value.location { font-weight: bold; font-size:14px;}
+            .hidden-answer { border: 1px dashed #999; height: 35px; border-radius: 4px; margin-top: 4px; }
+            .task-image-box { margin-top: 10px; text-align: center; width: 100%; }
+            .task-image-box img { max-width: 100%; max-height: 110px; object-fit: contain; border-radius: 6px; border: 1px solid #999; }
+            
+            /* Sređivanje prikaza generisanog QR koda */
+            .g2h-lokalni-qr img { display: inline-block !important; margin: 0 auto; }
         }
+    `;
+    document.head.appendChild(privremeniStil);
 
-        document.getElementById('zavrsiModal').style.display='none';
-        let printArea = document.getElementById('printArea');
-        if (!printArea) return;
+    let html = '';
+    let kljuceviZaStampu = Object.keys(ruteZaStampu).sort((a, b) => {
+        if (a === "Master") return -1;
+        if (b === "Master") return 1;
+        return parseInt(a) - parseInt(b);
+    });
 
-        if (window.pinovi.length === 0) {
-            alert("Nema tačaka za štampu.");
-            return;
-        }
-
-        let imeStaze = document.getElementById('imePotrage').value || 'Nova Potraga';
-        let sifraStaze = document.getElementById('sifraPotrage').value || 'BEZ_SIFRE';
-        let ukupnaDistanca = document.getElementById('pDist').innerText || '0.00';
-        let isGrupna = document.getElementById('checkGrupna').checked;
-        
-        let prikaziOpis = confirm(window.trenutniJezik === 'sr' ? "Da li želite da se na papirima za igrače štampa i 'Detaljan opis lokacije'?" : "Do you want to print the 'Detailed location description'?");
-
-        let grid = window.izracunajMatematickuMrezu();
-        let koordinateMape = {};
-        window.pinovi.forEach(p => {
-            koordinateMape[p.id] = window.dobiGridKoordinatu(p.marker.getLatLng().lat, p.marker.getLatLng().lng, grid);
-        });
-
-        let ruteZaStampu = {};
-        let standardniPinovi = window.pinovi.map(p=> { let latlng = p.marker.getLatLng(); return { id: p.id, broj: p.broj, lat: latlng.lat, lng: latlng.lng, rad: p.rad, dozvoliPomoc: p.dozvoliPomoc, isPocetna: p.isPocetna, imeLokacije: p.imeLokacije, opisLokacije: p.opisLokacije, opisLokacijeSlika: window.slikeLokacijaMap[p.id] || "", zadatak: p.zadatak }; });
-
-        ruteZaStampu["Master"] = standardniPinovi;
-
-        if (isGrupna) {
-            let brojTimova = parseInt(document.getElementById('brojTimovaGrupna').value);
-            let grupnaLogika = document.getElementById('logikaGrupna').value;
-            let generisaneRute = window.generisiGrupneRute(standardniPinovi, brojTimova, grupnaLogika);
-            for(let key in generisaneRute) { ruteZaStampu[key] = generisaneRute[key]; }
-        } else {
-            ruteZaStampu["1"] = standardniPinovi; 
-        }
-
-        let privremeniStil = document.createElement('style');
-        privremeniStil.id = 'stilUspravnaStampa';
-        privremeniStil.innerHTML = `
-            @media print { 
-                @page { size: A4 portrait !important; margin: 10mm !important; } 
-                *, *::before, *::after { box-sizing: border-box !important; }
-                body { background: white !important; margin: 0; padding: 0; width: 100%; font-family: Arial, sans-serif;}
-                body * { visibility: hidden; }
-                #printArea, #printArea * { visibility: visible; }
-                #printArea { position: absolute; left: 0; top: 0; width: 100%; }
-                
-                .print-container { width: 100%; page-break-after: always; }
-                .print-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #000; padding-bottom: 12px; margin-bottom: 20px; }
-                .header-left { text-align: left; }
-                .header-left h1 { margin: 0; font-size: 24px; text-transform: uppercase; color: #000; }
-                .header-left .sub-info { font-size: 14px; font-weight: bold; color: #000; margin-top: 5px; }
-                
-                .header-right { display: flex; flex-direction: column; align-items: flex-end; }
-                .header-right-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px;}
-                .header-right-text { text-align: right; }
-                .header-right-text h2 { margin: 0; font-size: 14px; font-weight: bold; color: #000; }
-                .header-right-text p { margin: 0; font-size: 11px; color: #333; }
-                .badge { display: inline-block; font-size: 14px; font-weight: bold; color: #e11d48; text-transform: uppercase; border: 2px solid #e11d48; border-radius: 6px; padding: 4px 8px; }
-
-                .tasks-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-                .task-card { page-break-inside: avoid; border: 2px solid #333; border-radius: 8px; padding: 12px; }
-                .task-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; margin-bottom: 8px; padding-bottom: 6px; }
-                .task-title { font-size: 14px; font-weight: bold; margin: 0; color: #000; display:flex; align-items:center; gap:8px;}
-                .task-label { font-size: 11px; text-transform: uppercase; color: #333; font-weight: bold; display: block; margin-bottom: 2px; margin-top:6px;}
-                .task-value { font-size: 13px; color: #000; display: block; line-height: 1.3; }
-                .task-value.location { font-weight: bold; font-size:14px;}
-                .hidden-answer { border: 1px dashed #999; height: 35px; border-radius: 4px; margin-top: 4px; }
-                .task-image-box { margin-top: 10px; text-align: center; width: 100%; }
-                .task-image-box img { max-width: 100%; max-height: 110px; object-fit: contain; border-radius: 6px; border: 1px solid #999; }
-            }
-        `;
-        document.head.appendChild(privremeniStil);
-
-        let html = '';
-        let kljuceviZaStampu = Object.keys(ruteZaStampu).sort((a, b) => {
-            if (a === "Master") return -1;
-            if (b === "Master") return 1;
-            return parseInt(a) - parseInt(b);
-        });
-
-        kljuceviZaStampu.forEach(nazivRute => {
-            let isMaster = (nazivRute === "Master");
-            let ruta = ruteZaStampu[nazivRute];
-            let naslovListe = isMaster ? 'MASTER LISTA (Rešenja)' : `TIM ${parseInt(nazivRute)}`;
-
-            html += `
-            <div class="print-container">
-                <div class="print-header">
-                    <div class="header-left">
-                        <h1>POTRAGA: ${imeStaze}</h1>
-                        <div class="sub-info">Šifra: ${sifraStaze} &nbsp;|&nbsp; Dužina: ${ukupnaDistanca} km</div>
-                    </div>
-                    <div class="header-right">
-                        <div class="header-right-top">
-                            <div class="header-right-text">
-                                <h2>Centar za mentalnu gimnastiku</h2>
-                                <p>Udruženje Mentalna Gimnastika</p>
-                            </div>
-                            <img src="https://i.ibb.co/VYdS4Yr9/logo-ikona-removebg-preview.png" alt="UMG Logo" style="width:45px; height:45px; object-fit:contain;">
-                        </div>
-                        <div class="badge">${naslovListe}</div>
-                    </div>
-                </div>
-                <div class="tasks-grid">`;
-
-            ruta.forEach((p, index) => {
-                let koordinata = koordinateMape[p.id] || "Mreža";
-                let tipZadatka = p.zadatak ? p.zadatak.tip.toUpperCase() : 'NEMA';
-                let naslovZadatka = isMaster ? `Tačka ${p.broj}` : `Zadatak ${index + 1}`;
-
-                html += `
-                <div class="task-card">
-                    <div class="task-header">
-                        <span class="task-title">
-                            <input type="checkbox" style="width:16px; height:16px; margin:0; cursor:pointer; border: 1px solid #000;">
-                            ${naslovZadatka} 
-                            <span style="font-weight:normal; font-size:13px; margin-left:4px; color:#000;">[Mapa: ${koordinata}]</span>
-                        </span>
-                        <span style="font-size:10px; font-weight:bold; border:1px solid #000; padding:2px 6px; border-radius:10px; color:#000;">${tipZadatka}</span>
-                    </div>`;
-
-                if (p.imeLokacije) { html += `<div><span class="task-label">Lokacija:</span><span class="task-value location">${p.imeLokacije}</span></div>`; }
-                
-                if ((isMaster || prikaziOpis) && p.opisLokacije) { 
-                    html += `<div><span class="task-label">Opis lokacije:</span><span class="task-value">${p.opisLokacije}</span></div>`; 
-                }
-                
-                if ((isMaster || prikaziOpis) && p.opisLokacijeSlika) {
-                    html += `<div style="margin-top: 10px; margin-bottom: 10px; text-align: center;">
-                                <img src="${p.opisLokacijeSlika}" style="max-width: 100%; max-height: 180px; border-radius: 8px; border: 1px solid #777; object-fit: contain;">
-                             </div>`;
-                }
-
-                if (p.zadatak) {
-                    let uputstvo = p.zadatak.tekst_zadatka || "Sledite navigaciju";
-                    let odgovor = p.zadatak.odgovor || "";
-                    if (p.zadatak.tip === 'zlatnik') uputstvo = "Sakupljanje zlatnika";
-                    if (p.zadatak.tip === 'igrica') uputstvo = `Odigrati igricu sa šifrom: ${p.zadatak.tekst_zadatka}`;
-                    
-                    if (p.zadatak.tip === 'multi') {
-                        let mUp = ""; let mOdg = "";
-                        if (p.zadatak.tekst_zadatka) mUp += `<div style="margin-bottom:4px;"><strong>Zajedničko:</strong> ${p.zadatak.tekst_zadatka}</div>`;
-                        let elovi = p.zadatak.multi_elementi || [];
-                        elovi.forEach(el => {
-                            if(el === 'zlatnik') { mUp += `<div style="margin-bottom:2px;"><strong>🪙 Zlatnik:</strong> Sakupljanje</div>`; mOdg += `<div style="margin-bottom:2px;">Prolazak</div>`; }
-                            if(el === 'zagonetka') { mUp += `<div style="margin-bottom:2px;"><strong>🧠 Zagonetka:</strong> ${p.zadatak.zag_tekst || ''}</div>`; mOdg += `<div style="margin-bottom:2px;"><strong>Odgovor:</strong> ${p.zadatak.zag_odgovor || ''}</div>`; }
-                            if(el === 'igrica') { mUp += `<div style="margin-bottom:2px;"><strong>🎮 Igrica:</strong> Pokrenuti ključ ${p.zadatak.igrica_kod || ''}</div>`; mOdg += `<div style="margin-bottom:2px;">Uspeh igre</div>`; }
-                            if(el === 'kviz' && p.zadatak.kvizData) { 
-                                let kText = p.zadatak.kvizData.map((q, i) => `P${i+1}: ${q.pitanje}`).join(', ');
-                                let kOdg = p.zadatak.kvizData.map((q, i) => `P${i+1}: ${q.tacni.join(', ')}`).join(', ');
-                                mUp += `<div style="margin-bottom:2px;"><strong>📝 Kviz:</strong> ${kText}</div>`; mOdg += `<div style="margin-bottom:2px;"><strong>Odgovor:</strong> ${kOdg}</div>`; 
-                            }
-                            if(el === 'kreativni') { mUp += `<div style="margin-bottom:2px;"><strong>📸 Foto:</strong> ${p.zadatak.kre_uputstvo || ''}</div>`; mOdg += `<div style="margin-bottom:2px;">Fotografija</div>`; }
-                            if(el === 'pronadji') { mUp += `<div style="margin-bottom:2px;"><strong>🔍  Pronađi:</strong> ${p.zadatak.pronadji_opis || ''}</div>`; mOdg += `<div style="margin-bottom:2px;">Pronađeno</div>`; }
-                            if(el === 'qr') { mUp += `<div style="margin-bottom:2px;"><strong>📱 QR:</strong> ${p.zadatak.qr_uputstvo || ''}</div>`; mOdg += `<div style="margin-bottom:2px;"><strong>Ključ:</strong> ${p.zadatak.qr_odg || ''}</div>`; }
-                        });
-                        uputstvo = mUp || "Nema podešenih zadataka"; odgovor = mOdg; 
-                    }
-
-                    html += `<div><span class="task-label">Zadatak / Uputstvo:</span><span class="task-value">${uputstvo}</span></div>`;
-                    if (isMaster) { if (odgovor) { html += `<div><span class="task-label">Rešenje:</span><span class="task-value" style="font-weight:bold;">${odgovor}</span></div>`; } } else { html += `<div><span class="task-label">Vaš odgovor:</span><div class="hidden-answer"></div></div>`; }
-                    if (p.zadatak.slika) { html += `<div class="task-image-box"><img src="${p.zadatak.slika}" alt="Slika"></div>`; }
-                }
-                html += `</div>`;
-            });
-            html += `</div></div>`;
-        });
+    kljuceviZaStampu.forEach(nazivRute => {
+        let isMaster = (nazivRute === "Master");
+        let ruta = ruteZaStampu[nazivRute];
+        let naslovListe = isMaster ? 'MASTER LISTA (Rešenja)' : `TIM ${parseInt(nazivRute)}`;
 
         html += `
-            <div class="qr-page" style="page-break-before: always; width: 100%; font-family: Arial, sans-serif;">
-                <div class="qr-header" style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid #000; padding-bottom: 15px;">
-                    <h1 style="font-size: 22px; margin: 0 0 8px 0; text-transform: uppercase; color: #000;">QR Kodovi za teren</h1>
-                    <p style="font-size:14px; margin:0; color:#333;">Odštampajte, isecite i postavite ove kodove na fizičke lokacije.</p>
+        <div class="print-container">
+            <div class="print-header">
+                <div class="header-left">
+                    <h1>POTRAGA: ${imeStaze}</h1>
+                    <div class="sub-info">Šifra: ${sifraStaze} &nbsp;|&nbsp; Dužina: ${ukupnaDistanca} km</div>
                 </div>
-                <div class="qr-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%;">
-        `;
+                <div class="header-right">
+                    <div class="header-right-top">
+                        <div class="header-right-text">
+                            <h2>Centar za mentalnu gimnastika</h2>
+                            <p>Udruženje Mentalna Gimnastika</p>
+                        </div>
+                        <img src="https://i.ibb.co/VYdS4Yr9/logo-ikona-removebg-preview.png" style="width:45px; height:45px; object-fit:contain;">
+                    </div>
+                    <div class="badge">${naslovListe}</div>
+                </div>
+            </div>
+            <div class="tasks-grid">`;
 
-        window.pinovi.forEach((p, index) => {
-            let nazivQr = index === 0 ? "START (Tačka 1)" : (index === window.pinovi.length - 1 ? `CILJ (Tačka ${p.broj})` : `Tačka ${p.broj}`);
-            let qrData = encodeURIComponent("POTRAGA:" + sifraStaze + "|TACKA:" + p.id);
-            let qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&data=" + qrData;
+        ruta.forEach((p, index) => {
+            let koordinata = koordinateMape[p.id] || "Mreža";
+            let tipZadatka = p.zadatak ? p.zadatak.tip.toUpperCase() : 'NEMA';
+            let naslovZadatka = isMaster ? `Tačka ${p.broj}` : `Zadatak ${index + 1}`;
 
             html += `
-                <div class="qr-card" style="border: 2px dashed #000; padding: 20px; text-align: center; page-break-inside: avoid; border-radius: 12px;">
-                    <div class="qr-title" style="font-size: 16px; font-weight: bold; margin-bottom: 10px; color:#000;">${nazivQr}</div>
-                    <img src="${qrUrl}" alt="QR Kod ${p.broj}" crossorigin="anonymous" style="width: 140px; height: 140px; margin-bottom: 12px; max-width: 100%; object-fit: contain;">
-                </div>
-            `;
-        });
+            <div class="task-card">
+                <div class="task-header">
+                    <span class="task-title">
+                        <input type="checkbox" style="width:16px; height:16px; margin:0;">
+                        ${naslovZadatka} <span style="font-weight:normal; font-size:13px; color:#000;">[Mapa: ${koordinata}]</span>
+                    </span>
+                    <span style="font-size:10px; font-weight:bold; border:1px solid #000; padding:2px 6px; border-radius:10px;">${tipZadatka}</span>
+                </div>`;
 
-        html += `</div></div>`; 
-        printArea.innerHTML = html;
-        
-        setTimeout(() => {
-            window.print();
-            setTimeout(() => { document.getElementById('stilUspravnaStampa').remove(); printArea.innerHTML = ''; }, 1000);
-        }, 500);
-    };
+            if (p.imeLokacije) { html += `<div><span class="task-label">Lokacija:</span><span class="task-value location">${p.imeLokacije}</span></div>`; }
+            if ((isMaster || prikaziOpis) && p.opisLokacije) { html += `<div><span class="task-label">Opis lokacije:</span><span class="task-value">${p.opisLokacije}</span></div>`; }
+            if ((isMaster || prikaziOpis) && p.opisLokacijeSlika) {
+                html += `<div style="margin-top:10px; text-align:center;"><img src="${p.opisLokacijeSlika}" style="max-width:100%; max-height:180px; border-radius:8px;"></div>`;
+            }
+
+            if (p.zadatak) {
+                let uputstvo = p.zadatak.tekst_zadatka || "Sledite navigaciju";
+                let odgovor = p.zadatak.odgovor || "";
+                if (p.zadatak.tip === 'zlatnik') uputstvo = "Sakupljanje zlatnika";
+                if (p.zadatak.tip === 'igrica') uputstvo = `Odigrati igricu sa šifrom: ${p.zadatak.tekst_zadatka}`;
+                
+                if (p.zadatak.tip === 'multi') {
+                    let mUp = ""; let mOdg = "";
+                    if (p.zadatak.tekst_zadatka) mUp += `<div><strong>Zajedničko:</strong> ${p.zadatak.tekst_zadatka}</div>`;
+                    let elovi = p.zadatak.multi_elementi || [];
+                    elovi.forEach(el => {
+                        if(el === 'zlatnik') { mUp += `<div>🪙 Zlatnik: Sakupljanje</div>`; mOdg += `<div>Prolazak</div>`; }
+                        if(el === 'zagonetka') { mUp += `<div>🧠 Zagonetka: ${p.zadatak.zag_tekst || ''}</div>`; mOdg += `<div>Odgovor: ${p.zadatak.zag_odgovor || ''}</div>`; }
+                        if(el === 'igrica') { mUp += `<div>🎮 Igrica: Ključ ${p.zadatak.igrica_kod || ''}</div>`; mOdg += `<div>Uspeh igre</div>`; }
+                        if(el === 'kviz' && p.zadatak.kvizData) { 
+                            mUp += `<div>📝 Kviz aktiviran</div>`; mOdg += `<div>Odgovoreno</div>`; 
+                        }
+                        if(el === 'kreativni') { mUp += `<div>📸 Foto: ${p.zadatak.kre_uputstvo || ''}</div>`; mOdg += `<div>Fotografija</div>`; }
+                        if(el === 'pronadji') { mUp += `<div>🔍 Pronađi: ${p.zadatak.pronadji_opis || ''}</div>`; mOdg += `<div>Pronađeno</div>`; }
+                        if(el === 'qr') { mUp += `<div>📱 QR: ${p.zadatak.qr_uputstvo || ''}</div>`; mOdg += `<div>Ključ: ${p.zadatak.qr_odg || ''}</div>`; }
+                    });
+                    uputstvo = mUp; odgovor = mOdg; 
+                }
+
+                html += `<div><span class="task-label">Zadatak / Uputstvo:</span><span class="task-value">${uputstvo}</span></div>`;
+                if (isMaster) { if (odgovor) { html += `<div><span class="task-label">Rešenje:</span><span class="task-value" style="font-weight:bold;">${odgovor}</span></div>`; } } else { html += `<div><span class="task-label">Vaš odgovor:</span><div class="hidden-answer"></div></div>`; }
+                if (p.zadatak.slika) { html += `<div class="task-image-box"><img src="${p.zadatak.slika}"></div>`; }
+            }
+            html += `</div>`;
+        });
+        html += `</div></div>`;
+    });
+
+    // DODAVANJE STRANICE ZA QR KODOVE
+    html += `
+        <div class="qr-page" style="page-break-before: always; width: 100%; font-family: Arial, sans-serif;">
+            <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid #000; padding-bottom: 15px;">
+                <h1 style="font-size: 22px; margin: 0 0 8px 0; text-transform: uppercase;">QR Kodovi za teren</h1>
+                <p style="font-size:14px; margin:0; color:#333;">Generisano direktno na računaru (Oflajn mod).</p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%;">
+    `;
+
+    window.pinovi.forEach((p, index) => {
+        let nazivQr = index === 0 ? "START (Tačka 1)" : (index === window.pinovi.length - 1 ? `CILJ (Tačka ${p.broj})` : `Tačka ${p.broj}`);
+        html += `
+            <div class="qr-card" style="border: 2px dashed #000; padding: 20px; text-align: center; page-break-inside: avoid; border-radius: 12px; background: white;">
+                <div style="font-size: 16px; font-weight: bold; margin-bottom: 15px; color:#000;">${nazivQr}</div>
+                <div id="g2h-lokalni-qr-${p.id}" class="g2h-lokalni-qr"></div>
+            </div>
+        `;
+    });
+
+    html += `</div></div>`; 
+    printArea.innerHTML = html;
+
+    // 🚀 LOKALNO INTEGRISANO POZIVANJE: Biblioteka crta QR kodove direktno u DOM
+    window.pinovi.forEach((p) => {
+        let divMeta = document.getElementById(`g2h-lokalni-qr-${p.id}`);
+        if (divMeta) {
+            let tekstZaKod = "POTRAGA:" + sifraStaze + "|TACKA:" + p.id;
+            new QRCode(divMeta, {
+                text: tekstZaKod,
+                width: 140,
+                height: 140,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+    });
+    
+    // Pošto se crta lokalno u mikrosekundi, štampa može odmah bez čekanja interneta!
+    setTimeout(() => {
+        window.print();
+        setTimeout(() => { document.getElementById('stilUspravnaStampa').remove(); printArea.innerHTML = ''; }, 1000);
+    }, 600);
+};
 
     window.ukljuciRucnuMrezu = function() {
         if(window.pinovi.length === 0) { alert("Dodajte barem jednu tačku na mapu!"); return; }
