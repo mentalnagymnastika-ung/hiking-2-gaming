@@ -1360,6 +1360,16 @@ window.switchZadatak = function() {
         document.querySelectorAll('.zadatak-sekcija').forEach(s => s.style.display='none'); 
         let tip = document.getElementById('tipZadatka').value;
         
+        // Pronalazimo tekstualno polje za odgovor i njegovu labelu (naslov) unutar zagonetke
+        let zagOdgovorPolje = document.getElementById('zag_odgovor');
+        let lblZagOdgLabela = document.getElementById('lblZagOdg');
+        let lblZagTekst = document.getElementById('lblZagTekst');
+
+        // Prvo uvek sve vratimo na fabrička podešavanja za zagonetku
+        if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'block';
+        if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'block';
+        if(lblZagTekst) lblZagTekst.innerText = "Tekst zagonetke Pitanje";
+
         if (tip === 'multi') {
             document.getElementById('sekcija_multi_kombinator').style.display='block';
             if(document.getElementById('chk_multi_zlatnik').checked) document.getElementById('sekcija_zlatnik').style.display='block';
@@ -1368,12 +1378,28 @@ window.switchZadatak = function() {
             if(document.getElementById('chk_multi_kreativni').checked) document.getElementById('sekcija_kreativni').style.display='block';
             if(document.getElementById('chk_multi_pronadji').checked) document.getElementById('sekcija_pronadji').style.display='block';
             if(document.getElementById('chk_multi_qr').checked) document.getElementById('sekcija_qr').style.display='block';
-            // Ako je unutar multija čekirana igrica, otvaramo polje zagonetke da tu upiše šifru igre!
-            if(document.getElementById('chk_multi_igrica').checked) document.getElementById('sekcija_zagonetka').style.display='block';
+            if(document.getElementById('chk_multi_igrica').checked) {
+                document.getElementById('sekcija_zagonetka').style.display='block';
+                // Sakrivamo odgovor unutar multija ako je štiklirana igrica
+                if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'none';
+                if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'none';
+            }
         } else if (tip === 'igrica') {
-            // Ako je izabrana čista igrica, prikazujemo polje zagonetke da u njega upišeš npr: memorija1, skocko2
+            // Otvaramo ceo kontejner zagonetke
             document.getElementById('sekcija_zagonetka').style.display='block'; 
+            
+            // Menjamo naslov u gornjem polju da bude jasan kreatoru staze
+            if(lblZagTekst) lblZagTekst.innerText = "Šifra / Naziv logičke igrice (npr. memorija1)";
+            
+            // ✂️ HIRURŠKO GASENJE unutrašnjih elemenata za odgovor
+            if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'none';
+            
+            // Pošto labela "Tačan odgovor" nema svoj ID u tvom HTML-u, nalazimo je preko polja za odgovor!
+            if(zagOdgovorPolje && zagOdgovorPolje.previousElementSibling) {
+                zagOdgovorPolje.previousElementSibling.style.display = 'none';
+            }
         } else {
+            // Za sve ostale standardne tipove (kviz, zagonetka, qr...) upali njihove sekcije
             document.getElementById('sekcija_' + tip).style.display='block'; 
         }
         window.osveziPinove(); 
