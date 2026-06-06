@@ -1,10 +1,10 @@
 {
   "id": "/kreator-app",
-  "name": "HIT-Zdrava Potraga", 
+  "name": "Gaming 2 Hiking", 
 
   // Ovdje mijenjaš PUNO IME aplikacije. To je ono što se vidi u prodavnici ili kod instalacije.
 
-  "short_name": "Tajna i Blaga", 
+  "short_name": "G2H", 
 
   // Ovdje mijenjaš KRATKO IME. To je ime koje će pisati na ekranu telefona direktno ISPOD tvoje ikonice.
 
