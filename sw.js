@@ -1,22 +1,34 @@
 // 👇 OVO JE JEDINA LINIJA KOJU MIJENJAŠ KADA AŽURIRAŠ APLIKACIJU 👇
-// Kada promijeniš nešto u HTML-u ili manifest.json, promijeni broj ovdje (npr. u 'v12', pa 'v13'...)
-const CACHE_NAME = 'potraga-oflajn-v31.51'; 
+const CACHE_NAME = 'potraga-oflajn-v31.52'; 
 // 👆 ----------------------------------------------------------- 👆
 
-// Kad se instalira, odmah preuzima kontrolu
+// Spisak ključnih fajlova koje aplikacija mora odmah da zapamti (uključujući novu JPG ikonicu)
+const OBAVEZNI_FAJLOVI = [
+    './',
+    './index.html',
+    './manifest.json',
+    './logo_test.png'
+];
+
+// Kad se instalira, odmah preuzima kontrolu i kešira osnovne fajlove
 self.addEventListener('install', (event) => {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            return cache.addAll(OBABAVEZNI_FAJLOVI).catch((err) => {
+                console.log('Neki fajl fali na serveru, ali nastavljamo dalje...', err);
+            });
+        })
+    );
     self.skipWaiting();
 });
 
-// Brisanje starih duhova (Samo onih koji pripadaju ovoj aplikaciji)
+// Brisanje starih verzija keša
 self.addEventListener('activate', (event) => {
     const cacheWhitelist = [CACHE_NAME];
     event.waitUntil(
         caches.keys().then((listaKeševa) => {
             return Promise.all(
                 listaKeševa.map((keš) => {
-                    // Brišemo SAMO ako počinje sa 'potraga-oflajn', a nije trenutna verzija. 
-                    // Na ovaj način ne diramo admin-cache!
                     if (keš.startsWith('potraga-oflajn') && cacheWhitelist.indexOf(keš) === -1) {
                         return caches.delete(keš);
                     }
@@ -26,12 +38,11 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-/////////// MAGIJA: "Network First" strategija 
+/////////// "Network First" strategija sa dinamičkim dopunjavanjem keša
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
 
-    // MAGIJA: Kažemo mu da ignoriše Firebase bazu i Google Auth. 
-    // Ako ovo pokuša da kešira, aplikacija puca!
+    // Ignorišemo Firebase i Google Auth da aplikacija ne puca
     if (event.request.url.includes('firestore.googleapis.com') || 
         event.request.url.includes('identitytoolkit.googleapis.com') || 
         event.request.url.includes('firebase')) {
@@ -50,7 +61,6 @@ self.addEventListener('fetch', (event) => {
             .catch(() => {
                 return caches.match(event.request).then((res) => {
                     if (res) return res;
-                    // Ovo sprečava "Failed to convert value to Response" grešku
                     return new Response('', { status: 404, statusText: 'Not Found' });
                 });
             })
