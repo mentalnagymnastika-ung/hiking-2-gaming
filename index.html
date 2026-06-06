@@ -210,6 +210,41 @@ localStorage.removeItem('poslednji_ekran');
         .kasnjenje-plavo { animation: pojaviSePolako 0.8s ease forwards; animation-delay: 1.0s; opacity: 0; }
         .kasnjenje-donacija { animation: pojaviSePolako 0.8s ease forwards; animation-delay: 2.2s; opacity: 0; }
         .kasnjenje-zeleno { animation: pojaviSePolako 0.8s ease forwards; animation-delay: 3.4s; opacity: 0; }
+
+/* Osiguravamo da kontejner za igru ima lepe proporcije i da ne guta dno ekrana */
+.g2h-igra-omotac {
+    width: 100%;
+    max-width: 360px;
+    margin: 10px auto;
+    padding: 10px;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+/* Blindirana mreža za memoriju - kartice se same smanjuju na manjim ekranima */
+.g2h-memorija-mreza {
+    display: grid;
+    gap: 8px;
+    margin: 15px auto;
+    width: 100%;
+    max-width: 320px;
+    box-sizing: border-box;
+}
+
+/* Prilagođene kartice za dečije prste i starije ljude */
+.g2h-kartica {
+    aspect-ratio: 1 / 1;
+    background: #347C17;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    user-select: none;
+    transition: transform 0.1s, background 0.2s;
+}
+
     </style>
 </head>
 <body>
@@ -2165,45 +2200,382 @@ window.pokreniOtkljucavanje = function() {
 // ===================================================================
 // 🎮 G2H MODULARNA FABRIKA LOGIČKIH IGARA (Sve igre na jednom mestu)
 // ===================================================================
+// ===================================================================
+// 🎮 G2H MODULARNA FABRIKA LOGIČKIH IGARA - MODUL: MEMORIJA
+// ===================================================================
 window.G2H_FabrikaIgara = {
-    
-    // --- 🌍 1. IGRA: MEMORIJA (Nivoi 1, 2 i 3) ---
-    pokreniMemoriju: function(sifra, kontejner) {
-        kontejner.innerHTML = `<h3 style="text-align:center; color:#347C17; margin-top:0;">🎮 IGRA MEMORIJE</h3>
-                               <p style="font-size:14px; text-align:center; color:#666;">Spojite sve parove voćkica da otključate sledeću stazu!</p>
-                               <div id="mrezaMemorije" style="display:grid; gap:8px; margin:15px auto; max-width:320px;"></div>`;
+    izabranaKartica: null,
+    blokirajKlikove: false,
+    pogodjeniParovi: 0,
+    ukupnoParova: 0,
+
+pokreniMemoriju: function(sifra, kontejner) {
+        this.izabranaKartica = null;
+        this.blokirajKlikove = false;
+        this.pogodjeniParovi = 0;
+
+        let vockeBaza = ['🍓', '🍏', '🍌', '🍒', '🍊', '🍉', '🍇', '🍍', '🍑', '🍋'];
+        let brojKolona = 3;
+
+        if (sifra === 'memorija1') { 
+            this.ukupnoParova = 6; // 3x4 mreža
+            brojKolona = 3;
+        } 
+        else if (sifra === 'memorija2') { 
+            this.ukupnoParova = 8; // 4x4 mreža
+            brojKolona = 4;
+        } 
+        else if (sifra === 'memorija3') { 
+            this.ukupnoParova = 10; // 4x5 mreža
+            brojKolona = 4; 
+        }
+
+        // Generišemo HTML strukturu direktno u prosleđeni kontejner
+        kontejner.innerHTML = `
+            <div class="g2h-igra-omotac">
+                <h3 style="text-align:center; color:#347C17; margin: 0 0 5px 0; font-size:22px; font-weight:bold;">🎮 IGRA MEMORIJE</h3>
+                <p style="font-size:14px; text-align:center; color:#555; margin: 0 0 15px 0; font-weight:600;">
+                    Spojite sve parove voćkica da otključate sledeću stazu!
+                </p>
+                <div id="mrezaMemorije" class="g2h-memorija-mreza"></div>
+            </div>
+        `;
         
         let mreza = document.getElementById('mrezaMemorije');
-        
-        // Određivanje težine staze na osnovu tvoje zamisli
-        if (sifra === 'memorija1') { // Bela staza: 2 para (4 kartice)
-            mreza.style.gridTemplateColumns = 'repeat(2, 1fr)';
-            // Tvoj kod za generisanje i crtanje 4 kartice ide ovde...
-        } 
-        else if (sifra === 'memorija2') { // Plava staza: 6 parova (12 kartica)
-            mreza.style.gridTemplateColumns = 'repeat(3, 1fr)';
-            // Tvoj kod za 12 kartica...
-        } 
-        else if (sifra === 'memorija3') { // Crvena staza: 8 parova (16 kartica)
-            mreza.style.gridTemplateColumns = 'repeat(4, 1fr)';
-            // Tvoj kod za 16 kartica...
+        if (!mreza) {
+            console.error("Greška: Element mrezaMemorije nije pronađen u DOM-u!");
+            return;
         }
-        
-        // 🎯 KADA DETE POBEDI U IGRI, UNUTAR KODA IGRICE SAMO DETEKTUJEMO USPEH:
-        // Primjer: if(pogodjeniSviParovi) { window.uspehZadatka(); }
+        mreza.style.gridTemplateColumns = `repeat(${brojKolona}, 1fr)`;
+
+        let izabraneVocke = vockeBaza.slice(0, this.ukupnoParova);
+        let sponzaKartica = [...izabraneVocke, ...izabraneVocke];
+
+        // Mešanje kartica
+        for (let i = sponzaKartica.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [sponzaKartica[i], sponzaKartica[j]] = [sponzaKartica[j], sponzaKartica[i]];
+        }
+
+        // Crtanje svake pojedinačne kartice u mrežu
+        sponzaKartica.forEach((vocka, indeks) => {
+            let kartica = document.createElement('div');
+            kartica.className = 'g2h-kartica';
+            kartica.style.fontSize = this.ukupnoParova > 6 ? '28px' : '34px'; 
+            kartica.style.color = 'transparent'; // Sakrivena voćka na početku
+            kartica.innerText = vocka;
+            
+            kartica.dataset.vocka = vocka;
+            kartica.dataset.indeks = indeks;
+
+            kartica.onclick = function() {
+                window.G2H_FabrikaIgara.klikNaKarticu(kartica);
+            };
+            mreza.appendChild(kartica);
+        });
     },
 
-    // --- 🍏 2. IGRA: VOĆNI SKOČKO (Nivoi 1, 2 i 3) ---
-    pokreniSkocka: function(sifra, kontejner) {
-        kontejner.innerHTML = `<h3 style="text-align:center; color:#347C17; margin-top:0;">🍓 VOĆNI SKOČKO</h3>
-                               <p style="font-size:14px; text-align:center; color:#666;">Pogodite tačnu kombinaciju voćkica!</p>
-                               <div id="tablaSkocka" style="width:100%; min-height:150px; background:#f8fafc; border-radius:8px; padding:10px;"></div>`;
-        
-        // Logika i težina za Skočka 1, 2 ili 3...
-        // Kada dete pogodi kombinaciju: window.uspehZadatka();
+    klikNaKarticu: function(kartica) {
+        if (this.blokirajKlikove) return;
+        if (kartica.style.background === 'white') return; // Već pogođena
+        if (this.izabranaKartica === kartica) return; // Klik na istu karticu
+
+        // Okretanje: prikaži simbol voćkice
+        kartica.style.color = 'initial';
+        kartica.style.background = '#f0fdf4';
+        kartica.style.transform = 'scale(0.95)';
+
+        if (!this.izabranaKartica) {
+            // Prva otvorena kartica
+            this.izabranaKartica = kartica;
+        } else {
+            // Druga otvorena kartica - proveravamo poklapanje
+            this.blokirajKlikove = true;
+
+            if (this.izabranaKartica.dataset.vocka === kartica.dataset.vocka) {
+                // ✅ Tačno! Par je pogođen
+                setTimeout(() => {
+                    this.izabranaKartica.style.background = 'white';
+                    this.izabranaKartica.style.transform = 'none';
+                    kartica.style.background = 'white';
+                    kartica.style.transform = 'none';
+                    
+                    this.izabranaKartica = null;
+                    this.blokirajKlikove = false;
+                    this.pogodjeniParovi++;
+
+                    // Provera završetka igre
+                    if (this.pogodjeniParovi === this.ukupnoParova) {
+                        setTimeout(() => {
+                            alert("🎉 Bravo! Uspešno rešena mentalna memorija!");
+                            if (typeof window.uspehZadatka === 'function') {
+                                window.uspehZadatka(); // Otključava sledeću tačku rute
+                            }
+                        }, 400);
+                    }
+                }, 400);
+            } else {
+                // ❌ Nije tačno! Sakrij voćkice ponovo
+                setTimeout(() => {
+                    this.izabranaKartica.style.color = 'transparent';
+                    this.izabranaKartica.style.background = '#347C17';
+                    this.izabranaKartica.style.transform = 'none';
+                    kartica.style.color = 'transparent';
+                    kartica.style.background = '#347C17';
+                    kartica.style.transform = 'none';
+
+                    this.izabranaKartica = null;
+                    this.blokirajKlikove = false;
+                }, 800);
+            }
+        }
     }
 };
+// ===================================================================
+// ===================================================================
+    // 🤠 G2H MODULARNA FABRIKA LOGIČKIH IGARA - MODUL: VOĆNI SKOČKO
+    // ===================================================================
+    pokreniSkocka: function(sifra, kontejner) {
+        // 1. POSTAVKE NIVOA NA OSNOVU ŠIFRE IZ ADMINA
+        let duzinaSifre = 4;   // Koliko polja deca pogađaju u redu
+        let brojVockica = 4;   // Koliko različitih voćkica nudimo u paleti
+        let maxPokusaja = 6;   // Ukupan broj redova (šansi)
+
+        if (sifra === 'skocko1') { 
+            // Bela staza (Najlakše): 4 polja, 4 voćkice, 6 pokušaja
+            duzinaSifre = 4; brojVockica = 4; maxPokusaja = 6;
+        } else if (sifra === 'skocko2') { 
+            // Plava staza (Srednje): 4 polja, 5 voćkica, 6 pokušaja
+            duzinaSifre = 4; brojVockica = 5; maxPokusaja = 6;
+        } else if (sifra === 'skocko3') { 
+            // Crvena staza (Najteže): 4 polja, 6 voćkica, 6 pokušaja (Klasika)
+            duzinaSifre = 4; brojVockica = 6; maxPokusaja = 6;
+        }
+
+        let sveVocke = ["🍓", "🍌", "🍏", "🍇", "🍊", "🍉"];
+        let aktivneVocke = sveVocke.slice(0, brojVockica);
+
+        // 2. GENERISANJE TAJNE ŠIFRE (Računar bira nasumično)
+        let tajnaSifra = [];
+        for (let i = 0; i < duzinaSifre; i++) {
+            let randomIndeks = Math.floor(Math.random() * aktivneVocke.length);
+            tajnaSifra.push(aktivneVocke[randomIndeks]);
+        }
+
+        let trenutniRed = 0;
+        let trenutnoPolje = 0;
+        let trenutniUnos = Array(duzinaSifre).fill(null);
+// ===================================================================
+    // 🤠 G2H MODULARNA FABRIKA LOGIČKIH IGARA - MODUL: VOĆNI SKOČKO
+    // ===================================================================
+    pokreniSkocka: function(sifra, kontejner) {
+        // 1. POSTAVKE NIVOA NA OSNOVU ŠIFRE IZ ADMINA
+        let duzinaSifre = 4;   
+        let brojVockica = 4;   
+        let maxPokusaja = 6;   
+
+        if (sifra === 'skocko1') { 
+            duzinaSifre = 4; brojVockica = 4; maxPokusaja = 6;
+        } else if (sifra === 'skocko2') { 
+            duzinaSifre = 4; brojVockica = 5; maxPokusaja = 6;
+        } else if (sifra === 'skocko3') { 
+            duzinaSifre = 4; brojVockica = 6; maxPokusaja = 6;
+        }
+
+        let sveVocke = ["🍓", "🍌", "🍏", "🍇", "🍊", "🍉"];
+        let aktivneVocke = sveVocke.slice(0, brojVockica);
+
+        // GENERISANJE TAJNE ŠIFRE
+        let tajnaSifra = [];
+        for (let i = 0; i < duzinaSifre; i++) {
+            let randomIndeks = Math.floor(Math.random() * aktivneVocke.length);
+            tajnaSifra.push(aktivneVocke[randomIndeks]);
+        }
+
+        let trenutniRed = 0;
+        let trenutnoPolje = 0;
+        let trenutniUnos = Array(duzinaSifre).fill(null);
+
+        // 2. CRTANJE PODLOGE I TABLE
+        kontejner.innerHTML = `
+            <h3 style="text-align:center; color:#1a4d54; margin-top:0; font-size:22px; font-weight:bold;">🤠 VOĆNI SKOČKO</h3>
+            <p style="font-size:14px; text-align:center; color:#555; margin-bottom:12px; font-weight:600;">
+                Pogodite tačnu kombinaciju skrivenih voćkica!
+            </p>
             
+            <div id="tablaSkocko" style="display:flex; flex-direction:column; gap:6px; background:#1a4d54; padding:12px; border-radius:16px; max-width:340px; margin:0 auto; border:3px solid #102e32;"></div>
+
+            <div style="text-align:center; margin-top:12px;">
+                <p style="font-size:12px; font-weight:bold; color:#666; margin-bottom:6px;">Dodirnite voćku za unos:</p>
+                <div id="paletaSkocko" style="display:flex; gap:6px; justify-content:center; background:rgba(0,0,0,0.1); padding:8px; border-radius:20px; max-width:340px; margin:0 auto; flex-wrap:wrap;"></div>
+                <button id="g2h_potvrdi_potez" style="width:100%; max-width:340px; padding:12px; font-size:16px; font-weight:bold; color:white; background:#2ecc71; border:none; border-radius:10px; margin-top:10px; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.1);">POTVRDI REŠENJE 🗸</button>
+            </div>
+        `;
+
+        // Dinamički pravimo redove (Popravljeno: maxPokusaja)
+        let tabla = document.getElementById('tablaSkocko');
+        for (let i = 0; i < maxPokusaja; i++) {
+            let redHtml = document.createElement('div');
+            redHtml.id = `g2h-red-${i}`;
+            redHtml.style.display = 'flex';
+            redHtml.style.alignItems = 'center';
+            redHtml.style.justifyContent = 'space-between';
+            redHtml.style.background = i === 0 ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)';
+            redHtml.style.padding = '6px 8px';
+            redHtml.style.borderRadius = '8px';
+
+            let poljaKontejner = document.createElement('div');
+            poljaKontejner.style.display = 'flex';
+            poljaKontejner.style.gap = '6px';
+            for (let j = 0; j < duzinaSifre; j++) {
+                let kruzic = document.createElement('div');
+                kruzic.id = `g2h-polje-${i}-${j}`;
+                kruzic.style.width = '38px';
+                kruzic.style.height = '38px';
+                kruzic.style.borderRadius = '50%';
+                kruzic.style.background = '#e6eded';
+                kruzic.style.border = '2px solid #102e32';
+                kruzic.style.display = 'flex';
+                kruzic.style.justifyContent = 'center';
+                kruzic.style.alignItems = 'center';
+                kruzic.style.fontSize = '24px';
+                if (i === 0 && j === 0) kruzic.style.borderColor = '#f1c40f'; 
+                poljaKontejner.appendChild(kruzic);
+            }
+
+            let hintoviKontejner = document.createElement('div');
+            hintoviKontejner.style.display = 'grid';
+            hintoviKontejner.style.gridTemplateColumns = 'repeat(2, 1fr)';
+            hintoviKontejner.style.gap = '4px';
+            for (let j = 0; j < duzinaSifre; j++) {
+                let peg = document.createElement('div');
+                peg.id = `g2h-hint-${i}-${j}`;
+                peg.style.width = '12px';
+                peg.style.height = '12px';
+                peg.style.borderRadius = '50%';
+                peg.style.background = '#102e32';
+                hintoviKontejner.appendChild(peg);
+            }
+
+            redHtml.appendChild(poljaKontejner);
+            redHtml.appendChild(hintoviKontejner);
+            tabla.appendChild(redHtml);
+        }
+
+        // Punjenje palete
+        let paleta = document.getElementById('paletaSkocko');
+        aktivneVocke.forEach(vocka => {
+            let stavka = document.createElement('div');
+            stavka.style.width = '42px';
+            stavka.style.height = '42px';
+            stavka.style.borderRadius = '50%';
+            stavka.style.background = 'white';
+            stavka.style.display = 'flex';
+            stavka.style.justifyContent = 'center';
+            stavka.style.alignItems = 'center';
+            stavka.style.fontSize = '28px';
+            stavka.style.cursor = 'pointer';
+            stavka.style.boxShadow = '0 3px 6px rgba(0,0,0,0.15)';
+            stavka.innerText = vocka;
+
+            stavka.onclick = function() {
+                if (trenutniRed >= maxPokusaja) return;
+                
+                trenutniUnos[trenutnoPolje] = vocka;
+                let poljeZaUpis = document.getElementById(`g2h-polje-${trenutniRed}-${trenutnoPolje}`);
+                if (poljeZaUpis) {
+                    poljeZaUpis.innerText = vocka;
+                    poljeZaUpis.style.borderColor = '#102e32';
+                }
+
+                if (trenutnoPolje < duzinaSifre - 1) {
+                    trenutnoPolje++;
+                    let sledecePolje = document.getElementById(`g2h-polje-${trenutniRed}-${trenutnoPolje}`);
+                    if (sledecePolje) sledecePolje.style.borderColor = '#f1c40f';
+                }
+            };
+            paleta.appendChild(stavka);
+        });
+
+        // 3. PROVERA POTEZA
+        document.getElementById('g2h_potvrdi_potez').onclick = function() {
+            if (trenutniUnos.includes(null)) {
+                alert("Niste popunili sva polja u ovom redu!");
+                return;
+            }
+
+            let crveni = 0;
+            let beli = 0;
+            let kopijaTajne = [...tajnaSifra];
+            let kopijaUnosa = [...trenutniUnos];
+
+            for (let i = 0; i < duzinaSifre; i++) {
+                if (kopijaUnosa[i] === kopijaTajne[i]) {
+                    crveni++;
+                    kopijaTajne[i] = null;
+                    kopijaUnosa[i] = null;
+                }
+            }
+
+            for (let i = 0; i < duzinaSifre; i++) {
+                if (kopijaUnosa[i] !== null) {
+                    let indeksUTajnoj = kopijaTajne.indexOf(kopijaUnosa[i]);
+                    if (indeksUTajnoj !== -1) {
+                        beli++;
+                        kopijaTajne[indeksUTajnoj] = null;
+                    }
+                }
+            }
+
+            let pegIndeks = 0;
+            for (let i = 0; i < crveni; i++) {
+                let hPeg = document.getElementById(`g2h-hint-${trenutniRed}-${pegIndeks}`);
+                if (hPeg) hPeg.style.background = '#ff4757'; 
+                pegIndeks++;
+            }
+            for (let i = 0; i < beli; i++) {
+                let hPeg = document.getElementById(`g2h-hint-${trenutniRed}-${pegIndeks}`);
+                if (hPeg) hPeg.style.background = '#ffffff'; 
+                pegIndeks++;
+            }
+
+            // POBEDA
+            if (crveni === duzinaSifre) {
+                setTimeout(() => {
+                    alert("🎉 Čestitamo! Uspešno ste razbili voćnu šifru i dokazali oštar um!");
+                    if (typeof window.uspehZadatka === 'function') window.uspehZadatka(); 
+                }, 300);
+                return;
+            }
+
+            let stariRedOkvir = document.getElementById(`g2h-red-${trenutniRed}`);
+            if (stariRedOkvir) stariRedOkvir.style.background = 'rgba(0,0,0,0.15)';
+            
+            trenutniRed++;
+
+            // PORAZ (Popravljeno automatsko čišćenje i re-inicijalizacija)
+            if (trenutniRed >= maxPokusaja) {
+                setTimeout(() => {
+                    alert(`😢 Ponestalo vam je pokušaja! Tražena šifra je bila: ${tajnaSifra.join(' ')}\n\nTabla se resetuje, pokušajte ponovo sa novom kombinacijom.`);
+                    window.G2H_FabrikaIgara.pokreniSkocka(sifra, kontejner);
+                }, 300);
+                return;
+            }
+
+            // Prelazak u novi red (Popravljen ID sa g2h-polje)
+            trenutnoPolje = 0;
+            trenutniUnos = Array(duzinaSifre).fill(null);
+            
+            let noviRedOkvir = document.getElementById(`g2h-red-${trenutniRed}`);
+            if (noviRedOkvir) noviRedOkvir.style.background = 'rgba(255,255,255,0.1)';
+            
+            let prvoPoljeNovogReda = document.getElementById(`g2h-polje-${trenutniRed}-0`);
+            if (prvoPoljeNovogReda) prvoPoljeNovogReda.style.borderColor = '#f1c40f';
+        };
+    }
+// ===================================================================
+
+       
 </script>
 </body>
 </html>
