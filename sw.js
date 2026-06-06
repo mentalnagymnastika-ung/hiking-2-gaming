@@ -1,5 +1,5 @@
 // 👇 OVO JE JEDINA LINIJA KOJU MIJENJAŠ KADA AŽURIRAŠ APLIKACIJU 👇
-const CACHE_NAME = 'potraga-oflajn-v31.52'; 
+const CACHE_NAME = 'potraga-oflajn-v31.53'; 
 // 👆 ----------------------------------------------------------- 👆
 
 // Spisak ključnih fajlova koje aplikacija mora odmah da zapamti (uključujući novu JPG ikonicu)
