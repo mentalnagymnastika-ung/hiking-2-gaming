@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
-<script type="module">
+    <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
       import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, updateDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
       import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -60,7 +60,7 @@
       window.onSnapshot = onSnapshot;
     </script>
     <style>
-.drag-corner { background: #e11d48; color: white; border: 2px solid white; border-radius: 50%; font-size: 20px; text-align: center; line-height: 26px; cursor: move; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .drag-corner { background: #e11d48; color: white; border: 2px solid white; border-radius: 50%; font-size: 20px; text-align: center; line-height: 26px; cursor: move; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8fafc; margin: 0; padding: 0; overflow: hidden; font-size: 16px; color: #334155;}
         
@@ -100,8 +100,8 @@
         .btn-lociraj-img:hover { background: #eff6ff; border-color: #3b82f6; }
         .btn-lociraj-img img { height: 30px; width: auto; pointer-events: none; }
 
-        .btn-akcija { background: #e2e8f0; color: #0f172a; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
-        .btn-akcija:hover { background: #cbd5e1; }
+        .btn-kreator-akcija { background: #e2e8f0; color: #0f172a; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+        .btn-kreator-akcija:hover { background: #cbd5e1; }
 
         .paralelne-karte { display: flex; gap: 15px; flex-wrap: wrap; }
         .karta-pola { flex: 1; min-width: 250px; background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
@@ -141,7 +141,6 @@
         
         #mapaWrapper { position: absolute; top: 70px; left: 0; width: 100vw; height: calc(100vh - 70px); z-index: 1; }
         
-/* Osnovni oblik kruga */
         .custom-pin-icon { background: none; border: none; }
         .pin { 
             width: 34px; 
@@ -159,7 +158,6 @@
             position: relative; 
         }
 
-        /* Farbanje kruga za svaki tip zadatka (OVO MORA DA BUDE AKTIVNO) */
         .pin.zagonetka { background: #64748b; }
         .pin.kreativni { background: #10b981; }
         .pin.qr { background: #a855f7; }
@@ -169,7 +167,6 @@
         .pin.pocetna { background: #3b82f6; border-color: #bfdbfe; box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);}
         .pin.krajnja { background: #ef4444; border-color: #fecaca; box-shadow: 0 0 15px rgba(239, 68, 68, 0.8);}
 
-        /* Zlatnik ostaje poseban */
         .pin.zlatnik { 
             background-color: #fef08a; 
             border-color: #f59e0b; 
@@ -183,33 +180,6 @@
             color: transparent !important; 
             filter: drop-shadow(0 0 3px white);
         }
-
-        /* =========================================================
-           ISKLJUČEN ŠPIC (REPIĆ) NA IKONICAMA - Otkomenatriši ako zatreba
-        .pin::after {
-            content: '';
-            position: absolute;
-            bottom: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 10px solid transparent;
-            border-right: 10px solid transparent;
-            border-top: 14px solid #475569; 
-            filter: drop-shadow(0 3px 2px rgba(0,0,0,0.3)); 
-        }
-
-        .pin.zagonetka::after { border-top-color: #64748b; }
-        .pin.kreativni::after { border-top-color: #10b981; }
-        .pin.qr::after { border-top-color: #a855f7; }
-        .pin.kviz::after { border-top-color: #f97316; }
-        .pin.pronadji::after { border-top-color: #0ea5e9; }
-        .pin.multi::after { border-top-color: #0369a1; }
-        .pin.pocetna::after { border-top-color: #3b82f6; }
-        .pin.krajnja::after { border-top-color: #ef4444; }
-        .pin.zlatnik::after { border-top-color: #f59e0b; } 
-        ========================================================= */
 
         #zavrsiModal, #izlazModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.8); z-index:9000; justify-content:center; align-items:center; padding:20px; backdrop-filter: blur(4px);}
         .dijalog-karta { background:white; padding:25px; border-radius:12px; text-align:center; max-width:400px; width:100%; box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1); }
@@ -243,7 +213,6 @@
 
         #printArea { display: none; }
         
-        /* OREOLI GRID ŠTAMPA CSS */
         #printGridOverlay {
             display: none; position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; pointer-events: none; flex-direction: column; font-family: sans-serif;
         }
@@ -262,15 +231,10 @@
             body:not(.stampaj-mapu) { overflow: auto; background: white; }
             body:not(.stampaj-mapu) #printArea { display: block !important; position: absolute; left: 0; top: 0; width: 100%; padding: 20px; font-family: sans-serif; color: black; background: white; }
 
-/* ZlatnaRezerva: OREOLI */
             body.stampaj-mapu #setupEkran, body.stampaj-mapu #topBar, body.stampaj-mapu #mapAlati, body.stampaj-mapu #lebdeciPanel, body.stampaj-mapu #zavrsiModal, body.stampaj-mapu #izlazModal, body.stampaj-mapu #modalUputstvo, body.stampaj-mapu #dashboardModal, body.stampaj-mapu .leaflet-control-container, body.stampaj-mapu #printArea { display: none !important; }
             body.stampaj-mapu #mapaWrapper { position: absolute !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 1 !important; background: transparent !important; }
             body.stampaj-mapu .ruta-linija { display: none !important; }
 
-            /* --- STARA VERZIJA (Sačuvana za svaki slučaj) --- */
-            /* body.stampaj-mapu path.krug-oreol { stroke: #ef4444 !important; stroke-width: 3px !important; fill: white !important; fill-opacity: 1 !important; } */
-            
-            /* --- NOVA VERZIJA: Crna ivica i providna bela unutrašnjost (40%) --- */
             body.stampaj-mapu path.krug-oreol { 
                 stroke: #000 !important; 
                 stroke-width: 3px !important; 
@@ -280,20 +244,17 @@
 
             body.stampaj-mapu .leaflet-marker-icon { display: none !important; }
             body.stampaj-koordinate path.krug-oreol { display: none !important; }
-           }
-        /* Vraća opciju za ručno širenje svih tekstualnih polja */
+        }
         textarea {
             resize: vertical !important;
             min-height: 60px;
         }
 
-        /* ZLATNAREZERVA SERVER CSS */
         #aktivnePotrageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); z-index: 9500; justify-content: center; align-items: center; padding: 15px; box-sizing:border-box; backdrop-filter: blur(4px);}
         .modal-sadrzaj-server { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 600px; box-shadow: 0 20px 25px rgba(0,0,0,0.1); max-height: 85vh; display: flex; flex-direction: column; }
         .lista-aktivnih { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex-grow: 1; border: 1px solid #e2e8f0; border-radius: 8px; }
         .lista-aktivnih li { padding: 15px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap:wrap; gap: 15px; background: #f8fafc;}
         .lista-aktivnih h4 { margin: 0 0 5px 0; color: #0f172a; font-size: 18px; }
-
     </style>
 </head>
 <body>
@@ -329,7 +290,7 @@
             <button id="btnZavrsiStampa" onclick="window.pripremiZaStampu()" class="btn-prof outline" style="flex:1; font-size: 13px;">🖨 Štampaj zadatke</button>
         </div>
 
-<div style="background: #eff6ff; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe; margin-bottom: 15px;">
+        <div style="background: #eff6ff; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe; margin-bottom: 15px;">
             <label style="margin-top:0; font-size:14px; color:#1e3a8a; text-align:center;">🗺️ Štampanje mape (Igra za decu)</label>
             <div style="display:flex; gap:10px; margin-top:10px; flex-wrap: wrap;">
                 <button onclick="window.stampaMapuOreoli('krugovi')" class="btn-prof outline" style="flex:1; min-width:120px; border-color:#3b82f6; color:#1d4ed8; font-size:13px; padding:10px;">⚪ Beli Krugovi</button>
@@ -338,7 +299,7 @@
             </div>
         </div>
 
-<div style="display: flex; justify-content: space-between; margin-top: 15px;">
+        <div style="display: flex; justify-content: space-between; margin-top: 15px;">
             <button id="btnZavrsiNazad" onclick="document.getElementById('zavrsiModal').style.display='none'" style="background:transparent; color:#64748b; border:none; font-weight:bold; cursor:pointer; font-size: 14px; text-decoration: underline;">Nazad na mapu</button>
             <button onclick="window.location.reload()" style="background:transparent; color:#ef4444; border:none; font-weight:bold; cursor:pointer; font-size: 14px; text-decoration: underline;">Izađi iz aplikacije</button>
         </div>
@@ -440,7 +401,7 @@
             <label id="lblSifra">Glavna šifra PASS <span style="color:#ef4444;">*</span></label>
             <div style="display:flex; gap:10px;">
                 <input type="text" id="sifraPotrage" style="font-weight:bold; letter-spacing:1px; text-transform:uppercase; background:white;" placeholder="Npr PLAZA" oninput="window.ukloniGresku(this)">
-                <button id="btnGenerisi" class="btn-akcija" onclick="window.generisiSifru()">Generiši</button>
+                <button id="btnGenerisi" class="btn-kreator-akcija" onclick="window.generisiSifru()">Generiši</button>
             </div>
         </div>
 
@@ -553,7 +514,7 @@
             <span style="color:#fde047;"><span id="pDist">0.00</span> km</span>
         </span>
     </div>
-<div class="top-dugmad">
+    <div class="top-dugmad">
         <button id="btnModDodaj" class="alat-btn aktivno" onclick="window.toggleDodavanjeTacke()" style="width: auto; padding: 10px 15px; border-radius: 6px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); margin: 0; background: #eff6ff; color: #1d4ed8; border: none; font-weight: bold; cursor: pointer;">📍 Dodavanje tačke Uključeno</button>
         
         <button id="btnLocirajMapu" onclick="window.preuzmiMojuLokacijuTackaMap()" style="background:#eff6ff; color:#1d4ed8; border:none; padding:10px 15px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:14px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">Kompas</button>
@@ -578,7 +539,7 @@
         </div>
     </div>
     <div id="panelSadrzaj">
-<div style="display:flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+        <div style="display:flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
             
             <div style="display:flex; flex-direction:column; gap:10px;">
                 <label style="text-transform: none; display:flex; align-items:center; gap:10px; color: #1d4ed8; margin:0; cursor: pointer; font-size: 20px;">
@@ -597,7 +558,7 @@
             </button>
         </div>
 
-<div style="background:#e0f2fe; padding:12px; border-radius:8px; border:1px solid #bfdbfe; margin-bottom: 15px;">
+        <div style="background:#e0f2fe; padding:12px; border-radius:8px; border:1px solid #bfdbfe; margin-bottom: 15px;">
             <label style="margin-top:0; font-size:14px; color:#1e3a8a; display:block; text-align:left;">🎯 Unesi tačne koordinate (Google Maps)</label>
             <div style="display:flex; gap:5px; margin-top:8px;">
                 <input type="text" id="rucniLat" placeholder="Lat (npr. 45.239)" style="padding:8px; font-size:14px; border:1px solid #93c5fd; flex:1; margin:0;">
@@ -609,7 +570,7 @@
         <label id="lblImeLokacije" style="margin-top:0;">Ime lokacije (Kratko)</label>
         <input type="text" id="imeLokacije" placeholder="Npr. Igralište" style="margin-bottom: 10px; border: 2px solid #3b82f6;">
         
-<label id="lblOpisLokacije" style="margin-top:0;">Opis lokacije (Detaljno)</label>
+        <label id="lblOpisLokacije" style="margin-top:0;">Opis lokacije (Detaljno)</label>
         <textarea id="opisLokacije" rows="2" placeholder="Npr. Dečije igralište sa peskom" style="margin-bottom: 5px; border: 2px solid #3b82f6;"></textarea>
         
         <label style="font-size:13px; color:#1d4ed8; font-weight:bold;">Slika lokacije (Galerija / Kamera)</label>
@@ -637,6 +598,7 @@
             <option value="kreativni" id="optKre">Kreativni</option>
             <option value="pronadji" id="optPro">Pronađi ovo</option>
             <option value="qr" id="optQr">QR Kod</option>
+            <option value="igrica">🎮 Logička igrica (G2H)</option>
             <option value="multi" id="optMulti">🧩 Multi Zadatak (Roditelj + Dete)</option>
         </select>
 
@@ -661,7 +623,7 @@
             <textarea id="kre_uputstvo" rows="3" placeholder="Npr Slikajte se pored drveta"></textarea>
         </div>
 
-<div id="sekcija_pronadji" class="zadatak-sekcija" style="display:none;">
+        <div id="sekcija_pronadji" class="zadatak-sekcija" style="display:none;">
             <label id="lblProSlika" style="color:#1d4ed8;">Mala fotografija lokacije</label>
             <input type="file" id="pronadji_upload_btn" accept="image/*" capture="environment" onchange="window.pripremiSlikaPronadji(event)" style="padding: 8px; background:white;">
             
@@ -690,6 +652,7 @@
                 <label style="font-weight:normal; display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chk_multi_kreativni" onchange="window.switchZadatak()" style="width:18px;height:18px;margin:0; accent-color:#059669;"> 📸 Kreativ-Foto</label>
                 <label style="font-weight:normal; display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chk_multi_pronadji" onchange="window.switchZadatak()" style="width:18px;height:18px;margin:0; accent-color:#059669;"> 🔍 Pronađi</label>
                 <label style="font-weight:normal; display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chk_multi_qr" onchange="window.switchZadatak()" style="width:18px;height:18px;margin:0; accent-color:#059669;"> 📱 QR Kod</label>
+                <label style="font-weight:normal; display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="checkbox" id="chk_multi_igrica" onchange="window.switchZadatak()" style="width:18px;height:18px;margin:0; accent-color:#059669;"> 🎮 Igrica (G2H)</label>
             </div>
             
             <label style="color:#1d4ed8; margin-top:0;">Zajedničko uputstvo za ovu multi-lokaciju (Opciono)</label>
@@ -715,7 +678,8 @@
 </div>
 
 <script>
-    // SVE GLOBALNE PROMENLJIVE NA JEDNOM MESTU
+// Obezbeđenje na vrhu skripte za dugmad koja se rano učitavaju
+    window.proveriNesacuvano = function() { if(window.promeneNisuSnimljene) return confirm(window.trenutniJezik==='sr'?"Nesnimljen rad. Izaći?":"Unsaved work. Exit?"); return true; };
     window.trenutniJezik = "sr";
     window.isPanelSakupljen = false;
     window.modKloniranjaU_Toku = false;
@@ -733,9 +697,9 @@
     window.mojMarkerLokacije = null;
     window.mojKrugPreciznosti = null;
     window.pracenjeLokacijeId = null;
-    window.dashUnsubscribe = null; // ZA DASHBOARD
+    window.dashUnsubscribe = null;
 
-window.pocniPrevlacenjePanela = function(e) {
+    window.pocniPrevlacenjePanela = function(e) {
         if (e.target.closest('button')) return;
         let panel = document.getElementById('lebdeciPanel');
         let startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
@@ -917,7 +881,7 @@ window.pocniPrevlacenjePanela = function(e) {
         window.map.removeLayer(window.aktivniPin.krug); 
         window.pinovi = window.pinovi.filter(p => p !== window.aktivniPin); 
         delete window.slikeZadatakaMap[window.aktivniPin.id];
-        delete window.slikeLokacijaMap[window.aktivniPin.id]; // OČISTI SLIKU LOKACIJE 
+        delete window.slikeLokacijaMap[window.aktivniPin.id]; 
         window.osveziPinove(); 
         window.crtajLinije(); 
         window.zatvoriPanel(); 
@@ -932,7 +896,7 @@ window.pocniPrevlacenjePanela = function(e) {
         }); 
         window.pinovi = []; 
         window.slikeZadatakaMap = {}; 
-        window.slikeLokacijaMap = {}; // OČISTI SVE SLIKE LOKACIJA
+        window.slikeLokacijaMap = {}; 
         window.crtajLinije(); 
         window.zatvoriPanel(); 
         window.izracunajVarijacije(); 
@@ -1058,7 +1022,6 @@ window.pocniPrevlacenjePanela = function(e) {
 
     window.dodajGpsTacku = function() {
         if (!navigator.geolocation) { alert(window.trenutniJezik === 'sr' ? "GPS nije podržan." : "GPS not supported"); return; }
-        
         let btn = document.getElementById('btnDodajGps');
         let staroDugme = btn.innerText; 
         btn.innerText = "⏳...";
@@ -1176,7 +1139,6 @@ window.pocniPrevlacenjePanela = function(e) {
 
     window.azurirajOvuTackuGps = function() {
         if (!window.aktivniPin) return; 
-        
         if (!navigator.geolocation) { 
             alert(window.trenutniJezik === 'sr' ? "GPS nije podržan na ovom uređaju." : "GPS not supported."); 
             return; 
@@ -1184,7 +1146,6 @@ window.pocniPrevlacenjePanela = function(e) {
         
         let btn = document.getElementById('btnAzurirajGpsTacku');
         let originalniSadrzaj = btn.innerHTML; 
-        
         btn.innerHTML = `<span style="font-size:24px; margin-bottom:4px;">⏳</span><span style="font-size:14px;">Učitavam...</span>`;
         btn.style.opacity = "0.7";
         
@@ -1227,7 +1188,6 @@ window.pocniPrevlacenjePanela = function(e) {
         window.map.setView(novaLokacija, 18);
         window.crtajLinije();
         window.promeneNisuSnimljene = true;
-        
         alert(window.trenutniJezik === 'sr' ? "✅ Koordinate uspešno primenjene!" : "✅ Coordinates applied!");
     }
 
@@ -1286,94 +1246,94 @@ window.pocniPrevlacenjePanela = function(e) {
 
     window.faktorijel = function(num) { if(num < 0) return 0; if(num === 0 || num === 1) return 1; let result = 1; for(let i=2; i<=num; i++) { result *= i; if(result > 10000) return 10000; } return result; }
 
-window.pripremiSliku = function(event) {
-    let file = event.target.files[0]; if(!file) return;
-    let reader = new FileReader();
-    reader.onload = function(e) {
-        let img = new Image();
-        img.onload = function() {
-            let canvas = document.createElement('canvas');
-            let max_size = 500; let width = img.width; let height = img.height;
-            if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } } 
-            else { if (height > max_size) { width *= max_size / height; height = max_size; } }
-            canvas.width = width; canvas.height = height;
-            let ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
-            window.promoSlikaBase64 = canvas.toDataURL('image/jpeg', 0.4); 
-            window.promeneNisuSnimljene = true; alert(window.trenutniJezik === 'sr' ? "Slika spremna" : "Image ready");
-        }
-        img.src = e.target.result;
-    }; reader.readAsDataURL(file);
-}
-
-window.pripremiSlikaPronadji = function(event) {
-    let file = event.target.files[0]; if(!file || !window.aktivniPin) return;
-    let reader = new FileReader();
-    reader.onload = function(e) {
-        let img = new Image();
-        img.onload = function() {
-            let canvas = document.createElement('canvas');
-            let max_size = 400; let width = img.width; let height = img.height;
-            if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } } 
-            else { if (height > max_size) { width *= max_size / height; height = max_size; } }
-            canvas.width = width; canvas.height = height;
-            let ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
-            let novaSlikaBase64 = canvas.toDataURL('image/jpeg', 0.4); 
-            window.slikeZadatakaMap[window.aktivniPin.id] = novaSlikaBase64;
-            
-            let el1 = document.getElementById('pronadji_slika_preview');
-            let kontejner = document.getElementById('kontejnerSlikePronadji');
-            if(el1 && kontejner) { 
-                el1.src = novaSlikaBase64; 
-                kontejner.style.display = 'block'; 
+    window.pripremiSliku = function(event) {
+        let file = event.target.files[0]; if(!file) return;
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let img = new Image();
+            img.onload = function() {
+                let canvas = document.createElement('canvas');
+                let max_size = 500; let width = img.width; let height = img.height;
+                if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } } 
+                else { if (height > max_size) { width *= max_size / height; height = max_size; } }
+                canvas.width = width; canvas.height = height;
+                let ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+                window.promoSlikaBase64 = canvas.toDataURL('image/jpeg', 0.4); 
+                window.promeneNisuSnimljene = true; alert(window.trenutniJezik === 'sr' ? "Slika spremna" : "Image ready");
             }
-            
-            let multiPreview = document.getElementById('multi_slika_preview');
-            if(multiPreview) { multiPreview.src = novaSlikaBase64; multiPreview.style.display = 'block'; }
+            img.src = e.target.result;
+        }; reader.readAsDataURL(file);
+    }
 
-            window.promeneNisuSnimljene = true;
-        }
-        img.src = e.target.result;
-    }; reader.readAsDataURL(file);
-}
+    window.pripremiSlikaPronadji = function(event) {
+        let file = event.target.files[0]; if(!file || !window.aktivniPin) return;
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let img = new Image();
+            img.onload = function() {
+                let canvas = document.createElement('canvas');
+                let max_size = 400; let width = img.width; let height = img.height;
+                if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } } 
+                else { if (height > max_size) { width *= max_size / height; height = max_size; } }
+                canvas.width = width; canvas.height = height;
+                let ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+                let novaSlikaBase64 = canvas.toDataURL('image/jpeg', 0.4); 
+                window.slikeZadatakaMap[window.aktivniPin.id] = novaSlikaBase64;
+                
+                let el1 = document.getElementById('pronadji_slika_preview');
+                let kontejner = document.getElementById('kontejnerSlikePronadji');
+                if(el1 && kontejner) { 
+                    el1.src = novaSlikaBase64; 
+                    kontejner.style.display = 'block'; 
+                }
+                
+                let multiPreview = document.getElementById('multi_slika_preview');
+                if(multiPreview) { multiPreview.src = novaSlikaBase64; multiPreview.style.display = 'block'; }
 
-window.obrisiSlikuZadatka = function() {
+                window.promeneNisuSnimljene = true;
+            }
+            img.src = e.target.result;
+        }; reader.readAsDataURL(file);
+    }
+
+    window.obrisiSlikuZadatka = function() {
         if(!window.aktivniPin) return;
-        delete window.slikeZadatakaMap[window.aktivniPin.id]; // Briše iz memorije
+        delete window.slikeZadatakaMap[window.aktivniPin.id];
         document.getElementById('pronadji_slika_preview').src = '';
         document.getElementById('kontejnerSlikePronadji').style.display = 'none';
         document.getElementById('pronadji_upload_btn').value = '';
         window.promeneNisuSnimljene = true;
     }
 
-window.pripremiSlikuLokacije = function(event) {
-    let file = event.target.files[0]; if(!file || !window.aktivniPin) return;
-    let reader = new FileReader();
-    reader.onload = function(e) {
-        let img = new Image();
-        img.onload = function() {
-            let canvas = document.createElement('canvas');
-            let max_size = 600; 
-            let width = img.width; let height = img.height;
-            if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } } 
-            else { if (height > max_size) { width *= max_size / height; height = max_size; } }
-            canvas.width = width; canvas.height = height;
-            let ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
-            let novaSlikaBase64 = canvas.toDataURL('image/jpeg', 0.4); 
-            window.slikeLokacijaMap[window.aktivniPin.id] = novaSlikaBase64;
-            
-            let preview = document.getElementById('lokSlikaPreview');
-            let kontejnerSlike = document.getElementById('kontejnerSlikeLokacije');
-            if (preview && kontejnerSlike) { 
-                preview.src = novaSlikaBase64; 
-                kontejnerSlike.style.display = 'block'; 
+    window.pripremiSlikuLokacije = function(event) {
+        let file = event.target.files[0]; if(!file || !window.aktivniPin) return;
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let img = new Image();
+            img.onload = function() {
+                let canvas = document.createElement('canvas');
+                let max_size = 600; 
+                let width = img.width; let height = img.height;
+                if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } } 
+                else { if (height > max_size) { width *= max_size / height; height = max_size; } }
+                canvas.width = width; canvas.height = height;
+                let ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+                let novaSlikaBase64 = canvas.toDataURL('image/jpeg', 0.4); 
+                window.slikeLokacijaMap[window.aktivniPin.id] = novaSlikaBase64;
+                
+                let preview = document.getElementById('lokSlikaPreview');
+                let kontejnerSlike = document.getElementById('kontejnerSlikeLokacije');
+                if (preview && kontejnerSlike) { 
+                    preview.src = novaSlikaBase64; 
+                    kontejnerSlike.style.display = 'block'; 
+                }
+                window.promeneNisuSnimljene = true;
             }
-            window.promeneNisuSnimljene = true;
-        }
-        img.src = e.target.result;
-    }; reader.readAsDataURL(file);
-}
+            img.src = e.target.result;
+        }; reader.readAsDataURL(file);
+    }
 
-window.obrisiSlikuLokacije = function() {
+    window.obrisiSlikuLokacije = function() {
         if(!window.aktivniPin) return;
         delete window.slikeLokacijaMap[window.aktivniPin.id];
         document.getElementById('lokSlikaPreview').src = '';
@@ -1401,7 +1361,6 @@ window.obrisiSlikuLokacije = function() {
     window.ukloniGresku = function(el) {
         el.classList.remove('input-greska');
         document.getElementById('greskaPoruka').style.display = 'none';
-           // OVO DODAJEMO: Govorimo autosave sistemu da je korisnik upravo kucao nešto na prvom ekranu!
         window.promeneNisuSnimljene = true; 
     }
 
@@ -1454,7 +1413,7 @@ window.obrisiSlikuLokacije = function() {
         }
     }
     
-window.nazadNaMeniBezIzlaza = function() {
+    window.nazadNaMeniBezIzlaza = function() {
         document.getElementById('setupEkran').style.display = 'flex';
         document.getElementById('topBar').style.display = 'none';
         document.getElementById('mapAlati').style.display = 'none';
@@ -1527,7 +1486,7 @@ window.nazadNaMeniBezIzlaza = function() {
 
         window.pinovi.push(p); window.osveziPinove(); window.crtajLinije(); window.izracunajVarijacije();
         if(data && data.zadatak && data.zadatak.slika) { window.slikeZadatakaMap[pinId] = data.zadatak.slika; }
-        if(data && data.opisLokacijeSlika) { window.slikeLokacijaMap[pinId] = data.opisLokacijeSlika; } // Učitaj sliku lokacije
+        if(data && data.opisLokacijeSlika) { window.slikeLokacijaMap[pinId] = data.opisLokacijeSlika; }
         
         if(!data && !window.modKloniranjaU_Toku) window.otvoriPanel(p, isNewClick); 
         window.promeneNisuSnimljene = true;
@@ -1547,6 +1506,7 @@ window.nazadNaMeniBezIzlaza = function() {
                 else if (p.zadatak.tip === 'qr') { klasa += ' qr'; krugBoja = '#a855f7'; } 
                 else if (p.zadatak.tip === 'kviz') { klasa += ' kviz'; krugBoja = '#f97316'; } 
                 else if (p.zadatak.tip === 'pronadji') { klasa += ' pronadji'; krugBoja = '#0ea5e9'; } 
+                else if (p.zadatak.tip === 'igrica') { klasa += ' zagonetka'; krugBoja = '#3b82f6'; }
                 else if (p.zadatak.tip === 'multi') { klasa += ' multi'; krugBoja = '#0369a1'; } 
             }
 
@@ -1599,7 +1559,7 @@ window.nazadNaMeniBezIzlaza = function() {
         
         document.getElementById('zag_tekst').value = ''; document.getElementById('zag_odgovor').value = ''; document.getElementById('kre_uputstvo').value = ''; document.getElementById('qr_uputstvo').value = ''; document.getElementById('qr_kod_vrednost').value = ''; document.getElementById('smernica_tekst').value = ''; document.getElementById('kviz_pitanja_container').innerHTML = '';
         document.getElementById('infoPovezivanje').style.display = 'none';
-window.kvizCount = 0; document.getElementById('pronadji_upload_btn').value = ""; document.getElementById('pronadji_slika_preview').style.display = 'none'; document.getElementById('pronadji_slika_preview').src = ''; document.getElementById('pronadji_opis').value = ''; document.getElementById('checkZavrsna').checked = false; let kPro = document.getElementById('kontejnerSlikePronadji'); if(kPro) kPro.style.display = 'none';
+        window.kvizCount = 0; document.getElementById('pronadji_upload_btn').value = ""; document.getElementById('pronadji_slika_preview').style.display = 'none'; document.getElementById('pronadji_slika_preview').src = ''; document.getElementById('pronadji_opis').value = ''; document.getElementById('checkZavrsna').checked = false; let kPro = document.getElementById('kontejnerSlikePronadji'); if(kPro) kPro.style.display = 'none';
         
         document.getElementById('chk_multi_zlatnik').checked = false;
         document.getElementById('chk_multi_zagonetka').checked = false;
@@ -1607,6 +1567,7 @@ window.kvizCount = 0; document.getElementById('pronadji_upload_btn').value = "";
         document.getElementById('chk_multi_kreativni').checked = false;
         document.getElementById('chk_multi_pronadji').checked = false;
         document.getElementById('chk_multi_qr').checked = false;
+        document.getElementById('chk_multi_igrica').checked = false;
         document.getElementById('multi_uputstvo').value = '';
         let multiPreview = document.getElementById('multi_slika_preview');
         if(multiPreview) { multiPreview.style.display = 'none'; multiPreview.src = ''; }
@@ -1620,8 +1581,24 @@ window.kvizCount = 0; document.getElementById('pronadji_upload_btn').value = "";
             if (myTip === 'zagonetka') { document.getElementById('zag_tekst').value = p.zadatak.tekst_zadatka || ''; document.getElementById('zag_odgovor').value = p.zadatak.odgovor || ''; } 
             else if (myTip === 'kreativni') { document.getElementById('kre_uputstvo').value = p.zadatak.tekst_zadatka || ''; } 
             else if (myTip === 'qr') { document.getElementById('qr_uputstvo').value = p.zadatak.tekst_zadatka || ''; document.getElementById('qr_kod_vrednost').value = p.zadatak.odgovor || ''; } 
-
-else if (myTip === 'pronadji') {
+            else if (myTip === 'igrica') {
+                window.switchZadatak();
+                let mIgra = document.getElementById('g2h_izbor_igre');
+                let mTezina = document.getElementById('g2h_izbor_tezine');
+                let sacuvanaSifra = p.zadatak.tekst_zadatka || '';
+                if (sacuvanaSifra.startsWith('memorija')) {
+                    if (mIgra) mIgra.value = 'memorija';
+                    window.switchZadatak(); // Osveži opcije težine
+                    if (mTezina) mTezina.value = sacuvanaSifra.replace('memorija', '');
+                } else if (sacuvanaSifra.startsWith('skocko')) {
+                    if (mIgra) mIgra.value = 'skocko';
+                    window.switchZadatak();
+                    if (mTezina) mTezina.value = sacuvanaSifra.replace('skocko', '');
+                }
+                let most = document.getElementById('zag_tekst');
+                if (most) most.value = sacuvanaSifra;
+            }
+            else if (myTip === 'pronadji') {
                 document.getElementById('pronadji_opis').value = p.zadatak.tekst_zadatka || '';
                 let kontejner = document.getElementById('kontejnerSlikePronadji');
                 if(window.slikeZadatakaMap[p.id]) { 
@@ -1633,36 +1610,32 @@ else if (myTip === 'pronadji') {
                     if(kontejner) kontejner.style.display = 'none';
                 }
             } 
-
-// 👇 OVO JE DEO KOJI JE NEDOSTAJAO ZA KVIZ 👇
-                else if (myTip === 'kviz') {
-                    if (p.zadatak.kvizData) {
-                        p.zadatak.kvizData.forEach(q => {
-                            window.kvizCount++; 
-                            let div = document.createElement('div'); 
-                            div.className = 'kviz-blok'; 
-                            div.style.background = 'white'; 
-                            div.style.padding = '15px'; 
-                            div.style.borderRadius = '8px'; 
-                            div.style.border = '1px solid #e2e8f0'; 
-                            div.style.marginBottom = '15px';
-                            
-                            let html = `<label style="margin-top:0; color:#0f172a; font-size:16px; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">${window.trenutniJezik==='sr'?'Pitanje':'Question'} ${window.kvizCount} <span onclick="this.parentElement.parentElement.remove()" class="ikona-brisi" title="Obriši pitanje">&times;</span></label><textarea rows="2" style="margin-top:10px; margin-bottom:15px;">${q.pitanje}</textarea><div class="opcije">`;
-                            
-                            q.opcije.forEach(opt => { 
-                                let isChecked = q.tacni.includes(opt) ? 'checked' : ''; 
-                                html += `<div class="kviz-opcija"><input type="text" value="${opt.replace(/"/g, '&quot;')}"><input type="checkbox" title="Tačan odgovor" ${isChecked}><span onclick="this.parentElement.remove()" class="ikona-brisi">&times;</span></div>`; 
-                            });
-                            
-                            html += `</div><button class="btn-dodaj" onclick="window.dodajOpciju(this)"> ${window.trenutniJezik==='sr'?'Dodaj opciju':'Add option'}</button>`; 
-                            
-                            div.innerHTML = html; 
-                            document.getElementById('kviz_pitanja_container').appendChild(div);
+            else if (myTip === 'kviz') {
+                if (p.zadatak.kvizData) {
+                    p.zadatak.kvizData.forEach(q => {
+                        window.kvizCount++; 
+                        let div = document.createElement('div'); 
+                        div.className = 'kviz-blok'; 
+                        div.style.background = 'white'; 
+                        div.style.padding = '15px'; 
+                        div.style.borderRadius = '8px'; 
+                        div.style.border = '1px solid #e2e8f0'; 
+                        div.style.marginBottom = '15px';
+                        
+                        let html = `<label style="margin-top:0; color:#0f172a; font-size:16px; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">${window.trenutniJezik==='sr'?'Pitanje':'Question'} ${window.kvizCount} <span onclick="this.parentElement.parentElement.remove()" class="ikona-brisi" title="Obriši pitanje">&times;</span></label><textarea rows="2" style="margin-top:10px; margin-bottom:15px;">${q.pitanje}</textarea><div class="opcije">`;
+                        
+                        q.opcije.forEach(opt => { 
+                            let isChecked = q.tacni.includes(opt) ? 'checked' : ''; 
+                            html += `<div class="kviz-opcija"><input type="text" value="${opt.replace(/"/g, '&quot;')}"><input type="checkbox" title="Tačan odgovor" ${isChecked}><span onclick="this.parentElement.remove()" class="ikona-brisi">&times;</span></div>`; 
                         });
-                    }
+                        
+                        html += `</div><button class="btn-dodaj" onclick="window.dodajOpciju(this)"> ${window.trenutniJezik==='sr'?'Dodaj opciju':'Add option'}</button>`; 
+                        
+                        div.innerHTML = html; 
+                        document.getElementById('kviz_pitanja_container').appendChild(div);
+                    });
                 }
-                // 👆 KRAJ DELA KOJI JE NEDOSTAJAO 👆
-
+            }
             else if (myTip === 'multi') {
                 document.getElementById('multi_uputstvo').value = p.zadatak.tekst_zadatka || '';
                 let elovi = p.zadatak.multi_elementi || [];
@@ -1673,6 +1646,9 @@ else if (myTip === 'pronadji') {
                 document.getElementById('chk_multi_kreativni').checked = elovi.includes('kreativni');
                 document.getElementById('chk_multi_pronadji').checked = elovi.includes('pronadji');
                 document.getElementById('chk_multi_qr').checked = elovi.includes('qr');
+                document.getElementById('chk_multi_igrica').checked = elovi.includes('igrica');
+
+                window.switchZadatak(); // Okida transformaciju i u multiju ako ima igre
 
                 if(elovi.includes('zagonetka')) {
                     document.getElementById('zag_tekst').value = p.zadatak.zag_tekst || '';
@@ -1681,8 +1657,25 @@ else if (myTip === 'pronadji') {
                 if(elovi.includes('kreativni')) {
                     document.getElementById('kre_uputstvo').value = p.zadatak.kre_uputstvo || '';
                 }
-      
-if(elovi.includes('pronadji')) {
+                if(elovi.includes('igrica')) {
+                    let mIgra = document.getElementById('g2h_izbor_igre');
+                    let mTezina = document.getElementById('g2h_izbor_tezine');
+                    let mSifra = p.zadatak.igrica_kod || '';
+                    if (mSifra.startsWith('memorija')) {
+                        if (mIgra) mIgra.value = 'memorija';
+                        let resetMreze = document.getElementById('g2h_izbor_tezine'); // Osveži privremeno
+                        if (resetMreze) resetMreze.innerHTML = `<option value="1">⚪ Bela staza (Najlakše - mreža 3x4)</option><option value="2">🔵 Plava staza (Srednje - mreža 4x4)</option><option value="3">🔴 Crvena staza (Najteže - mreža 4x5)</option>`;
+                        if (mTezina) mTezina.value = mSifra.replace('memorija', '');
+                    } else if (mSifra.startsWith('skocko')) {
+                        if (mIgra) mIgra.value = 'skocko';
+                        let resetMreze = document.getElementById('g2h_izbor_tezine');
+                        if (resetMreze) resetMreze.innerHTML = `<option value="1">⚪ Bela staza (Lakši nivo pogađanja)</option><option value="2">🔵 Plava staza (Srednji nivo pogađanja)</option><option value="3">🔴 Crvena staza (Klasičan najteži nivo)</option>`;
+                        if (mTezina) mTezina.value = mSifra.replace('skocko', '');
+                    }
+                    let most = document.getElementById('zag_tekst');
+                    if (most) most.value = mSifra;
+                }
+                if(elovi.includes('pronadji')) {
                     document.getElementById('pronadji_opis').value = p.zadatak.pronadji_opis || '';
                     let kontejner = document.getElementById('kontejnerSlikePronadji');
                     if(window.slikeZadatakaMap[p.id]) { 
@@ -1694,7 +1687,6 @@ if(elovi.includes('pronadji')) {
                         if(kontejner) kontejner.style.display = 'none';
                     }
                 }
-
                 if(elovi.includes('qr')) {
                     document.getElementById('qr_uputstvo').value = p.zadatak.qr_uputstvo || '';
                     document.getElementById('qr_kod_vrednost').value = p.zadatak.qr_odg || '';
@@ -1751,7 +1743,31 @@ if(elovi.includes('pronadji')) {
     
     window.switchZadatak = function() { 
         document.querySelectorAll('.zadatak-sekcija').forEach(s => s.style.display='none'); 
-        let tip = document.getElementById('tipZadatka').value;
+        
+        let tipEl = document.getElementById('tipZadatka');
+        if (!tipEl) return;
+        let tip = tipEl.value;
+        
+        // 🚨 ODBRANA OD GOMILANJA: Kompletan reset i čišćenje starih menija rute pre crtanja 🚨
+        let proveraKontejnera = document.getElementById('g2h_kontejner_menija');
+        if (proveraKontejnera) {
+            let resetovanaTextarea = document.createElement('textarea');
+            resetovanaTextarea.id = 'zag_tekst';
+            resetovanaTextarea.rows = 3;
+            proveraKontejnera.parentNode.replaceChild(resetovanaTextarea, proveraKontejnera);
+        }
+
+        let zagTekstPolje = document.getElementById('zag_tekst'); 
+        let zagOdgovorPolje = document.getElementById('zag_odgovor');
+        let lblZagOdgLabela = document.getElementById('lblZagOdg');
+        let lblZagTekst = document.getElementById('lblZagTekst');
+
+        if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'block';
+        if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'block';
+        if(lblZagTekst) lblZagTekst.innerText = "Tekst zagonetke Pitanje";
+
+        let igricaJeAktivna = false;
+
         if (tip === 'multi') {
             document.getElementById('sekcija_multi_kombinator').style.display='block';
             if(document.getElementById('chk_multi_zlatnik').checked) document.getElementById('sekcija_zlatnik').style.display='block';
@@ -1760,9 +1776,91 @@ if(elovi.includes('pronadji')) {
             if(document.getElementById('chk_multi_kreativni').checked) document.getElementById('sekcija_kreativni').style.display='block';
             if(document.getElementById('chk_multi_pronadji').checked) document.getElementById('sekcija_pronadji').style.display='block';
             if(document.getElementById('chk_multi_qr').checked) document.getElementById('sekcija_qr').style.display='block';
-        } else {
-            document.getElementById('sekcija_' + tip).style.display='block'; 
+            
+            if(document.getElementById('chk_multi_igrica').checked) {
+                document.getElementById('sekcija_zagonetka').style.display='block';
+                if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'none';
+                if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'none';
+                igricaJeAktivna = true;
+            }
+        } 
+        else if (tip === 'igrica') {
+            document.getElementById('sekcija_zagonetka').style.display='block'; 
+            if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'none';
+            if(zagOdgovorPolje && zagOdgovorPolje.previousElementSibling) {
+                zagOdgovorPolje.previousElementSibling.style.display = 'none';
+            }
+            igricaJeAktivna = true;
+        } 
+        else {
+            let sekcija = document.getElementById('sekcija_' + tip);
+            if(sekcija) sekcija.style.display = 'block';
         }
+
+        // --- 3. PROVERA I INTEGRACIJA DUPLOG MENIJA ZA VOĆNE IGRE ---
+        if (igricaJeAktivna) {
+            if(lblZagTekst) lblZagTekst.innerText = "Konfiguracija logičke igre:";
+
+            let kontejnerMenija = document.createElement('div');
+            kontejnerMenija.id = 'g2h_kontejner_menija';
+            kontejnerMenija.style.display = 'flex';
+            kontejnerMenija.style.flexDirection = 'column';
+            kontejnerMenija.style.gap = '10px';
+
+            let mIgra = document.createElement('select');
+            mIgra.id = 'g2h_izbor_igre';
+            mIgra.style.padding = '10px';
+            mIgra.style.borderRadius = '6px';
+            mIgra.style.fontWeight = 'bold';
+            mIgra.innerHTML = `
+                <option value="memorija">🍓 Igra Memorije (G2H)</option>
+                <option value="skocko">🤠 Voćni Skočko (G2H)</option>
+            `;
+
+            let mTezina = document.createElement('select');
+            mTezina.id = 'g2h_izbor_tezine';
+            mTezina.style.padding = '10px';
+            mTezina.style.borderRadius = '6px';
+            mTezina.style.fontWeight = 'bold';
+
+            let skriveniMost = document.createElement('input');
+            skriveniMost.type = 'hidden';
+            skriveniMost.id = 'zag_tekst';
+
+            let osveziTezine = function() {
+                let izabranaIgra = mIgra.value;
+                if (izabranaIgra === 'memorija') {
+                    mTezina.innerHTML = `
+                        <option value="1">⚪ Bela staza (Najlakše - mreža 3x4)</option>
+                        <option value="2">🔵 Plava staza (Srednje - mreža 4x4)</option>
+                        <option value="3">🔴 Crvena staza (Najteže - mreža 4x5)</option>
+                    `;
+                } else if (izabranaIgra === 'skocko') {
+                    mTezina.innerHTML = `
+                        <option value="1">⚪ Bela staza (Lakši nivo pogađanja)</option>
+                        <option value="2">🔵 Plava staza (Srednji nivo pogađanja)</option>
+                        <option value="3">🔴 Crvena staza (Klasičan najteži nivo)</option>
+                    `;
+                }
+                skriveniMost.value = mIgra.value + mTezina.value;
+            };
+
+            mIgra.onchange = osveziTezine;
+            mTezina.onchange = function() {
+                skriveniMost.value = mIgra.value + mTezina.value;
+            };
+
+            osveziTezine();
+
+            kontejnerMenija.appendChild(mIgra);
+            kontejnerMenija.appendChild(mTezina);
+            kontejnerMenija.appendChild(skriveniMost);
+
+            if (zagTekstPolje && zagTekstPolje.parentNode) {
+                zagTekstPolje.parentNode.replaceChild(kontejnerMenija, zagTekstPolje);
+            }
+        }
+
         window.osveziPinove(); 
     }
 
@@ -1794,8 +1892,13 @@ if(elovi.includes('pronadji')) {
         if(tipZ === 'zlatnik') { podaciZadatka.tekst_zadatka = "Pokupi zlatnik"; podaciZadatka.tekst = "Zlatnik"; podaciZadatka.odgovor = "zlatnik"; }
         else if(tipZ === 'zagonetka') { podaciZadatka.tekst_zadatka = document.getElementById('zag_tekst').value; podaciZadatka.tekst = podaciZadatka.tekst_zadatka; podaciZadatka.odgovor = document.getElementById('zag_odgovor').value; } 
         else if(tipZ === 'kreativni') { podaciZadatka.tekst_zadatka = document.getElementById('kre_uputstvo').value; podaciZadatka.tekst = podaciZadatka.tekst_zadatka; podaciZadatka.odgovor = window.trenutniJezik==='sr'?'Fotografija lokacije':'Location photo'; } 
-        else if(tipZ === 'pronadji') { podaciZadatka.tekst_zadatka = document.getElementById('pronadji_opis').value; podaciZadatka.tekst = podaciZadatka.tekst_zadatka; podaciZadatka.slika = window.slikeZadatakaMap[window.aktivniPin.id] || ""; podaciZadatka.odgovor = window.trenutniJezik==='sr'?'Lokacija pronađena':'Location found'; } 
         else if(tipZ === 'qr') { podaciZadatka.tekst_zadatka = document.getElementById('qr_uputstvo').value; podaciZadatka.tekst = podaciZadatka.tekst_zadatka; podaciZadatka.odgovor = document.getElementById('qr_kod_vrednost').value; } 
+        else if(tipZ === 'igrica') {
+            podaciZadatka.tekst_zadatka = document.getElementById('zag_tekst').value; 
+            podaciZadatka.tekst = "G2H Logička Igra"; 
+            podaciZadatka.odgovor = "igrica_uspeh"; 
+        }
+        else if(tipZ === 'pronadji') { podaciZadatka.tekst_zadatka = document.getElementById('pronadji_opis').value; podaciZadatka.tekst = podaciZadatka.tekst_zadatka; podaciZadatka.slika = window.slikeZadatakaMap[window.aktivniPin.id] || ""; podaciZadatka.odgovor = window.trenutniJezik==='sr'?'Lokacija pronađena':'Location found'; } 
         else if(tipZ === 'multi') {
             podaciZadatka.tekst_zadatka = document.getElementById('multi_uputstvo').value;
             podaciZadatka.tekst = podaciZadatka.tekst_zadatka;
@@ -1804,8 +1907,13 @@ if(elovi.includes('pronadji')) {
             if(document.getElementById('chk_multi_zlatnik').checked) multiEl.push('zlatnik');
             if(document.getElementById('chk_multi_zagonetka').checked) {
                 multiEl.push('zagonetka');
+                multiEl.push('zagonetka');
                 podaciZadatka.zag_tekst = document.getElementById('zag_tekst').value;
                 podaciZadatka.zag_odgovor = document.getElementById('zag_odgovor').value;
+            }
+            if(document.getElementById('chk_multi_igrica').checked) {
+                multiEl.push('igrica');
+                podaciZadatka.igrica_kod = document.getElementById('zag_tekst').value;
             }
             if(document.getElementById('chk_multi_kviz').checked) {
                 multiEl.push('kviz');
@@ -1859,7 +1967,7 @@ if(elovi.includes('pronadji')) {
         window.aktivniPin.zadatak = podaciZadatka; 
         window.aktivniPin.isPocetna = isPocetna;
         
-        let indexOveTacke = window.pinovi.findIndex(p => p.id === window.aktivniPin.id);
+        let indexOveTacke = window.pinovi.findIndex(pin => pin.id === window.aktivniPin.id);
         if (indexOveTacke > 0) {
             let prethodnaTacka = window.pinovi[indexOveTacke - 1];
             if (prethodnaTacka && prethodnaTacka.zadatak) {
@@ -1908,6 +2016,9 @@ if(elovi.includes('pronadji')) {
 
     window.shuffleArray = function(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } }
 
+    // ===================================================================
+    // 🏆 GENERISANJE GRUPNIH RUTA ZA TIMOVE (Fizički kôd funkcije ugrađen)
+    // ===================================================================
     window.generisiGrupneRute = function(standardniPinovi, brojTimova, logika) {
         let rute = {}; let maxPokusaja = 2000; let pokusaj = 0;
         while(Object.keys(rute).length < brojTimova && pokusaj < maxPokusaja) {
@@ -1970,10 +2081,13 @@ if(elovi.includes('pronadji')) {
         alert(window.trenutniJezik === 'sr' ? "✨ Magični skok završen Sve tačke su prebačene. Sada ih možete fino podesiti." : "✨ Magic jump complete All points moved. You can now fine tune them.");
     }
 
-window.snimiJSON = function() {
+    // ===================================================================
+    // 🕒 SNIMANJE JSON FAJLA SA AUTOMATSKIM DATUMOM I VREMENOM
+    // ===================================================================
+    window.snimiJSON = function() {
         document.getElementById('zavrsiModal').style.display='none'; 
         document.getElementById('izlazModal').style.display='none';
-        if(window.pinovi.length === 0) { alert(window.customJezik==='sr'?"Mapa je prazna.":"Map is empty."); return; }
+        if(window.pinovi.length === 0) { alert(window.trenutniJezik==='sr'?"Mapa je prazna.":"Map is empty."); return; }
         
         let sifra = document.getElementById('sifraPotrage').value.trim(); 
         let isGrupna = document.getElementById('checkGrupna').checked; 
@@ -1986,7 +2100,6 @@ window.snimiJSON = function() {
         
         let takmicarskiChecked = document.getElementById('checkTakmicarski') ? document.getElementById('checkTakmicarski').checked : false;
 
-        // 1. GLAVNI NIZ PINOVA (Ovde slike ostaju jednom i nikad više!)
         let standardniPinovi = window.pinovi.map(p=> { 
             let latlng = p.marker.getLatLng(); 
             return { 
@@ -2006,23 +2119,20 @@ window.snimiJSON = function() {
             
             if(brojTimova > maxV) { alert(window.trenutniJezik==='sr'?`Nemoguće je napraviti ${brojTimova} unikatnih staza`:`Cannot make ${brojTimova} unique trails`); return; }
             
-            // Generišemo rute sa slikama privremeno
-            let privremeneRute = window.generisiGrupneRute(standardniPinovi, brojTimova, grupnaLogika);
-            
-            // 👇 ČIŠĆENJE: Prolazimo kroz rute timova i BEZMILOSNO brišemo slike da se ne bi duplirale 20 puta!
-            ruteTimovaObj = {};
-            for(let timKey in privremeneRute) {
-                ruteTimovaObj[timKey] = privremeneRute[timKey].map(p => {
-                    // Pravimo plitku kopiju tačke
-                    let cisceniPin = { ...p };
-                    // Brišemo teške Base64 stringove iz rute ovog tima
-                    cisceniPin.opisLokacijeSlika = ""; 
-                    if(cisceniPin.zadatak) {
-                        cisceniPin.zadatak = { ...cisceniPin.zadatak };
-                        delete cisceniPin.zadatak.slika; // Briše sliku zadatka iz ove kopije
-                    }
-                    return cisceniPin;
-                });
+            if (typeof window.generisiGrupneRute === 'function') {
+                let privremeneRute = window.generisiGrupneRute(standardniPinovi, brojTimova, grupnaLogika);
+                ruteTimovaObj = {};
+                for(let timKey in privremeneRute) {
+                    ruteTimovaObj[timKey] = privremeneRute[timKey].map(p => {
+                        let cisceniPin = { ...p };
+                        cisceniPin.opisLokacijeSlika = ""; 
+                        if(cisceniPin.zadatak) {
+                            cisceniPin.zadatak = { ...cisceniPin.zadatak };
+                            delete cisceniPin.zadatak.slika; 
+                        }
+                        return cisceniPin;
+                    });
+                }
             }
         }
 
@@ -2037,7 +2147,19 @@ window.snimiJSON = function() {
             pinovi: standardniPinovi
         };
 
-        let imeFajla = (data.ime || "Potraga").trim() + " " + (data.sifra || "BEZ_SIFRE").trim();
+        // Generisanje unikatnog imena fajla sa hronološkim pečatom
+        let sada = new Date();
+        let godina = sada.getFullYear();
+        let mesec = String(sada.getMonth() + 1).padStart(2, '0');
+        let dan = String(sada.getDate()).padStart(2, '0');
+        let sati = String(sada.getHours()).padStart(2, '0');
+        let minuti = String(sada.getMinutes()).padStart(2, '0');
+        let vremenskiPecat = `${godina}-${mesec}-${dan}_${sati}-${minuti}`;
+
+        let cistoIme = (data.ime || "Potraga").trim().replace(/\s+/g, '_');
+        let cistaSifra = (data.sifra || "BEZ_SIFRE").trim().replace(/\s+/g, '_');
+        let imeFajla = `${cistoIme}_${cistaSifra}_${vremenskiPecat}`;
+
         let blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"}); 
         let a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = imeFajla + ".json"; a.click(); 
         window.promeneNisuSnimljene = false; 
@@ -2072,29 +2194,28 @@ window.snimiJSON = function() {
         let startLat = 0; let startLng = 0;
         if(window.pinovi.length > 0) { let prvaTacka = window.pinovi[0].marker.getLatLng(); startLat = prvaTacka.lat; startLng = prvaTacka.lng; }
 
-let standardniPinovi = window.pinovi.map(p=> { let latlng = p.marker.getLatLng(); return { id: p.id, broj: p.broj, lat: latlng.lat, lng: latlng.lng, rad: p.rad, dozvoliPomoc: p.dozvoliPomoc, isPocetna: p.isPocetna, imeLokacije: p.imeLokacije, opisLokacije: p.opisLokacije, opisLokacijeSlika: window.slikeLokacijaMap[p.id] || "", zadatak: p.zadatak }; });
+        let standardniPinovi = window.pinovi.map(p=> { let latlng = p.marker.getLatLng(); return { id: p.id, broj: p.broj, lat: latlng.lat, lng: latlng.lng, rad: p.rad, dozvoliPomoc: p.dozvoliPomoc, isPocetna: p.isPocetna, imeLokacije: p.imeLokacije, opisLokacije: p.opisLokacije, opisLokacijeSlika: window.slikeLokacijaMap[p.id] || "", zadatak: p.zadatak }; });
 
-let ruteTimovaObj = null;
+        let ruteTimovaObj = null;
         if(isGrupna) {
             let maxV = 0; let n = window.pinovi.length;
             if(grupnaLogika === 'zajednicki_start_kraj') maxV = n<3 ? 0 : window.faktorijel(n-2); else if(grupnaLogika === 'zajednicki_start' || grupnaLogika === 'zajednicki_kraj') maxV = window.faktorijel(n-1); else maxV = window.faktorijel(n);
             if(brojTimova > maxV) { alert(`Nemoguće je napraviti ${brojTimova} unikatnih staza!`); document.getElementById('zavrsiModal').style.display='none'; return; }
             
-            // Generišemo rute sa slikama privremeno
-            let privremeneRute = window.generisiGrupneRute(standardniPinovi, brojTimova, grupnaLogika);
-            
-            // Čišćenje dupliranih slika iz timskih ruta pre slanja na Firebase server
-            ruteTimovaObj = {};
-            for(let timKey in privremeneRute) {
-                ruteTimovaObj[timKey] = privremeneRute[timKey].map(p => {
-                    let cisceniPin = { ...p };
-                    cisceniPin.opisLokacijeSlika = ""; // Briše sliku lokacije iz kopije za tim
-                    if(cisceniPin.zadatak) {
-                        cisceniPin.zadatak = { ...cisceniPin.zadatak };
-                        delete cisceniPin.zadatak.slika; // Briše sliku zadatka iz kopije za tim
-                    }
-                    return cisceniPin;
-                });
+            if (typeof window.generisiGrupneRute === 'function') {
+                let privremeneRute = window.generisiGrupneRute(standardniPinovi, brojTimova, grupnaLogika);
+                ruteTimovaObj = {};
+                for(let timKey in privremeneRute) {
+                    ruteTimovaObj[timKey] = privremeneRute[timKey].map(p => {
+                        let cisceniPin = { ...p };
+                        cisceniPin.opisLokacijeSlika = ""; 
+                        if(cisceniPin.zadatak) {
+                            cisceniPin.zadatak = { ...cisceniPin.zadatak };
+                            delete cisceniPin.zadatak.slika; 
+                        }
+                        return cisceniPin;
+                    });
+                }
             }
         }
 
@@ -2109,9 +2230,7 @@ let ruteTimovaObj = null;
             objasnjenje: document.getElementById('promoTekst').value, 
             promoSlika: window.promoSlikaBase64,
             mesanjeRute: isGrupna ? false : document.getElementById('mesanjeRute').checked, 
-            isGrupna: isGrupna, 
-            brojTimova: isGrupna ? brojTimova : 0, 
-            grupnaLogika: isGrupna ? grupnaLogika : "",
+            isGrupna: isGrupna, brojTimova: isGrupna ? brojTimova : 0, grupnaLogika: isGrupna ? grupnaLogika : "",
             takmicarskiMod: takmicarskiChecked,
             ruteTimova: ruteTimovaObj, 
             startLat: startLat, 
@@ -2176,7 +2295,6 @@ let ruteTimovaObj = null;
         } catch(e) { ul.innerHTML = `<li style="color:#dc2626; text-align:center;">Greška: ${e.message}</li>`; }
     }
 
-    // --- DASHBOARD FUNKCIJE ---
     window.otvoriDashboard = function(sifra, imeStaze) {
         document.getElementById('dashSifra').innerText = sifra + " - " + imeStaze;
         document.getElementById('dashboardModal').style.display = 'flex';
@@ -2204,7 +2322,7 @@ let ruteTimovaObj = null;
             timovi.sort((a,b) => b.trenutniIndeks - a.trenutniIndeks);
             
             timovi.forEach(t => {
-                let statusIgre = t.zavrsena ? "🏁 Završili" : "🏃 Na terenu";
+                let statusIgre = t.zavrsena ? "🏁  Završili" : "🏃 Na terenu";
                 let colorStatus = t.zavrsena ? "#10b981" : "#3b82f6";
                 let zdravljeBoja = t.zdravlje < 50 ? "#ef4444" : "#10b981";
                 
@@ -2266,8 +2384,7 @@ let ruteTimovaObj = null;
     }
 
     window.autoSaveLocal = function() {
-let standardniPinovi = window.pinovi.map(p=> { let latlng = p.marker.getLatLng(); return { id: p.id, broj: p.broj, lat: latlng.lat, lng: latlng.lng, rad: p.rad, dozvoliPomoc: p.dozvoliPomoc, isPocetna: p.isPocetna, imeLokacije: p.imeLokacije, opisLokacije: p.opisLokacije, opisLokacijeSlika: window.slikeLokacijaMap[p.id] || "", zadatak: p.zadatak }; });
-        
+        let standardniPinovi = window.pinovi.map(p=> { let latlng = p.marker.getLatLng(); return { id: p.id, broj: p.broj, lat: latlng.lat, lng: latlng.lng, rad: p.rad, dozvoliPomoc: p.dozvoliPomoc, isPocetna: p.isPocetna, imeLokacije: p.imeLokacije, opisLokacije: p.opisLokacije, opisLokacijeSlika: window.slikeLokacijaMap[p.id] || "", zadatak: p.zadatak }; });
         let takmMod = document.getElementById('checkTakmicarski') ? document.getElementById('checkTakmicarski').checked : false;
 
         let data = { 
@@ -2339,10 +2456,8 @@ let standardniPinovi = window.pinovi.map(p=> { let latlng = p.marker.getLatLng()
 
     window.addEventListener('DOMContentLoaded', () => {
         let sacuvanRad = localStorage.getItem('autosave_potraga');
-        
         if (sacuvanRad) {
-            let zelisLiOporavak = confirm("⚠️ Pronađen je nesnimljen rad! Verovatno se telefon ugasio ili je pretraživač prekinut.\n\nŽelite da vratite tačke i nastavite rad?");
-            
+            let zelisLiOporavak = confirm("⚠️ Pronađen je nesnimljen rad! Verovatno se telefon ugasio ili je pretraživač prekinut.\n\nŽujete da vratite tačke i nastavite rad?");
             if (zelisLiOporavak) {
                 try {
                     let d = JSON.parse(sacuvanRad);
@@ -2354,454 +2469,450 @@ let standardniPinovi = window.pinovi.map(p=> { let latlng = p.marker.getLatLng()
         }
     });
 
-// --- 2. FUNKCIJA ZA ŠTAMPANJE MAPE (Armirana A4 veličina, Brendiranje na dnu, Koordinate desno) ---
-window.stampaMapuOreoli = function(mod) {
-    if (!window.rucnaMrezaGranice) {
-        alert("⚠️ Molimo vas da prvo podesite mrežu klikom na '📐 Podesi Mrežu' na dnu ekrana, pa je sačuvate.");
-        return;
-    }
-
-    let izborTima = "Master";
-    if ((mod === 'koordinate' || mod === 'hibridni') && document.getElementById('checkGrupna').checked) {
-        let unos = prompt("Za koji TIM štampate mapu?\nUpiši broj (npr. 01, 02, 05...) ili ostavi prazno za MASTER:");
-        if (unos && unos.trim() !== "") {
-            izborTima = unos.trim();
+    window.stampaMapuOreoli = function(mod) {
+        if (!window.rucnaMrezaGranice) {
+            alert("⚠️ Molimo vas da prvo podesite mrežu klikom na '📐 Podesi Mrežu' na dnu ekrana, pa je sačuvate.");
+            return;
         }
-    }
 
-    document.getElementById('zavrsiModal').style.display = 'none';
-    document.body.classList.add('stampaj-mapu');
-    
-    if(mod === 'koordinate') document.body.classList.add('sakrij-krugove');
-
-    let stariUI = document.getElementById('printMapUI');
-    if (stariUI) stariUI.remove();
-
-    let grid = window.izracunajMatematickuMrezu();
-
-    let ukupnaSirinaM = window.map.distance([grid.s, grid.w], [grid.s, grid.e]);
-    let ukupnaVisinaM = window.map.distance([grid.n, grid.w], [grid.s, grid.w]);
-    let poljeSirina = Math.round(ukupnaSirinaM / 9);
-    let poljeVisina = Math.round(ukupnaVisinaM / 7);
-    
-    if (window.rucnaMrezaSloj) window.map.removeLayer(window.rucnaMrezaSloj);
-    if (window.printGridSloj) window.map.removeLayer(window.printGridSloj);
-    window.printGridSloj = L.featureGroup().addTo(window.map);
-
-    let outerBounds = [ [90, -180], [90, 180], [-90, -180], [-90, 180] ];
-    let innerBounds = [ [grid.n, grid.w], [grid.s, grid.w], [grid.s, grid.e], [grid.n, grid.e] ];
-    L.polygon([outerBounds, innerBounds], {
-        color: 'none', stroke: false, fillColor: '#ffffff', fillOpacity: 1
-    }).addTo(window.printGridSloj);
-
-    L.rectangle([[grid.s, grid.w], [grid.n, grid.e]], {color: '#000', weight: 5, fill: false}).addTo(window.printGridSloj);
-
-    for(let i=1; i<9; i++) { 
-        let lng = grid.w + (i * grid.cellLng); 
-        L.polyline([[grid.n, lng], [grid.s, lng]], {color: '#000', weight: 2, dashArray: '6, 6'}).addTo(window.printGridSloj); 
-    }
-    for(let i=0; i<9; i++) { 
-        let markerLng = grid.w + (i * grid.cellLng) + (grid.cellLng / 2); 
-        let icon = L.divIcon({
-            className: 'grid-oznaka', 
-            html: `<div style="font-size:24px; font-weight:bold; color:#000; text-align:center; background:#fff; border:3px solid #000; width:36px; height:36px; line-height:30px; border-radius:6px; box-sizing:border-box;">${i+1}</div>`, 
-            iconSize:[36,36], 
-            iconAnchor:[18, 42]
-        }); 
-        L.marker([grid.n, markerLng], {icon: icon}).addTo(window.printGridSloj); 
-    }
-
-    for(let j=1; j<7; j++) { 
-        let lat = grid.n - (j * grid.cellLat); 
-        L.polyline([[lat, grid.w], [lat, grid.e]], {color: '#000', weight: 2, dashArray: '6, 6'}).addTo(window.printGridSloj); 
-    }
-    for(let j=0; j<7; j++) { 
-        let markerLat = grid.n - (j * grid.cellLat) - (grid.cellLat / 2); 
-        let slovo = ['A','B','C','D','E','F','G'][j]; 
-        let icon = L.divIcon({
-            className: 'grid-oznaka', 
-            html: `<div style="font-size:24px; font-weight:bold; color:#000; text-align:center; background:#fff; border:3px solid #000; width:36px; height:36px; line-height:30px; border-radius:6px; box-sizing:border-box;">${slovo}</div>`, 
-            iconSize:[36,36], 
-            iconAnchor:[42, 18]
-        }); 
-        L.marker([markerLat, grid.w], {icon: icon}).addTo(window.printGridSloj); 
-    }
-
-    let coordsText = "";
-    let listaAktivnihPinova = [];
-
-    if (izborTima !== "Master" && window.potragaPodaci && window.potragaPodaci.ruteTimova && window.potragaPodaci.ruteTimova[izborTima]) {
-        listaAktivnihPinova = window.potragaPodaci.ruteTimova[izborTima];
-    } else {
-        listaAktivnihPinova = window.pinovi;
-    }
-
-    listaAktivnihPinova.forEach((p, index) => {
-        let lat = p.marker ? p.marker.getLatLng().lat : p.lat;
-        let lng = p.marker ? p.marker.getLatLng().lng : p.lng;
-        let coord = window.dobiGridKoordinatu(lat, lng, grid);
-        if (index === 0) coordsText += `<div style="margin-bottom:6px; border-bottom:1px solid #ccc;">Start: <b style="font-size:16px;">${coord}</b></div>`;
-        else if (index === listaAktivnihPinova.length - 1) coordsText += `<div style="margin-bottom:6px; border-bottom:1px solid #ccc;">Cilj: <b style="font-size:16px;">${coord}</b></div>`;
-        else coordsText += `<div style="margin-bottom:6px; border-bottom:1px solid #ccc;">Tačka ${index + 1}: <b style="font-size:16px;">${coord}</b></div>`;
-    });
-
-    let displayKordinate = (mod === 'koordinate' || mod === 'hibridni') ? 'block' : 'none';
-    let naslovOznake = (izborTima === "Master") ? "MASTER LOKACIJE" : `TIM ${izborTima} RUTA`;
-
-    let printUI = document.createElement('div');
-    printUI.id = 'printMapUI';
-    printUI.innerHTML = `
-        <div style="position: absolute; top: 0; left: 0; width: 297mm; height: 210mm; z-index: 9999; pointer-events: none; font-family: Arial, sans-serif;">
-            
-            <div style="position: absolute; top: 12mm; left: 12mm; background: #fff; padding: 5px 12px; border: 2px solid #000; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                <span style="font-size: 20px; font-weight: bold; color: #ef4444; line-height: 1;">▲</span>
-                <span style="font-size: 12px; font-weight: bold; color: #000; letter-spacing: 1px;">SEVER</span>
-            </div>
-
-            <div style="position: absolute; bottom: 12mm; left: 50%; transform: translateX(-50%); background: #fff; padding: 10px 25px; border: 2px solid #000; border-radius: 12px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                <img src="https://i.ibb.co/VYdS4Yr9/logo-ikona-removebg-preview.png" style="width: 45px; height: 45px; object-fit: contain;">
-                <div style="text-align: left;">
-                    <strong style="font-size: 20px; color: #000; text-transform:uppercase;">${document.getElementById('imePotrage').value || "Potraga"}</strong><br>
-                    <span style="font-size: 13px; color: #333;">UMG Mentalna gimnastika | Šifra: <b>${document.getElementById('sifraPotrage').value || 'NEMA'}</b> | 📐 1 polje ≈ <b>${poljeSirina}m x ${poljeVisina}m</b></span>
-                </div>
-            </div>
-
-            <div style="display: ${displayKordinate}; position: absolute; top: 12mm; right: 12mm; background: #fff; padding: 15px 20px; border: 3px solid #000; border-radius: 12px; width: 220px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                <h3 style="margin:0 0 10px 0; color:#000; font-size:18px; text-align:center; border-bottom: 2px solid #000; padding-bottom: 8px;">📍 ${naslovOznake}</h3>
-                <div style="font-size: 15px; color: #000; text-align:left;">${coordsText}</div>
-            </div>
-
-        </div>
-    `;
-    document.body.appendChild(printUI);
-
-    let privremeniStil = document.createElement('style');
-    privremeniStil.id = 'stilPolozenoMreza';
-    privremeniStil.innerHTML = `
-        @media print { 
-            @page { size: A4 landscape !important; margin: 0mm !important; } 
-            body, html { width: 100% !important; height: 100% !important; margin: 0 !important; padding: 0 !important; background: white !important; overflow: hidden !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .leaflet-tile-pane { filter: none !important; opacity: 1 !important; } 
-            .leaflet-control-container { display: none !important; }
-            #mapaWrapper { display: block !important; visibility: visible !important; position: absolute !important; top: 0 !important; left: 0 !important; width: 297mm !important; height: 210mm !important; border: none !important; z-index: 1 !important; }
-            body.stampaj-mapu .leaflet-marker-icon.grid-oznaka { display: block !important; opacity: 1 !important; visibility: visible !important; }
-            #printMapUI { display: block !important; visibility: visible !important; z-index: 9999 !important; }
-            body.sakrij-krugove path.krug-oreol { display: none !important; }
-            body.stampaj-mapu .leaflet-marker-icon { display: none !important; }
-        }
-    `;
-    document.head.appendChild(privremeniStil);
-
-    window.pinovi.forEach(p => {
-        if (mod === 'hibridni' || mod === 'krugovi') {
-            p.krug.setStyle({
-                color: '#000000',
-                weight: 3,
-                fillColor: '#ffffff',
-                fillOpacity: 0.4,
-                fill: true
-            });
-        }
-    });
-
-    let wrapper = document.getElementById('mapaWrapper');
-    let oldWidth = wrapper.style.width; let oldHeight = wrapper.style.height; let oldPos = wrapper.style.position;
-    
-    wrapper.style.position = 'absolute'; wrapper.style.width = '297mm'; wrapper.style.height = '210mm';
-    window.map.invalidateSize();
-    
-    let padDesno = (mod === 'koordinate' || mod === 'hibridni') ? 270 : 60;
-    window.map.fitBounds([[grid.s, grid.w], [grid.n, grid.e]], { paddingTopLeft: [60, 60], paddingBottomRight: [padDesno, 110] });
-
-    setTimeout(() => {
-        window.print();
-        setTimeout(() => {
-            wrapper.style.width = oldWidth; wrapper.style.height = oldHeight; wrapper.style.position = oldPos;
-            window.map.invalidateSize();
-
-            document.body.classList.remove('stampaj-mapu');
-            document.body.classList.remove('stampaj-koordinate');
-            document.body.classList.remove('sakrij-krugove');
-            
-            if(window.printGridSloj) window.map.removeLayer(window.printGridSloj);
-            let stil = document.getElementById('stilPolozenoMreza'); if(stil) stil.remove();
-            let ui = document.getElementById('printMapUI'); if(ui) ui.remove();
-            
-            if (window.rucnaMrezaSloj) window.map.addLayer(window.rucnaMrezaSloj);
-            window.osveziPinove();
-            window.map.fitBounds([[grid.s, grid.w], [grid.n, grid.e]], {padding: [50, 50]});
-        }, 1000);
-    }, 2500); 
-};
-
-window.pripremiZaStampu = function() {
-    if (!window.rucnaMrezaGranice) {
-        alert("⚠️ Molimo vas da prvo podesite mrežu klikom na '📐 Podesi Mrežu' na dnu ekrana, pa je sačuvate.");
-        return;
-    }
-
-    document.getElementById('zavrsiModal').style.display='none';
-    let printArea = document.getElementById('printArea');
-    if (!printArea) return;
-
-    if (window.pinovi.length === 0) {
-        alert("Nema tačaka za štampu.");
-        return;
-    }
-
-    let imeStaze = document.getElementById('imePotrage').value || 'Nova Potraga';
-    let sifraStaze = document.getElementById('sifraPotrage').value || 'BEZ_SIFRE';
-    let ukupnaDistanca = document.getElementById('pDist').innerText || '0.00';
-    let isGrupna = document.getElementById('checkGrupna').checked;
-    
-    let prikaziOpis = confirm(window.trenutniJezik === 'sr' ? "Da li želite da se na papirima za igrače štampa i 'Detaljan opis lokacije'?" : "Do you want to print the 'Detailed location description'?");
-
-    let grid = window.izracunajMatematickuMrezu();
-    let koordinateMape = {};
-    window.pinovi.forEach(p => {
-        koordinateMape[p.id] = window.dobiGridKoordinatu(p.marker.getLatLng().lat, p.marker.getLatLng().lng, grid);
-    });
-
-    let ruteZaStampu = {};
-    let standardniPinovi = window.pinovi.map(p=> { let latlng = p.marker.getLatLng(); return { id: p.id, broj: p.broj, lat: latlng.lat, lng: latlng.lng, rad: p.rad, dozvoliPomoc: p.dozvoliPomoc, isPocetna: p.isPocetna, imeLokacije: p.imeLokacije, opisLokacije: p.opisLokacije, opisLokacijeSlika: window.slikeLokacijaMap[p.id] || "", zadatak: p.zadatak }; });
-
-    ruteZaStampu["Master"] = standardniPinovi;
-
-    if (isGrupna) {
-        let brojTimova = parseInt(document.getElementById('brojTimovaGrupna').value);
-        let grupnaLogika = document.getElementById('logikaGrupna').value;
-        let generisaneRute = window.generisiGrupneRute(standardniPinovi, brojTimova, grupnaLogika);
-        for(let key in generisaneRute) { ruteZaStampu[key] = generisaneRute[key]; }
-    } else {
-        ruteZaStampu["1"] = standardniPinovi; 
-    }
-
-    let privremeniStil = document.createElement('style');
-    privremeniStil.id = 'stilUspravnaStampa';
-    privremeniStil.innerHTML = `
-        @media print { 
-            @page { size: A4 portrait !important; margin: 10mm !important; } 
-            *, *::before, *::after { box-sizing: border-box !important; }
-            body { background: white !important; margin: 0; padding: 0; width: 100%; font-family: Arial, sans-serif;}
-            body * { visibility: hidden; }
-            #printArea, #printArea * { visibility: visible; }
-            #printArea { position: absolute; left: 0; top: 0; width: 100%; }
-            
-            .print-container { width: 100%; page-break-after: always; }
-            .print-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #000; padding-bottom: 12px; margin-bottom: 20px; }
-            .header-left { text-align: left; }
-            .header-left h1 { margin: 0; font-size: 24px; text-transform: uppercase; color: #000; }
-            .header-left .sub-info { font-size: 14px; font-weight: bold; color: #000; margin-top: 5px; }
-            
-            .header-right { display: flex; flex-direction: column; align-items: flex-end; }
-            .header-right-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px;}
-            .header-right-text { text-align: right; }
-            .header-right-text h2 { margin: 0; font-size: 14px; font-weight: bold; color: #000; }
-            .header-right-text p { margin: 0; font-size: 11px; color: #333; }
-            .badge { display: inline-block; font-size: 14px; font-weight: bold; color: #e11d48; text-transform: uppercase; border: 2px solid #e11d48; border-radius: 6px; padding: 4px 8px; }
-
-            .tasks-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-            .task-card { page-break-inside: avoid; border: 2px solid #333; border-radius: 8px; padding: 12px; }
-            .task-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; margin-bottom: 8px; padding-bottom: 6px; }
-            .task-title { font-size: 14px; font-weight: bold; margin: 0; color: #000; display:flex; align-items:center; gap:8px;}
-            .task-label { font-size: 11px; text-transform: uppercase; color: #333; font-weight: bold; display: block; margin-bottom: 2px; margin-top:6px;}
-            .task-value { font-size: 13px; color: #000; display: block; line-height: 1.3; }
-            .task-value.location { font-weight: bold; font-size:14px;}
-            .hidden-answer { border: 1px dashed #999; height: 35px; border-radius: 4px; margin-top: 4px; }
-            .task-image-box { margin-top: 10px; text-align: center; width: 100%; }
-            .task-image-box img { max-width: 100%; max-height: 110px; object-fit: contain; border-radius: 6px; border: 1px solid #999; }
-        }
-    `;
-    document.head.appendChild(privremeniStil);
-
-    let html = '';
-    let kljuceviZaStampu = Object.keys(ruteZaStampu).sort((a, b) => {
-        if (a === "Master") return -1;
-        if (b === "Master") return 1;
-        return parseInt(a) - parseInt(b);
-    });
-
-    kljuceviZaStampu.forEach(nazivRute => {
-        let isMaster = (nazivRute === "Master");
-        let ruta = ruteZaStampu[nazivRute];
-        let naslovListe = isMaster ? 'MASTER LISTA (Rešenja)' : `TIM ${parseInt(nazivRute)}`;
-
-        html += `
-        <div class="print-container">
-            <div class="print-header">
-                <div class="header-left">
-                    <h1>POTRAGA: ${imeStaze}</h1>
-                    <div class="sub-info">Šifra: ${sifraStaze} &nbsp;|&nbsp; Dužina: ${ukupnaDistanca} km</div>
-                </div>
-                <div class="header-right">
-                    <div class="header-right-top">
-                        <div class="header-right-text">
-                            <h2>Centar za mentalnu gimnastiku</h2>
-                            <p>Udruženje Mentalna Gimnastika</p>
-                        </div>
-                        <img src="https://i.ibb.co/VYdS4Yr9/logo-ikona-removebg-preview.png" alt="UMG Logo" style="width:45px; height:45px; object-fit:contain;">
-                    </div>
-                    <div class="badge">${naslovListe}</div>
-                </div>
-            </div>
-            <div class="tasks-grid">`;
-
-        ruta.forEach((p, index) => {
-            let koordinata = koordinateMape[p.id] || "Mreža";
-            let tipZadatka = p.zadatak ? p.zadatak.tip.toUpperCase() : 'NEMA';
-            let naslovZadatka = isMaster ? `Tačka ${p.broj}` : `Zadatak ${index + 1}`;
-
-            html += `
-            <div class="task-card">
-                <div class="task-header">
-                    <span class="task-title">
-                        <input type="checkbox" style="width:16px; height:16px; margin:0; cursor:pointer; border: 1px solid #000;">
-                        ${naslovZadatka} 
-                        <span style="font-weight:normal; font-size:13px; margin-left:4px; color:#000;">[Mapa: ${koordinata}]</span>
-                    </span>
-                    <span style="font-size:10px; font-weight:bold; border:1px solid #000; padding:2px 6px; border-radius:10px; color:#000;">${tipZadatka}</span>
-                </div>`;
-
-            if (p.imeLokacije) { html += `<div><span class="task-label">Lokacija:</span><span class="task-value location">${p.imeLokacije}</span></div>`; }
-            
-            if ((isMaster || prikaziOpis) && p.opisLokacije) { 
-                html += `<div><span class="task-label">Opis lokacije:</span><span class="task-value">${p.opisLokacije}</span></div>`; 
+        let izborTima = "Master";
+        if ((mod === 'koordinate' || mod === 'hibridni') && document.getElementById('checkGrupna').checked) {
+            let unos = prompt("Za koji TIM štampate mapu?\nUpiši broj (npr. 01, 02, 05...) ili ostavi prazno za MASTER:");
+            if (unos && unos.trim() !== "") {
+                izborTima = unos.trim();
             }
-            
-            if ((isMaster || prikaziOpis) && p.opisLokacijeSlika) {
-                html += `<div style="margin-top: 10px; margin-bottom: 10px; text-align: center;">
-                            <img src="${p.opisLokacijeSlika}" style="max-width: 100%; max-height: 180px; border-radius: 8px; border: 1px solid #777; object-fit: contain;">
-                         </div>`;
-            }
+        }
 
-            if (p.zadatak) {
-                let uputstvo = p.zadatak.tekst_zadatka || "Sledite navigaciju";
-                let odgovor = p.zadatak.odgovor || "";
-                if (p.zadatak.tip === 'zlatnik') uputstvo = "Sakupljanje zlatnika";
-                
-                if (p.zadatak.tip === 'multi') {
-                    let mUp = ""; let mOdg = "";
-                    if (p.zadatak.tekst_zadatka) mUp += `<div style="margin-bottom:4px;"><strong>Zajedničko:</strong> ${p.zadatak.tekst_zadatka}</div>`;
-                    let elovi = p.zadatak.multi_elementi || [];
-                    elovi.forEach(el => {
-                        if(el === 'zlatnik') { mUp += `<div style="margin-bottom:2px;"><strong>🪙 Zlatnik:</strong> Sakupljanje</div>`; mOdg += `<div style="margin-bottom:2px;">Prolazak</div>`; }
-                        if(el === 'zagonetka') { mUp += `<div style="margin-bottom:2px;"><strong>🧠 Zagonetka:</strong> ${p.zadatak.zag_tekst || ''}</div>`; mOdg += `<div style="margin-bottom:2px;"><strong>Odgovor:</strong> ${p.zadatak.zag_odgovor || ''}</div>`; }
-                        if(el === 'kviz' && p.zadatak.kvizData) { 
-                            let kText = p.zadatak.kvizData.map((q, i) => `P${i+1}: ${q.pitanje}`).join(', ');
-                            let kOdg = p.zadatak.kvizData.map((q, i) => `P${i+1}: ${q.tacni.join(', ')}`).join(', ');
-                            mUp += `<div style="margin-bottom:2px;"><strong>📝 Kviz:</strong> ${kText}</div>`; mOdg += `<div style="margin-bottom:2px;"><strong>Odgovor:</strong> ${kOdg}</div>`; 
-                        }
-                        if(el === 'kreativni') { mUp += `<div style="margin-bottom:2px;"><strong>📸 Foto:</strong> ${p.zadatak.kre_uputstvo || ''}</div>`; mOdg += `<div style="margin-bottom:2px;">Fotografija</div>`; }
-                        if(el === 'pronadji') { mUp += `<div style="margin-bottom:2px;"><strong>🔍 Pronađi:</strong> ${p.zadatak.pronadji_opis || ''}</div>`; mOdg += `<div style="margin-bottom:2px;">Pronađeno</div>`; }
-                        if(el === 'qr') { mUp += `<div style="margin-bottom:2px;"><strong>📱 QR:</strong> ${p.zadatak.qr_uputstvo || ''}</div>`; mOdg += `<div style="margin-bottom:2px;"><strong>Ključ:</strong> ${p.zadatak.qr_odg || ''}</div>`; }
-                    });
-                    uputstvo = mUp || "Nema podešenih zadataka"; odgovor = mOdg; 
-                }
+        document.getElementById('zavrsiModal').style.display = 'none';
+        document.getElementById('zavrsiModal').style.display = 'none';
+        document.body.classList.add('stampaj-mapu');
+        if(mod === 'koordinate') document.body.classList.add('sakrij-krugove');
 
-                html += `<div><span class="task-label">Zadatak / Uputstvo:</span><span class="task-value">${uputstvo}</span></div>`;
-                if (isMaster) { if (odgovor) { html += `<div><span class="task-label">Rešenje:</span><span class="task-value" style="font-weight:bold;">${odgovor}</span></div>`; } } else { html += `<div><span class="task-label">Vaš odgovor:</span><div class="hidden-answer"></div></div>`; }
-                if (p.zadatak.slika) { html += `<div class="task-image-box"><img src="${p.zadatak.slika}" alt="Slika"></div>`; }
-            }
-            html += `</div>`;
+        let stariUI = document.getElementById('printMapUI');
+        if (stariUI) stariUI.remove();
+
+        let grid = window.izracunajMatematickuMrezu();
+        let ukupnaSirinaM = window.map.distance([grid.s, grid.w], [grid.s, grid.e]);
+        let ukupnaVisinaM = window.map.distance([grid.n, grid.w], [grid.s, grid.w]);
+        let poljeSirina = Math.round(ukupnaSirinaM / 9);
+        let poljeVisina = Math.round(ukupnaVisinaM / 7);
+        
+        if (window.rucnaMrezaSloj) window.map.removeLayer(window.rucnaMrezaSloj);
+        if (window.printGridSloj) window.map.removeLayer(window.printGridSloj);
+        window.printGridSloj = L.featureGroup().addTo(window.map);
+
+        let outerBounds = [ [90, -180], [90, 180], [-90, -180], [-90, 180] ];
+        let innerBounds = [ [grid.n, grid.w], [grid.s, grid.w], [grid.s, grid.e], [grid.n, grid.e] ];
+        L.polygon([outerBounds, innerBounds], {
+            color: 'none', stroke: false, fillColor: '#ffffff', fillOpacity: 1
+        }).addTo(window.printGridSloj);
+
+        L.rectangle([[grid.s, grid.w], [grid.n, grid.e]], {color: '#000', weight: 5, fill: false}).addTo(window.printGridSloj);
+
+        for(let i=1; i<9; i++) { 
+            let lng = grid.w + (i * grid.cellLng); 
+            L.polyline([[grid.n, lng], [grid.s, lng]], {color: '#000', weight: 2, dashArray: '6, 6'}).addTo(window.printGridSloj); 
+        }
+        for(let i=0; i<9; i++) { 
+            let markerLng = grid.w + (i * grid.cellLng) + (grid.cellLng / 2); 
+            let icon = L.divIcon({
+                className: 'grid-oznaka', 
+                html: `<div style="font-size:24px; font-weight:bold; color:#000; text-align:center; background:#fff; border:3px solid #000; width:36px; height:36px; line-height:30px; border-radius:6px; box-sizing:border-box;">${i+1}</div>`, 
+                iconSize:[36,36], 
+                iconAnchor:[18, 42]
+            }); 
+            L.marker([grid.n, markerLng], {icon: icon}).addTo(window.printGridSloj); 
+        }
+
+        for(let j=1; j<7; j++) { 
+            let lat = grid.n - (j * grid.cellLat); 
+            L.polyline([[lat, grid.w], [lat, grid.e]], {color: '#000', weight: 2, dashArray: '6, 6'}).addTo(window.printGridSloj); 
+        }
+        for(let j=0; j<7; j++) { 
+            let markerLat = grid.n - (j * grid.cellLat) - (grid.cellLat / 2); 
+            let slovo = ['A','B','C','D','E','F','G'][j]; 
+            let icon = L.divIcon({
+                className: 'grid-oznaka', 
+                html: `<div style="font-size:24px; font-weight:bold; color:#000; text-align:center; background:#fff; border:3px solid #000; width:36px; height:36px; line-height:30px; border-radius:6px; box-sizing:border-box;">${slovo}</div>`, 
+                iconSize:[36,36], 
+                iconAnchor:[42, 18]
+            }); 
+            L.marker([markerLat, grid.w], {icon: icon}).addTo(window.printGridSloj); 
+        }
+
+        let coordsText = "";
+        let listaAktivnihPinova = [];
+
+        if (izborTima !== "Master" && window.potragaPodaci && window.potragaPodaci.ruteTimova && window.potragaPodaci.ruteTimova[izborTima]) {
+            listaAktivnihPinova = window.potragaPodaci.ruteTimova[izborTima];
+        } else {
+            listaAktivnihPinova = window.pinovi;
+        }
+
+        listaAktivnihPinova.forEach((p, index) => {
+            let lat = p.marker ? p.marker.getLatLng().lat : p.lat;
+            let lng = p.marker ? p.marker.getLatLng().lng : p.lng;
+            let coord = window.dobiGridKoordinatu(lat, lng, grid);
+            if (index === 0) coordsText += `<div style="margin-bottom:6px; border-bottom:1px solid #ccc;">Start: <b style="font-size:16px;">${coord}</b></div>`;
+            else if (index === listaAktivnihPinova.length - 1) coordsText += `<div style="margin-bottom:6px; border-bottom:1px solid #ccc;">Cilj: <b style="font-size:16px;">${coord}</b></div>`;
+            else coordsText += `<div style="margin-bottom:6px; border-bottom:1px solid #ccc;">Tačka ${index + 1}: <b style="font-size:16px;">${coord}</b></div>`;
         });
-        html += `</div></div>`;
-    });
 
-    html += `
-        <div class="qr-page" style="page-break-before: always; width: 100%; font-family: Arial, sans-serif;">
-            <div class="qr-header" style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid #000; padding-bottom: 15px;">
-                <h1 style="font-size: 22px; margin: 0 0 8px 0; text-transform: uppercase; color: #000;">QR Kodovi za teren</h1>
-                <p style="font-size:14px; margin:0; color:#333;">Odštampajte, isecite i postavite ove kodove na fizičke lokacije.</p>
-            </div>
-            <div class="qr-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%;">
-    `;
+        let displayKordinate = (mod === 'koordinate' || mod === 'hibridni') ? 'block' : 'none';
+        let naslovOznake = (izborTima === "Master") ? "MASTER LOKACIJE" : `TIM ${izborTima} RUTA`;
 
-    window.pinovi.forEach((p, index) => {
-        let nazivQr = index === 0 ? "START (Tačka 1)" : (index === window.pinovi.length - 1 ? `CILJ (Tačka ${p.broj})` : `Tačka ${p.broj}`);
-        let qrData = encodeURIComponent("POTRAGA:" + sifraStaze + "|TACKA:" + p.id);
-        let qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&data=" + qrData;
-
-        html += `
-            <div class="qr-card" style="border: 2px dashed #000; padding: 20px; text-align: center; page-break-inside: avoid; border-radius: 12px;">
-                <div class="qr-title" style="font-size: 16px; font-weight: bold; margin-bottom: 10px; color:#000;">${nazivQr}</div>
-                <img src="${qrUrl}" alt="QR Kod ${p.broj}" crossorigin="anonymous" style="width: 140px; height: 140px; margin-bottom: 12px; max-width: 100%; object-fit: contain;">
+        let printUI = document.createElement('div');
+        printUI.id = 'printMapUI';
+        printUI.innerHTML = `
+            <div style="position: absolute; top: 0; left: 0; width: 297mm; height: 210mm; z-index: 9999; pointer-events: none; font-family: Arial, sans-serif;">
+                <div style="position: absolute; top: 12mm; left: 12mm; background: #fff; padding: 5px 12px; border: 2px solid #000; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                    <span style="font-size: 20px; font-weight: bold; color: #ef4444; line-height: 1;">▲</span>
+                    <span style="font-size: 12px; font-weight: bold; color: #000; letter-spacing: 1px;">SEVER</span>
+                </div>
+                <div style="position: absolute; bottom: 12mm; left: 50%; transform: translateX(-50%); background: #fff; padding: 10px 25px; border: 2px solid #000; border-radius: 12px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                    <img src="https://i.ibb.co/VYdS4Yr9/logo-ikona-removebg-preview.png" style="width: 45px; height: 45px; object-fit: contain;">
+                    <div style="text-align: left;">
+                        <strong style="font-size: 20px; color: #000; text-transform:uppercase;">${document.getElementById('imePotrage').value || "Potraga"}</strong><br>
+                        <span style="font-size: 13px; color: #333;">UMG Mentalna gimnastika | Šifra: <b>${document.getElementById('sifraPotrage').value || 'NEMA'}</b> | 📐 1 polje ≈ <b>${poljeSirina}m x ${poljeVisina}m</b></span>
+                    </div>
+                </div>
+                <div style="display: ${displayKordinate}; position: absolute; top: 12mm; right: 12mm; background: #fff; padding: 15px 20px; border: 3px solid #000; border-radius: 12px; width: 220px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                    <h3 style="margin:0 0 10px 0; color:#000; font-size:18px; text-align:center; border-bottom: 2px solid #000; padding-bottom: 8px;">📍 ${naslovOznake}</h3>
+                    <div style="font-size: 15px; color: #000; text-align:left;">${coordsText}</div>
+                </div>
             </div>
         `;
-    });
+        document.body.appendChild(printUI);
 
-    html += `</div></div>`; 
-    printArea.innerHTML = html;
-    
-    setTimeout(() => {
-        window.print();
-        setTimeout(() => { document.getElementById('stilUspravnaStampa').remove(); printArea.innerHTML = ''; }, 1000);
-    }, 500);
-};
+        let privremeniStil = document.createElement('style');
+        privremeniStil.id = 'stilPolozenoMreza';
+        privremeniStil.innerHTML = `
+            @media print { 
+                @page { size: A4 landscape !important; margin: 0mm !important; } 
+                body, html { width: 100% !important; height: 100% !important; margin: 0 !important; padding: 0 !important; background: white !important; overflow: hidden !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .leaflet-tile-pane { filter: none !important; opacity: 1 !important; } 
+                .leaflet-control-container { display: none !important; }
+                #mapaWrapper { display: block !important; visibility: visible !important; position: absolute !important; top: 0 !important; left: 0 !important; width: 297mm !important; height: 210mm !important; border: none !important; z-index: 1 !important; }
+                body.stampaj-mapu .leaflet-marker-icon.grid-oznaka { display: block !important; opacity: 1 !important; visibility: visible !important; }
+                #printMapUI { display: block !important; visibility: visible !important; z-index: 9999 !important; }
+                body.sakrij-krugove path.krug-oreol { display: none !important; }
+                body.stampaj-mapu .leaflet-marker-icon { display: none !important; }
+            }
+        `;
+        document.head.appendChild(privremeniStil);
 
-window.ukljuciRucnuMrezu = function() {
-    if(window.pinovi.length === 0) { alert("Dodajte barem jednu tačku na mapu!"); return; }
-    document.getElementById('btnPodesiMrezu').style.display = 'none';
-    document.getElementById('btnSacuvajMrezu').style.display = 'block';
+        window.pinovi.forEach(p => {
+            if (mod === 'hibridni' || mod === 'krugovi') {
+                p.krug.setStyle({
+                    color: '#000000',
+                    weight: 3,
+                    fillColor: '#ffffff',
+                    fillOpacity: 0.4,
+                    fill: true
+                });
+            }
+        });
 
-    if (window.rucnaMrezaSloj) window.map.removeLayer(window.rucnaMrezaSloj);
-    
-    if (window.rucnaMrezaMarkeri && Array.isArray(window.rucnaMrezaMarkeri)) {
-        window.rucnaMrezaMarkeri.forEach(m => window.map.removeLayer(m));
-    }
-    window.rucnaMrezaMarkeri = [];
-    window.rucnaMrezaSloj = L.featureGroup().addTo(window.map);
+        let wrapper = document.getElementById('mapaWrapper');
+        let oldWidth = wrapper.style.width; let oldHeight = wrapper.style.height; let oldPos = wrapper.style.position;
+        
+        wrapper.style.position = 'absolute'; wrapper.style.width = '297mm'; wrapper.style.height = '210mm';
+        window.map.invalidateSize();
+        
+        let padDesno = (mod === 'koordinate' || mod === 'hibridni') ? 270 : 60;
+        window.map.fitBounds([[grid.s, grid.w], [grid.n, grid.e]], { paddingTopLeft: [60, 60], paddingBottomRight: [padDesno, 110] });
 
-    let bounds = L.featureGroup(window.pinovi.map(p => p.krug)).getBounds();
-    let padLat = (bounds.getNorth() - bounds.getSouth()) * 0.15;
-    let padLng = (bounds.getEast() - bounds.getWest()) * 0.15;
-    let grid = { n: bounds.getNorth() + padLat, s: bounds.getSouth() - padLat, e: bounds.getEast() + padLng, w: bounds.getWest() - padLng };
+        setTimeout(() => {
+            window.print();
+            setTimeout(() => {
+                wrapper.style.width = oldWidth; wrapper.style.height = oldHeight; wrapper.style.position = oldPos;
+                wrapper.style.width = oldWidth; wrapper.style.height = oldHeight; wrapper.style.position = oldPos;
+                window.map.invalidateSize();
+                document.body.classList.remove('stampaj-mapu');
+                document.body.classList.remove('stampaj-koordinate');
+                document.body.classList.remove('sakrij-krugove');
+                
+                if(window.printGridSloj) window.map.removeLayer(window.printGridSloj);
+                let stil = document.getElementById('stilPolozenoMreza'); if(stil) stil.remove();
+                let ui = document.getElementById('printMapUI'); if(ui) ui.remove();
+                
+                if (window.rucnaMrezaSloj) window.map.addLayer(window.rucnaMrezaSloj);
+                window.osveziPinove();
+                window.map.fitBounds([[grid.s, grid.w], [grid.n, grid.e]], {padding: [50, 50]});
+            }, 1000);
+        }, 2500); 
+    };
 
-    let icon = L.divIcon({className: 'drag-corner', html: '⤡', iconSize: [30,30], iconAnchor: [15,15]});
-    let nwMarker = L.marker([grid.n, grid.w], {draggable: true, icon: icon, zIndexOffset: 2000}).addTo(window.map);
-    let seMarker = L.marker([grid.s, grid.e], {draggable: true, icon: icon, zIndexOffset: 2000}).addTo(window.map);
-    window.rucnaMrezaMarkeri.push(nwMarker, seMarker);
+    window.pripremiZaStampu = function() {
+        if (!window.rucnaMrezaGranice) {
+            alert("⚠️ Molimo vas da prvo podesite mrežu klikom na '📐 Podesi Mrežu' na dnu ekrana, pa je sačuvate.");
+            return;
+        }
 
-    function crtajZivuMrezu() {
-        window.rucnaMrezaSloj.clearLayers();
-        let p1 = nwMarker.getLatLng(); let p2 = seMarker.getLatLng();
-        let curN = Math.max(p1.lat, p2.lat); let curS = Math.min(p1.lat, p2.lat);
-        let curE = Math.max(p1.lng, p2.lng); let curW = Math.min(p1.lng, p2.lng);
-        window.rucnaMrezaGranice = { n:curN, s:curS, e:curE, w:curW, cellLat:(curN-curS)/7, cellLng:(curE-curW)/9 };
-        L.rectangle([[curS, curW], [curN, curE]], {color: '#e11d48', weight: 3, fill: false}).addTo(window.rucnaMrezaSloj);
-        for(let i=1; i<9; i++) { let lng = curW + (i * window.rucnaMrezaGranice.cellLng); L.polyline([[curN, lng], [curS, lng]], {color: '#e11d48', weight: 1, dashArray: '4,4'}).addTo(window.rucnaMrezaSloj); }
-        for(let j=1; j<7; j++) { let lat = curN - (j * window.rucnaMrezaGranice.cellLat); L.polyline([[lat, curW], [lat, curE]], {color: '#e11d48', weight: 1, dashArray: '4,4'}).addTo(window.rucnaMrezaSloj); }
-    }
-    nwMarker.on('drag', crtajZivuMrezu); seMarker.on('drag', crtajZivuMrezu); crtajZivuMrezu(); 
-    window.map.fitBounds([[grid.s, grid.w], [grid.n, grid.e]], {padding: [40,40]});
-};
+        document.getElementById('zavrsiModal').style.display='none';
+        let printArea = document.getElementById('printArea');
+        if (!printArea) return;
 
-window.sacuvajRucnuMrezu = function() {
-    if (window.rucnaMrezaMarkeri && Array.isArray(window.rucnaMrezaMarkeri)) {
-        window.rucnaMrezaMarkeri.forEach(m => window.map.removeLayer(m));
-    }
-    window.rucnaMrezaMarkeri = [];
-    
-    document.getElementById('btnPodesiMrezu').style.display = 'block'; 
-    document.getElementById('btnPodesiMrezu').innerText = '📐 Izmeni Mrežu';
-    document.getElementById('btnSacuvajMrezu').style.display = 'none';
-    alert("Mreža sačuvana!");
-};
-window.izracunajMatematickuMrezu = function() {
-    if (window.rucnaMrezaGranice) return window.rucnaMrezaGranice;
-    if(window.pinovi.length === 0) return null;
-    let bounds = L.featureGroup(window.pinovi.map(p => p.krug)).getBounds();
-    let padLat = (bounds.getNorth() - bounds.getSouth()) * 0.15; let padLng = (bounds.getEast() - bounds.getWest()) * 0.15;
-    let n = bounds.getNorth() + padLat; let s = bounds.getSouth() - padLat; let e = bounds.getEast() + padLng; let w = bounds.getWest() - padLng;
-    return { n:n, s:s, e:e, w:w, cellLat: (n - s) / 7, cellLng: (e - w) / 9 };
-};
+        if (window.pinovi.length === 0) {
+            alert("Nema tačaka za štampu.");
+            return;
+        }
 
-window.dobiGridKoordinatu = function(lat, lng, grid) {
-    if(!grid) return "??";
-    let col = Math.floor((lng - grid.w) / grid.cellLng) + 1; let row = Math.floor((grid.n - lat) / grid.cellLat);
-    if (col < 1) col = 1; if (col > 9) col = 9; if (row < 0) row = 0; if (row > 6) row = 6;
-    return ['A','B','C','D','E','F','G'][row] + col;
-};
+        let imeStaze = document.getElementById('imePotrage').value || 'Nova Potraga';
+        let sifraStaze = document.getElementById('sifraPotrage').value || 'BEZ_SIFRE';
+        let ukupnaDistanca = document.getElementById('pDist').innerText || '0.00';
+        let isGrupna = document.getElementById('checkGrupna').checked;
+        
+        let prikaziOpis = confirm(window.trenutniJezik === 'sr' ? "Da li želite da se na papirima za igrače štampa i 'Detaljan opis lokacije'?" : "Do you want to print the 'Detailed location description'?");
 
+        let grid = window.izracunajMatematickuMrezu();
+        let koordinateMape = {};
+        window.pinovi.forEach(p => {
+            koordinateMape[p.id] = window.dobiGridKoordinatu(p.marker.getLatLng().lat, p.marker.getLatLng().lng, grid);
+        });
+
+        let ruteZaStampu = {};
+        let standardniPinovi = window.pinovi.map(p=> { let latlng = p.marker.getLatLng(); return { id: p.id, broj: p.broj, lat: latlng.lat, lng: latlng.lng, rad: p.rad, dozvoliPomoc: p.dozvoliPomoc, isPocetna: p.isPocetna, imeLokacije: p.imeLokacije, opisLokacije: p.opisLokacije, opisLokacijeSlika: window.slikeLokacijaMap[p.id] || "", zadatak: p.zadatak }; });
+
+        ruteZaStampu["Master"] = standardniPinovi;
+
+        if (isGrupna) {
+            let brojTimova = parseInt(document.getElementById('brojTimovaGrupna').value);
+            let grupnaLogika = document.getElementById('logikaGrupna').value;
+            let generisaneRute = window.generisiGrupneRute(standardniPinovi, brojTimova, grupnaLogika);
+            for(let key in generisaneRute) { ruteZaStampu[key] = generisaneRute[key]; }
+        } else {
+            ruteZaStampu["1"] = standardniPinovi; 
+        }
+
+        let privremeniStil = document.createElement('style');
+        privremeniStil.id = 'stilUspravnaStampa';
+        privremeniStil.innerHTML = `
+            @media print { 
+                @page { size: A4 portrait !important; margin: 10mm !important; } 
+                *, *::before, *::after { box-sizing: border-box !important; }
+                body { background: white !important; margin: 0; padding: 0; width: 100%; font-family: Arial, sans-serif;}
+                body * { visibility: hidden; }
+                #printArea, #printArea * { visibility: visible; }
+                #printArea { position: absolute; left: 0; top: 0; width: 100%; }
+                
+                .print-container { width: 100%; page-break-after: always; }
+                .print-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #000; padding-bottom: 12px; margin-bottom: 20px; }
+                .header-left { text-align: left; }
+                .header-left h1 { margin: 0; font-size: 24px; text-transform: uppercase; color: #000; }
+                .header-left .sub-info { font-size: 14px; font-weight: bold; color: #000; margin-top: 5px; }
+                
+                .header-right { display: flex; flex-direction: column; align-items: flex-end; }
+                .header-right-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px;}
+                .header-right-text { text-align: right; }
+                .header-right-text h2 { margin: 0; font-size: 14px; font-weight: bold; color: #000; }
+                .header-right-text p { margin: 0; font-size: 11px; color: #333; }
+                .badge { display: inline-block; font-size: 14px; font-weight: bold; color: #e11d48; text-transform: uppercase; border: 2px solid #e11d48; border-radius: 6px; padding: 4px 8px; }
+
+                .tasks-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+                .task-card { page-break-inside: avoid; border: 2px solid #333; border-radius: 8px; padding: 12px; }
+                .task-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; margin-bottom: 8px; padding-bottom: 6px; }
+                .task-title { font-size: 14px; font-weight: bold; margin: 0; color: #000; display:flex; align-items:center; gap:8px;}
+                .task-label { font-size: 11px; text-transform: uppercase; color: #333; font-weight: bold; display: block; margin-bottom: 2px; margin-top:6px;}
+                .task-value { font-size: 13px; color: #000; display: block; line-height: 1.3; }
+                .task-value.location { font-weight: bold; font-size:14px;}
+                .hidden-answer { border: 1px dashed #999; height: 35px; border-radius: 4px; margin-top: 4px; }
+                .task-image-box { margin-top: 10px; text-align: center; width: 100%; }
+                .task-image-box img { max-width: 100%; max-height: 110px; object-fit: contain; border-radius: 6px; border: 1px solid #999; }
+            }
+        `;
+        document.head.appendChild(privremeniStil);
+
+        let html = '';
+        let kljuceviZaStampu = Object.keys(ruteZaStampu).sort((a, b) => {
+            if (a === "Master") return -1;
+            if (b === "Master") return 1;
+            return parseInt(a) - parseInt(b);
+        });
+
+        kljuceviZaStampu.forEach(nazivRute => {
+            let isMaster = (nazivRute === "Master");
+            let ruta = ruteZaStampu[nazivRute];
+            let naslovListe = isMaster ? 'MASTER LISTA (Rešenja)' : `TIM ${parseInt(nazivRute)}`;
+
+            html += `
+            <div class="print-container">
+                <div class="print-header">
+                    <div class="header-left">
+                        <h1>POTRAGA: ${imeStaze}</h1>
+                        <div class="sub-info">Šifra: ${sifraStaze} &nbsp;|&nbsp; Dužina: ${ukupnaDistanca} km</div>
+                    </div>
+                    <div class="header-right">
+                        <div class="header-right-top">
+                            <div class="header-right-text">
+                                <h2>Centar za mentalnu gimnastiku</h2>
+                                <p>Udruženje Mentalna Gimnastika</p>
+                            </div>
+                            <img src="https://i.ibb.co/VYdS4Yr9/logo-ikona-removebg-preview.png" alt="UMG Logo" style="width:45px; height:45px; object-fit:contain;">
+                        </div>
+                        <div class="badge">${naslovListe}</div>
+                    </div>
+                </div>
+                <div class="tasks-grid">`;
+
+            ruta.forEach((p, index) => {
+                let koordinata = koordinateMape[p.id] || "Mreža";
+                let tipZadatka = p.zadatak ? p.zadatak.tip.toUpperCase() : 'NEMA';
+                let naslovZadatka = isMaster ? `Tačka ${p.broj}` : `Zadatak ${index + 1}`;
+
+                html += `
+                <div class="task-card">
+                    <div class="task-header">
+                        <span class="task-title">
+                            <input type="checkbox" style="width:16px; height:16px; margin:0; cursor:pointer; border: 1px solid #000;">
+                            ${naslovZadatka} 
+                            <span style="font-weight:normal; font-size:13px; margin-left:4px; color:#000;">[Mapa: ${koordinata}]</span>
+                        </span>
+                        <span style="font-size:10px; font-weight:bold; border:1px solid #000; padding:2px 6px; border-radius:10px; color:#000;">${tipZadatka}</span>
+                    </div>`;
+
+                if (p.imeLokacije) { html += `<div><span class="task-label">Lokacija:</span><span class="task-value location">${p.imeLokacije}</span></div>`; }
+                
+                if ((isMaster || prikaziOpis) && p.opisLokacije) { 
+                    html += `<div><span class="task-label">Opis lokacije:</span><span class="task-value">${p.opisLokacije}</span></div>`; 
+                }
+                
+                if ((isMaster || prikaziOpis) && p.opisLokacijeSlika) {
+                    html += `<div style="margin-top: 10px; margin-bottom: 10px; text-align: center;">
+                                <img src="${p.opisLokacijeSlika}" style="max-width: 100%; max-height: 180px; border-radius: 8px; border: 1px solid #777; object-fit: contain;">
+                             </div>`;
+                }
+
+                if (p.zadatak) {
+                    let uputstvo = p.zadatak.tekst_zadatka || "Sledite navigaciju";
+                    let odgovor = p.zadatak.odgovor || "";
+                    if (p.zadatak.tip === 'zlatnik') uputstvo = "Sakupljanje zlatnika";
+                    if (p.zadatak.tip === 'igrica') uputstvo = `Odigrati igricu sa šifrom: ${p.zadatak.tekst_zadatka}`;
+                    
+                    if (p.zadatak.tip === 'multi') {
+                        let mUp = ""; let mOdg = "";
+                        if (p.zadatak.tekst_zadatka) mUp += `<div style="margin-bottom:4px;"><strong>Zajedničko:</strong> ${p.zadatak.tekst_zadatka}</div>`;
+                        let elovi = p.zadatak.multi_elementi || [];
+                        elovi.forEach(el => {
+                            if(el === 'zlatnik') { mUp += `<div style="margin-bottom:2px;"><strong>🪙 Zlatnik:</strong> Sakupljanje</div>`; mOdg += `<div style="margin-bottom:2px;">Prolazak</div>`; }
+                            if(el === 'zagonetka') { mUp += `<div style="margin-bottom:2px;"><strong>🧠 Zagonetka:</strong> ${p.zadatak.zag_tekst || ''}</div>`; mOdg += `<div style="margin-bottom:2px;"><strong>Odgovor:</strong> ${p.zadatak.zag_odgovor || ''}</div>`; }
+                            if(el === 'igrica') { mUp += `<div style="margin-bottom:2px;"><strong>🎮 Igrica:</strong> Pokrenuti ključ ${p.zadatak.igrica_kod || ''}</div>`; mOdg += `<div style="margin-bottom:2px;">Uspeh igre</div>`; }
+                            if(el === 'kviz' && p.zadatak.kvizData) { 
+                                let kText = p.zadatak.kvizData.map((q, i) => `P${i+1}: ${q.pitanje}`).join(', ');
+                                let kOdg = p.zadatak.kvizData.map((q, i) => `P${i+1}: ${q.tacni.join(', ')}`).join(', ');
+                                mUp += `<div style="margin-bottom:2px;"><strong>📝 Kviz:</strong> ${kText}</div>`; mOdg += `<div style="margin-bottom:2px;"><strong>Odgovor:</strong> ${kOdg}</div>`; 
+                            }
+                            if(el === 'kreativni') { mUp += `<div style="margin-bottom:2px;"><strong>📸 Foto:</strong> ${p.zadatak.kre_uputstvo || ''}</div>`; mOdg += `<div style="margin-bottom:2px;">Fotografija</div>`; }
+                            if(el === 'pronadji') { mUp += `<div style="margin-bottom:2px;"><strong>🔍  Pronađi:</strong> ${p.zadatak.pronadji_opis || ''}</div>`; mOdg += `<div style="margin-bottom:2px;">Pronađeno</div>`; }
+                            if(el === 'qr') { mUp += `<div style="margin-bottom:2px;"><strong>📱 QR:</strong> ${p.zadatak.qr_uputstvo || ''}</div>`; mOdg += `<div style="margin-bottom:2px;"><strong>Ključ:</strong> ${p.zadatak.qr_odg || ''}</div>`; }
+                        });
+                        uputstvo = mUp || "Nema podešenih zadataka"; odgovor = mOdg; 
+                    }
+
+                    html += `<div><span class="task-label">Zadatak / Uputstvo:</span><span class="task-value">${uputstvo}</span></div>`;
+                    if (isMaster) { if (odgovor) { html += `<div><span class="task-label">Rešenje:</span><span class="task-value" style="font-weight:bold;">${odgovor}</span></div>`; } } else { html += `<div><span class="task-label">Vaš odgovor:</span><div class="hidden-answer"></div></div>`; }
+                    if (p.zadatak.slika) { html += `<div class="task-image-box"><img src="${p.zadatak.slika}" alt="Slika"></div>`; }
+                }
+                html += `</div>`;
+            });
+            html += `</div></div>`;
+        });
+
+        html += `
+            <div class="qr-page" style="page-break-before: always; width: 100%; font-family: Arial, sans-serif;">
+                <div class="qr-header" style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid #000; padding-bottom: 15px;">
+                    <h1 style="font-size: 22px; margin: 0 0 8px 0; text-transform: uppercase; color: #000;">QR Kodovi za teren</h1>
+                    <p style="font-size:14px; margin:0; color:#333;">Odštampajte, isecite i postavite ove kodove na fizičke lokacije.</p>
+                </div>
+                <div class="qr-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%;">
+        `;
+
+        window.pinovi.forEach((p, index) => {
+            let nazivQr = index === 0 ? "START (Tačka 1)" : (index === window.pinovi.length - 1 ? `CILJ (Tačka ${p.broj})` : `Tačka ${p.broj}`);
+            let qrData = encodeURIComponent("POTRAGA:" + sifraStaze + "|TACKA:" + p.id);
+            let qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&data=" + qrData;
+
+            html += `
+                <div class="qr-card" style="border: 2px dashed #000; padding: 20px; text-align: center; page-break-inside: avoid; border-radius: 12px;">
+                    <div class="qr-title" style="font-size: 16px; font-weight: bold; margin-bottom: 10px; color:#000;">${nazivQr}</div>
+                    <img src="${qrUrl}" alt="QR Kod ${p.broj}" crossorigin="anonymous" style="width: 140px; height: 140px; margin-bottom: 12px; max-width: 100%; object-fit: contain;">
+                </div>
+            `;
+        });
+
+        html += `</div></div>`; 
+        printArea.innerHTML = html;
+        
+        setTimeout(() => {
+            window.print();
+            setTimeout(() => { document.getElementById('stilUspravnaStampa').remove(); printArea.innerHTML = ''; }, 1000);
+        }, 500);
+    };
+
+    window.ukljuciRucnuMrezu = function() {
+        if(window.pinovi.length === 0) { alert("Dodajte barem jednu tačku na mapu!"); return; }
+        document.getElementById('btnPodesiMrezu').style.display = 'none';
+        document.getElementById('btnSacuvajMrezu').style.display = 'block';
+
+        if (window.rucnaMrezaSloj) window.map.removeLayer(window.rucnaMrezaSloj);
+        
+        if (window.rucnaMrezaMarkeri && Array.isArray(window.rucnaMrezaMarkeri)) {
+            window.rucnaMrezaMarkeri.forEach(m => window.map.removeLayer(m));
+        }
+        window.rucnaMrezaMarkeri = [];
+        window.rucnaMrezaSloj = L.featureGroup().addTo(window.map);
+
+        let bounds = L.featureGroup(window.pinovi.map(p => p.krug)).getBounds();
+        let padLat = (bounds.getNorth() - bounds.getSouth()) * 0.15;
+        let padLng = (bounds.getEast() - bounds.getWest()) * 0.15;
+        let grid = { n: bounds.getNorth() + padLat, s: bounds.getSouth() - padLat, e: bounds.getEast() + padLng, w: bounds.getWest() - padLng };
+
+        let icon = L.divIcon({className: 'drag-corner', html: '⤡', iconSize: [30,30], iconAnchor: [15,15]});
+        let nwMarker = L.marker([grid.n, grid.w], {draggable: true, icon: icon, zIndexOffset: 2000}).addTo(window.map);
+        let seMarker = L.marker([grid.s, grid.e], {draggable: true, icon: icon, zIndexOffset: 2000}).addTo(window.map);
+        window.rucnaMrezaMarkeri.push(nwMarker, seMarker);
+
+        function crtajZivuMrezu() {
+            window.rucnaMrezaSloj.clearLayers();
+            let p1 = nwMarker.getLatLng(); let p2 = seMarker.getLatLng();
+            let curN = Math.max(p1.lat, p2.lat); let curS = Math.min(p1.lat, p2.lat);
+            let curE = Math.max(p1.lng, p2.lng); let curW = Math.min(p1.lng, p2.lng);
+            window.rucnaMrezaGranice = { n:curN, s:curS, e:curE, w:curW, cellLat:(curN-curS)/7, cellLng:(curE-curW)/9 };
+            L.rectangle([[curS, curW], [curN, curE]], {color: '#e11d48', weight: 3, fill: false}).addTo(window.rucnaMrezaSloj);
+            for(let i=1; i<9; i++) { let lng = curW + (i * window.rucnaMrezaGranice.cellLng); L.polyline([[curN, lng], [curS, lng]], {color: '#e11d48', weight: 1, dashArray: '4,4'}).addTo(window.rucnaMrezaSloj); }
+            for(let j=1; j<7; j++) { let lat = curN - (j * window.rucnaMrezaGranice.cellLat); L.polyline([[lat, curW], [lat, curE]], {color: '#e11d48', weight: 1, dashArray: '4,4'}).addTo(window.rucnaMrezaSloj); }
+        }
+        nwMarker.on('drag', crtajZivuMrezu); seMarker.on('drag', crtajZivuMrezu); crtajZivuMrezu(); 
+        window.map.fitBounds([[grid.s, grid.w], [grid.n, grid.e]], {padding: [40,40]});
+    };
+
+    window.sacuvajRucnuMrezu = function() {
+        if (window.rucnaMrezaMarkeri && Array.isArray(window.rucnaMrezaMarkeri)) {
+            window.rucnaMrezaMarkeri.forEach(m => window.map.removeLayer(m));
+        }
+        window.rucnaMrezaMarkeri = [];
+        
+        document.getElementById('btnPodesiMrezu').style.display = 'block'; 
+        document.getElementById('btnPodesiMrezu').innerText = '📐 Izmeni Mrežu';
+        document.getElementById('btnSacuvajMrezu').style.display = 'none';
+        alert("Mreža sačuvana!");
+    };
+
+    window.izracunajMatematickuMrezu = function() {
+        if (window.rucnaMrezaGranice) return window.rucnaMrezaGranice;
+        if(window.pinovi.length === 0) return null;
+        let bounds = L.featureGroup(window.pinovi.map(p => p.krug)).getBounds();
+        let padLat = (bounds.getNorth() - bounds.getSouth()) * 0.15; let padLng = (bounds.getEast() - bounds.getWest()) * 0.15;
+        let n = bounds.getNorth() + padLat; let s = bounds.getSouth() - padLat; let e = bounds.getEast() + padLng; let w = bounds.getWest() - padLng;
+        return { n:n, s:s, e:e, w:w, cellLat: (n - s) / 7, cellLng: (e - w) / 9 };
+    };
+
+    window.dobiGridKoordinatu = function(lat, lng, grid) {
+        if(!grid) return "??";
+        let col = Math.floor((lng - grid.w) / grid.cellLng) + 1; let row = Math.floor((grid.n - lat) / grid.cellLat);
+        if (col < 1) col = 1; if (col > 9) col = 9; if (row < 0) row = 0; if (row > 6) row = 6;
+        return ['A','B','C','D','E','F','G'][row] + col;
+    };
 </script>
 </body>
 </html>
