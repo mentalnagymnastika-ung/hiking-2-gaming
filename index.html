@@ -1402,13 +1402,23 @@ window.prikaziZadatak = function() {
                 </div>`;
             }
             
-            // Faza: IGRICA
+// Faza: IGRICA (Otvara se preko CELOG ekrana u sklopu Multi-ja da se ne bi gnječila)
             else if (trenutnaKomponenta === 'igrica') {
                 tekstZaPrikaz += `
-                <div style="background:#eff6ff; border: 3px solid #2563eb; padding: 15px; border-radius: 16px; margin-bottom: 15px; box-shadow: 0 6px 14px rgba(37,99,235,0.08);">
-                    <b style="font-size:20px; color:#2563eb; display:block; margin-bottom:12px; text-align:center; font-weight:900;">🎮 REŠITE LOGIČKI IZAZOV:</b>
-                    <div id="multi_g2h_game_container" style="width:100%; min-height:320px; background:#ffffff; border-radius:10px; padding:10px; box-sizing:border-box; border:1px solid #bfdbfe; overflow:hidden;">
+                <div style="background:#eff6ff; border: 2px solid #2563eb; padding: 15px; border-radius: 12px; margin-bottom: 10px; text-align:center;">
+                    <div style="font-size:40px; margin-bottom:5px;">🎮</div>
+                    <b style="font-size:18px; color:#2563eb; display:block; margin-bottom:10px;">Logički izazov aktiviran!</b>
+                    <p style="font-size:15px; color:#1e3a8a; font-weight:600; line-height:1.4;">Za pokretanje igre u punoj veličini kliknite na narandžasto dugme ispod.</p>
+                    
+                    <button onclick="window.otvoriG2HIgruUPunomEkranu()" style="background:#ff9800; color:white; font-weight:900; border:none; padding:15px 20px; border-radius:10px; font-size:18px; cursor:pointer; width:100%; box-shadow:0 4px 6px rgba(255,152,0,0.2); margin-top:5px;">🚀 POKRENI IGRU</button>
+                </div>
+                
+                <div id="g2h_multi_puni_ekran" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#ffffff; z-index:99999; padding:15px; box-sizing:border-box; overflow-y:auto;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #e2e8f0; padding-bottom:10px; margin-bottom:15px;">
+                        <b style="font-size:18px; color:#2563eb;">🎮 Gaming 2 Hiking Izazov</b>
+                        <button onclick="document.getElementById('g2h_multi_puni_ekran').style.display='none'" style="background:#ef4444; color:white; border:none; padding:5px 12px; border-radius:6px; font-weight:bold; cursor:pointer;">❌ Zatvori</button>
                     </div>
+                    <div id="multi_g2h_game_container" style="width:100%; min-height:400px;"></div>
                 </div>`;
             }
             
@@ -1751,6 +1761,28 @@ window.sakupiMultiZlatnik = function() {
     setTimeout(() => {
         window.proveriOdgovor();
     }, 600);
+};
+
+window.otvoriG2HIgruUPunomEkranu = function() {
+    let pin = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
+    let kodIgre = pin.zadatak?.igrica_kod || "";
+    
+    let prozor = document.getElementById('g2h_multi_puni_ekran');
+    let kontejnerIgre = document.getElementById('multi_g2h_game_container');
+    
+    if (prozor && kontejnerIgre && typeof window.pokreniG2HIgricu === 'function') {
+        kontejnerIgre.innerHTML = ''; // Čistimo boks pre pokretanja
+        prozor.style.display = 'block'; // Otvaramo prozor preko celog ekrana!
+        
+        // Pokrećemo tvoju originalnu funkciju igre unutar čistog, velikog prozora
+        window.pokreniG2HIgricu(kodIgre, kontejnerIgre);
+        
+        let proveraMreze = document.getElementById('g2h_okvir_igre') || document.getElementById('skockoMreza') || document.getElementById('memorijaMreza');
+        if (proveraMreze) {
+            kontejnerIgre.appendChild(proveraMreze);
+            proveraMreze.style.display = 'block';
+        }
+    }
 };
 
 // --- PROVERA ODGOVORA ---
@@ -2506,6 +2538,14 @@ window.G2H_FabrikaIgara.klikNaKarticu = function(kartica) {
                 if (f.pogodjeniParovi === f.ukupnoParova) {
                     setTimeout(() => {
                         alert("🎉 Bravo! Uspešno rešena mentalna memorija!");
+
+                       // 👇 DODATAK KOJI POVEZUJE IGRU SA MULTI SISTEMOM 👇
+                        window.G2H_trenutniStatusIgreUspeh = true; 
+                        let puniEkranProzor = document.getElementById('g2h_multi_puni_ekran');
+                        if (puniEkranProzor) puniEkranProzor.style.display = 'none'; // Zatvara prozor
+                        if (typeof window.proveriOdgovor === 'function') window.proveriOdgovor(); 
+                       // Automatski ide dalje
+
                         if (typeof window.uspehZadatka === 'function') window.uspehZadatka();
                     }, 400);
                 }
@@ -2679,6 +2719,14 @@ window.G2H_FabrikaIgara.pokreniSkocka = function(sifra, kontejner) {
         if (crveni === duzinaSifre) {
             setTimeout(() => {
                 alert("🎉 Čestitamo! Uspešno ste razbili voćnu šifru i dokazali oštar um!");
+
+                // 👇 DODATAK KOJI POVEZUJE IGRU SA MULTI SISTEMOM 👇
+                window.G2H_trenutniStatusIgreUspeh = true; 
+                let puniEkranProzor = document.getElementById('g2h_multi_puni_ekran');
+                if (puniEkranProzor) puniEkranProzor.style.display = 'none'; // Zatvara prozor
+                if (typeof window.proveriOdgovor === 'function') window.proveriOdgovor(); 
+                // Automatski ide dalje
+
                 if (typeof window.uspehZadatka === 'function') window.uspehZadatka(); 
             }, 300);
             return;
