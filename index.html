@@ -1361,7 +1361,8 @@ window.prikaziZadatak = function() {
 
         document.getElementById('tekstZadatkaUUI').style.display = 'block';
 
-// --- MULTI ZADATAK (Smenjivanje koraka sa zlatnikom na dodir) ---
+/////////////////////// --- MULTI ZADATAK (Smenjivanje koraka sa zlatnikom na dodir) ---
+ // --- MULTI ZADATAK (Smenjivanje koraka sa KRUPNIM fontovima i elementima) ---
         if (tip === 'multi') {
             let elovi = pin.zadatak?.multi_elementi || [];
             
@@ -1370,49 +1371,56 @@ window.prikaziZadatak = function() {
                 window.multiTrenutniKorak = 0;
                 window.multiInicijalizovanPinId = pin.id;
                 window.G2H_trenutniStatusIgreUspeh = false; // Resetujemo uspeh igrice
-                window.multiZlatnikSakupljen = false;     // Nova varijabla za praćenje dodira zlatnika
+                window.multiZlatnikSakupljen = false;     // Pracenje dodira zlatnika
             }
 
             // Filtriramo aktivne komponente rute
             let aktivniKoraci = elovi.filter(e => ['zlatnik', 'zagonetka', 'igrica', 'kreativni', 'pronadji', 'qr', 'kviz'].includes(e));
             let trenutnaKomponenta = aktivniKoraci[window.multiTrenutniKorak];
 
-            let tekstZaPrikaz = `<div style="padding: 5px; text-align: center;">`;
+            // Glavni omotač sa komfornim unutrašnjim razmakom
+            let tekstZaPrikaz = `<div style="padding: 10px; text-align: center; font-family: sans-serif;">`;
 
+            // 📋 KORAK TRAKA (Pokazivač faza) - krupna i vidljiva
             if(pin.zadatak?.tekst_zadatka && pin.zadatak?.tekst_zadatka.trim() !== '') {
-                tekstZaPrikaz += `<div style="font-size:16px; color:#1a4d54; margin-bottom:12px; font-weight:bold; background:#e0f2fe; padding:8px; border-radius:8px;">📋 Korak ${window.multiTrenutniKorak + 1} od ${aktivniKoraci.length}: ${pin.zadatak.tekst_zadatka}</div>`;
+                tekstZaPrikaz += `
+                <div style="font-size:20px; color:#1a4d54; margin-bottom:20px; font-weight:800; background:#e0f2fe; padding:12px; border-radius:10px; border:2px solid #bae6fd; line-height:1.4;">
+                    🧩 FAZA ${window.multiTrenutniKorak + 1} od ${aktivniKoraci.length}:<br>
+                    <span style="font-weight:600; font-size:18px; color:#0369a1;">${pin.zadatak.tekst_zadatka}</span>
+                </div>`;
             }
 
-            // --- PRIKAZ TRENUTNOG KORAKA ---
+            // --- PRIKAZ TRENUTNOG KORAKA SA VEĆIM SLOVIMA ---
             
-            // Faza: ZLATNIK (Reaguje na dodir!)
+            // Faza: ZLATNIK
             if (trenutnaKomponenta === 'zlatnik') {
                 tekstZaPrikaz += `
-                <div id="multi_zlatnik_boks" onclick="window.sakupiMultiZlatnik()" style="background:#fff9db; border:3px dashed #f59e0b; padding:20px; margin-bottom:10px; text-align:center; border-radius:12px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); cursor:pointer; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
-                    <div id="multi_zlatnik_ikona" style="font-size:55px; margin-bottom:8px; animation: pulse 1.5s infinite;">🪙</div>
-                    <b id="multi_zlatnik_naslov" style="color:#b45309; font-size:18px; display:block; margin-bottom:5px;">Pronašli ste Zlatnik!</b>
-                    <span id="multi_zlatnik_uputstvo" style="font-size:15px; color:#78350f; font-weight:bold; display:block; background:#fef3c7; padding:8px; border-radius:6px;">👉 DODIRNI ZLATNIK DA GA SAKUPIŠ 👈</span>
+                <div id="multi_zlatnik_boks" onclick="window.sakupiMultiZlatnik()" style="background:#fff9db; border:4px dashed #f59e0b; padding:25px; margin-bottom:15px; text-align:center; border-radius:16px; box-shadow: 0 6px 12px rgba(0,0,0,0.06); cursor:pointer; transition: transform 0.2s;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
+                    <div id="multi_zlatnik_ikona" style="font-size:70px; margin-bottom:10px; animation: pulse 1.5s infinite;">🪙</div>
+                    <b id="multi_zlatnik_naslov" style="color:#b45309; font-size:24px; display:block; margin-bottom:10px; font-weight:900;">Pronašli ste Zlatnik!</b>
+                    <span id="multi_zlatnik_uputstvo" style="font-size:18px; color:#78350f; font-weight:900; display:block; background:#fef3c7; padding:12px; border-radius:8px; border:1px solid #fde68a;">👉 DODIRNI ZLATNIK DA GA SAKUPIŠ 👈</span>
                 </div>`;
             }
             
             // Faza: IGRICA
             else if (trenutnaKomponenta === 'igrica') {
                 tekstZaPrikaz += `
-                <div style="background:#eff6ff; border: 2px solid #2563eb; padding: 12px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(37,99,235,0.08);">
-                    <b style="font-size:16px; color:#2563eb; display:block; margin-bottom:10px; text-align:center;">🎮 REŠITE LOGIČKI IZAZOV:</b>
-                    <div id="multi_g2h_game_container" style="width:100%; min-height:300px; background:#ffffff; border-radius:8px; padding:8px; box-sizing:border-box; border:1px solid #bfdbfe; overflow:hidden;">
+                <div style="background:#eff6ff; border: 3px solid #2563eb; padding: 15px; border-radius: 16px; margin-bottom: 15px; box-shadow: 0 6px 14px rgba(37,99,235,0.08);">
+                    <b style="font-size:20px; color:#2563eb; display:block; margin-bottom:12px; text-align:center; font-weight:900;">🎮 REŠITE LOGIČKI IZAZOV:</b>
+                    <div id="multi_g2h_game_container" style="width:100%; min-height:320px; background:#ffffff; border-radius:10px; padding:10px; box-sizing:border-box; border:1px solid #bfdbfe; overflow:hidden;">
                     </div>
                 </div>`;
             }
             
-            // Faza: ZAGONETKA
+            // Faza: ZAGONETKA (Krupna i lako čitljiva slova!)
             else if (trenutnaKomponenta === 'zagonetka') {
                 let zagTekst = pin.zadatak?.zag_tekst ? pin.zadatak.zag_tekst : "Rešite zagonetku:";
                 tekstZaPrikaz += `
-                <div style="background:#f8fafc; border-left:4px solid #3b82f6; padding:12px; margin-bottom:10px; border-radius:8px; text-align:left;">
-                    <b style="font-size:16px; color:#1e293b;">🧠 Dešifrujte zagonetku:</b>
-                    <p style="font-style:italic; font-size:16px; margin: 8px 0; background:#ffffff; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">"${zagTekst}"</p>
-                    <input type="text" id="dinamicki_zag_odg" class="multi-input" placeholder="Upišite odgovor ovde..." style="width:100%; padding:12px; border: 2px dashed #3b82f6; border-radius:8px; font-size:16px; box-sizing:border-box; text-transform:uppercase; text-align:center; font-weight:bold;">
+                <div style="background:#f8fafc; border: 2px solid #cbd5e1; border-top:6px solid #3b82f6; padding:20px; margin-bottom:15px; border-radius:14px; text-align:center; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                    <b style="font-size:22px; color:#1e293b; font-weight:900; display:block; margin-bottom:10px;">🧠 Dešifrujte zagonetku:</b>
+                    <p style="font-style:italic; font-size:20px; font-weight:700; color:#334155; margin: 12px 0; background:#ffffff; padding:15px; border-radius:8px; border:1px solid #e2e8f0; line-height:1.5;">"${zagTekst}"</p>
+                    <input type="text" id="dinamicki_zag_odg" class="multi-input" placeholder="UKUCAJTE ODGOVOR..." 
+                        style="width:100%; padding:15px; border: 3px solid #cbd5e1; border-radius:10px; font-size:20px; box-sizing:border-box; text-transform:uppercase; text-align:center; font-weight:900; color:#1e293b; background:#fff;">
                 </div>`;
             }
             
@@ -1420,10 +1428,12 @@ window.prikaziZadatak = function() {
             else if (trenutnaKomponenta === 'kreativni') {
                 let kreTekst = pin.zadatak?.kre_uputstvo ? pin.zadatak.kre_uputstvo : "Napravite fotografiju.";
                 tekstZaPrikaz += `
-                <div style="background:#f8fafc; border-left:4px solid #10b981; padding:12px; margin-bottom:10px; border-radius:8px; text-align:left;">
-                    <b style="font-size:16px; color:#1e293b;">📸 Uputstvo za foto:</b><br><span style="font-size:15px; display:block; margin-top:5px; margin-bottom:8px;">${kreTekst}</span>
-                    <button id="dinamicki_btn_kamera" class="btn-kamera" style="width:100%; background:#ff9800; color:white; font-weight:bold; padding:12px; border:none; border-radius:8px; font-size:16px; cursor:pointer;" onclick="document.getElementById('skrivenaKamera').click()">📸 OTVORI KAMERU</button>
-                    <div id="multi_foto_preview_box" style="display:none; margin-top:10px; text-align:center;"><img id="multi_foto_preview" src="" style="max-width:100%; max-height:120px; border-radius:6px; border:2px solid #10b981;"></div>
+                <div style="background:#f8fafc; border: 2px solid #cbd5e1; border-top:6px solid #10b981; padding:20px; margin-bottom:15px; border-radius:14px; text-align:center;">
+                    <b style="font-size:22px; color:#1e293b; font-weight:900; display:block; margin-bottom:10px;">📸 Kreativni foto zadatak:</b>
+                    <p style="font-size:18px; font-weight:600; color:#334155; margin-bottom:15px; line-height:1.4;">${kreTekst}</p>
+                    <button id="dinamicki_btn_kamera" class="btn-kamera" 
+                        style="width:100%; background:#ff9800; color:white; font-weight:900; padding:15px; border:none; border-radius:10px; font-size:18px; cursor:pointer; box-shadow:0 4px 8px rgba(255,152,0,0.3);" onclick="document.getElementById('skrivenaKamera').click()">📸 OTVORI KAMERU</button>
+                    <div id="multi_foto_preview_box" style="display:none; margin-top:15px; text-align:center;"><img id="multi_foto_preview" src="" style="max-width:100%; max-height:160px; border-radius:10px; border:3px solid #10b981;"></div>
                 </div>`;
             }
             
@@ -1431,10 +1441,11 @@ window.prikaziZadatak = function() {
             else if (trenutnaKomponenta === 'pronadji') {
                 let proTekst = pin.zadatak?.pronadji_opis ? pin.zadatak.pronadji_opis : "Pronađite skriveni motiv.";
                 tekstZaPrikaz += `
-                <div style="background:#f8fafc; border-left:4px solid #0ea5e9; padding:12px; margin-bottom:10px; border-radius:8px; text-align:left;">
-                    <b style="font-size:16px; color:#1e293b;">🔍 Pronađi skriveni motiv:</b><br><span style="font-size:15px; display:block; margin-top:5px; margin-bottom:8px;">${proTekst}</span>
-                    <button id="dinamicki_btn_kamera" class="btn-kamera" style="width:100%; background:#ff9800; color:white; font-weight:bold; padding:12px; border:none; border-radius:8px; font-size:16px; cursor:pointer;" onclick="document.getElementById('skrivenaKamera').click()">📸 OTVORI KAMERU</button>
-                    <div id="multi_foto_preview_box" style="display:none; margin-top:10px; text-align:center;"><img id="multi_foto_preview" src="" style="max-width:100%; max-height:120px; border-radius:6px; border:2px solid #0ea5e9;"></div>
+                <div style="background:#f8fafc; border: 2px solid #cbd5e1; border-top:6px solid #0ea5e9; padding:20px; margin-bottom:15px; border-radius:14px; text-align:center;">
+                    <b style="font-size:22px; color:#1e293b; font-weight:900; display:block; margin-bottom:10px;">🔍 Pronađi skriveni motiv:</b>
+                    <p style="font-size:18px; font-weight:600; color:#334155; margin-bottom:15px; line-height:1.4;">${proTekst}</p>
+                    <button id="dinamicki_btn_kamera" class="btn-kamera" style="width:100%; background:#ff9800; color:white; font-weight:900; padding:15px; border:none; border-radius:10px; font-size:18px; cursor:pointer;" onclick="document.getElementById('skrivenaKamera').click()">📸 OTVORI KAMERU</button>
+                    <div id="multi_foto_preview_box" style="display:none; margin-top:15px; text-align:center;"><img id="multi_foto_preview" src="" style="max-width:100%; max-height:160px; border-radius:10px; border:3px solid #0ea5e9;"></div>
                 </div>`;
             }
 
@@ -1442,16 +1453,17 @@ window.prikaziZadatak = function() {
             else if (trenutnaKomponenta === 'qr') {
                 let qrTekst = pin.zadatak?.qr_uputstvo ? pin.zadatak.qr_uputstvo : "Pronađite QR kod i unesite šifru.";
                 tekstZaPrikaz += `
-                <div style="background:#f8fafc; border-left:4px solid #a855f7; padding:12px; margin-bottom:10px; border-radius:8px; text-align:left;">
-                    <b style="font-size:16px; color:#1e293b;">📱 Pronađite i skenirajte QR kod:</b><br><span style="font-size:15px; display:block; margin-top:5px;">${qrTekst}</span>
-                    <input type="text" id="dinamicki_qr_odg" class="multi-input" placeholder="Unesite tajnu šifru..." style="width:100%; padding:12px; margin-top:10px; border: 2px dashed #a855f7; border-radius:8px; font-size:16px; box-sizing:border-box; text-align:center; font-weight:bold;">
+                <div style="background:#f8fafc; border: 2px solid #cbd5e1; border-top:6px solid #a855f7; padding:20px; margin-bottom:15px; border-radius:14px; text-align:center;">
+                    <b style="font-size:22px; color:#1e293b; font-weight:900; display:block; margin-bottom:10px;">📱 Pronađite i skenirajte QR kod:</b>
+                    <p style="font-size:18px; font-weight:600; color:#475569; margin-bottom:10px;">${qrTekst}</p>
+                    <input type="text" id="dinamicki_qr_odg" class="multi-input" placeholder="UNESITE TAJNU REČ..." style="width:100%; padding:15px; border: 3px solid #cbd5e1; border-radius:10px; font-size:18px; box-sizing:border-box; text-align:center; font-weight:900; text-transform:uppercase;">
                 </div>`;
             }
 
             tekstZaPrikaz += `</div>`;
             
             document.getElementById('tekstZadatkaUUI').innerHTML = tekstZaPrikaz;
-            document.getElementById('tekstZadatkaUUI').style.fontSize = "16px";
+            document.getElementById('tekstZadatkaUUI').style.fontSize = "18px";
             document.getElementById('tekstZadatkaUUI').style.textAlign = "center"; 
 
             if (trenutnaKomponenta === 'kviz') {
@@ -1476,8 +1488,13 @@ window.prikaziZadatak = function() {
                 }, 100);
             }
             
+            // Masivno i krupno glavno dugme na dnu
             let dugmeProveri = document.getElementById('btnProveri');
             if (dugmeProveri) {
+                dugmeProveri.style.fontSize = "20px";
+                dugmeProveri.style.padding = "16px";
+                dugmeProveri.style.fontWeight = "900";
+                dugmeProveri.style.borderRadius = "12px";
                 if (window.multiTrenutniKorak < aktivniKoraci.length - 1) {
                     dugmeProveri.innerText = "PROVERI I NASTAVI ➡️";
                 } else {
@@ -1485,11 +1502,11 @@ window.prikaziZadatak = function() {
                 }
             }
 
-            document.getElementById('txtNapomena').innerHTML = `<b style='color:#0284c7;'>💡 Korak po korak: Rešite trenutni izazov na ekranu da otvorite sledeći!</b>`;
+            document.getElementById('txtNapomena').innerHTML = `<b style='color:#0284c7; font-size:15px;'>💡 Korak po korak: Rešite trenutni izazov na ekranu da otvorite sledeći!</b>`;
             document.getElementById('txtNapomena').style.display = 'block';
 
-
         } else if (tip === 'igrica') {
+//////////////////////////////////////////////////////////////////////////////////////////////
             // Samostalni prikaz logičke igre kada nije u Multi kombinaciji
             let kodIgre = pin.zadatak?.tekst_zadatka || "";
             window.G2H_trenutniStatusIgreUspeh = false;
@@ -1840,17 +1857,18 @@ if (tip === 'multi') {
             
             // --- ISHOD PROVERE TRENUTNOG KORAKA ---
             if (trenutniKorakTacan) {
-                // Ako ima još zadataka u nizu, povećaj korak i ponovo iscrtaj panel
+                // Ako ima još zadataka u nizu, prebaci na sledeći korak
                 if (window.multiTrenutniKorak < aktivniKoraci.length - 1) {
                     window.multiTrenutniKorak++;
                     window.slikaSlikanaSada = false; 
-                    window.prikaziZadatak(); // Ovo automatski briše trenutni i crta sledeći zadatak (npr. igricu)
+                    window.prikaziZadatak(); // Crta sledeći zadatak
                 } else {
-                    // Ako je ovo bio zadnji korak, proveri da li je zlatnik sakupljen tokom ove tačke da pustimo animaciju
-                    if (elovi.includes('zlatnik') && typeof window.pokaziZlatnikAnimaciju === 'function') {
-                        window.pokaziZlatnikAnimaciju();
-                    }
-                    window.uspehZadatka(); // Uspešno završena kompletna lokacija!
+                    // ✨ KRAJ MULTI ZADATKA: Sve je uspešno rešeno!
+                    // Resetujemo brojač koraka za sledeće tačke da ne ostane zaglavljen
+                    window.multiTrenutniKorak = 0;
+                    
+                    // Pokrećemo uspeh zadatka koji će sam prepoznati ako treba dati zlato ili poene
+                    window.uspehZadatka(); 
                 }
             } else {
                 // Ako trenutni zadatak nije tačan, kazni tim i prikaži grešku
@@ -1860,7 +1878,6 @@ if (tip === 'multi') {
             }
             return;
         }
-
         let un = document.getElementById('unosOdgovor').value.trim().toLowerCase();
         if(!un) { alert(window.recnik[window.trenutniJezik].porukaPrazno || "Upišite odgovor!"); return; }
         
