@@ -1744,14 +1744,48 @@
 
     window.azurirajRadijusIzPanela = function() { window.aktivniPin.rad = document.getElementById('kRad').value; document.getElementById('vRad').innerText = window.aktivniPin.rad; window.aktivniPin.krug.setRadius(window.aktivniPin.rad); window.promeneNisuSnimljene = true; }
     
-    window.switchZadatak = function() { 
-        document.querySelectorAll('.zadatak-sekcija').forEach(s => s.style.display='none'); 
+window.switchZadatak = function() { 
+    document.querySelectorAll('.zadatak-sekcija').forEach(s => s.style.display='none');
+    let tipEl = document.getElementById('tipZadatka');
+    if (!tipEl) return;
+    let tip = tipEl.value;
+
+    let zagTekstPolje = document.getElementById('zag_tekst');
+    let zagOdgovorPolje = document.getElementById('zag_odgovor');
+    let lblZagOdgLabela = document.getElementById('lblZagOdg');
+    let lblZagTekst = document.getElementById('lblZagTekst');
+
+    if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'block';
+    if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'block';
+    if(lblZagTekst) lblZagTekst.innerText = "Tekst zagonetke Pitanje";
+
+    let igricaJeAktivna = false;
+    if (tip === 'multi') {
+        document.getElementById('sekcija_multi_kombinator').style.display='block';
+        if(document.getElementById('chk_multi_zlatnik').checked) document.getElementById('sekcija_zlatnik').style.display='block';
+        if(document.getElementById('chk_multi_zagonetka').checked) document.getElementById('sekcija_zagonetka').style.display='block';
+        if(document.getElementById('chk_multi_kviz').checked) document.getElementById('sekcija_kviz').style.display='block';
+        if(document.getElementById('chk_multi_kreativni').checked) document.getElementById('sekcija_kreativni').style.display='block';
+        if(document.getElementById('chk_multi_pronadji').checked) document.getElementById('sekcija_pronadji').style.display='block';
+        if(document.getElementById('chk_multi_qr').checked) document.getElementById('sekcija_qr').style.display='block';
+        if(document.getElementById('chk_multi_igrica').checked) {
+            document.getElementById('sekcija_zagonetka').style.display='block';
+            if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'none';
+            if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'none';
+            igricaJeAktivna = true;
+        }
+    } 
+    else if (tip === 'igrica') {
+        document.getElementById('sekcija_zagonetka').style.display='block';
+        if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'none';
+        if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'none';
+        igricaJeAktivna = true;
+    } 
+    else {
+        let sekcija = document.getElementById('sekcija_' + tip);
+        if(sekcija) sekcija.style.display = 'block';
         
-        let tipEl = document.getElementById('tipZadatka');
-        if (!tipEl) return;
-        let tip = tipEl.value;
-        
-        // 🚨 ODBRANA OD GOMILANJA: Kompletan reset i čišćenje starih menija rute pre crtanja 🚨
+        // Ako se prebaci na bilo šta što nije igra, a postojao je kontejner menija, vrati običnu tekstualnu površinu
         let proveraKontejnera = document.getElementById('g2h_kontejner_menija');
         if (proveraKontejnera) {
             let resetovanaTextarea = document.createElement('textarea');
@@ -1759,57 +1793,23 @@
             resetovanaTextarea.rows = 3;
             proveraKontejnera.parentNode.replaceChild(resetovanaTextarea, proveraKontejnera);
         }
+    }
 
-        let zagTekstPolje = document.getElementById('zag_tekst'); 
-        let zagOdgovorPolje = document.getElementById('zag_odgovor');
-        let lblZagOdgLabela = document.getElementById('lblZagOdg');
-        let lblZagTekst = document.getElementById('lblZagTekst');
-
-        if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'block';
-        if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'block';
-        if(lblZagTekst) lblZagTekst.innerText = "Tekst zagonetke Pitanje";
-
-        let igricaJeAktivna = false;
-
-        if (tip === 'multi') {
-            document.getElementById('sekcija_multi_kombinator').style.display='block';
-            if(document.getElementById('chk_multi_zlatnik').checked) document.getElementById('sekcija_zlatnik').style.display='block';
-            if(document.getElementById('chk_multi_zagonetka').checked) document.getElementById('sekcija_zagonetka').style.display='block';
-            if(document.getElementById('chk_multi_kviz').checked) document.getElementById('sekcija_kviz').style.display='block';
-            if(document.getElementById('chk_multi_kreativni').checked) document.getElementById('sekcija_kreativni').style.display='block';
-            if(document.getElementById('chk_multi_pronadji').checked) document.getElementById('sekcija_pronadji').style.display='block';
-            if(document.getElementById('chk_multi_qr').checked) document.getElementById('sekcija_qr').style.display='block';
-            
-            if(document.getElementById('chk_multi_igrica').checked) {
-                document.getElementById('sekcija_zagonetka').style.display='block';
-                if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'none';
-                if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'none';
-                igricaJeAktivna = true;
-            }
-        } 
-        else if (tip === 'igrica') {
-            document.getElementById('sekcija_zagonetka').style.display='block'; 
-            if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'none';
-            if(zagOdgovorPolje && zagOdgovorPolje.previousElementSibling) {
-                zagOdgovorPolje.previousElementSibling.style.display = 'none';
-            }
-            igricaJeAktivna = true;
-        } 
-        else {
-            let sekcija = document.getElementById('sekcija_' + tip);
-            if(sekcija) sekcija.style.display = 'block';
-        }
-
-        // --- 3. PROVERA I INTEGRACIJA DUPLOG MENIJA ZA VOĆNE IGRE ---
-        if (igricaJeAktivna) {
-            if(lblZagTekst) lblZagTekst.innerText = "Konfiguracija logičke igre:";
-
+    // --- ARHITEKTURA ZA G2H LOGIČKE IGRE ---
+    if (igricaJeAktivna) {
+        if(lblZagTekst) lblZagTekst.innerText = "Konfiguracija logičke igre:";
+        
+        let proveraKontejnera = document.getElementById('g2h_kontejner_menija');
+        
+        // Kreiramo kontejner SAMO ako već ne postoji, da ne bismo prebrisali selektovano stanje!
+        if (!proveraKontejnera) {
             let kontejnerMenija = document.createElement('div');
             kontejnerMenija.id = 'g2h_kontejner_menija';
             kontejnerMenija.style.display = 'flex';
             kontejnerMenija.style.flexDirection = 'column';
             kontejnerMenija.style.gap = '10px';
 
+            // 1. Centralni registar igara - OVDE DODAJEŠ NOVE IGRE U BUDUĆNOSTI
             let mIgra = document.createElement('select');
             mIgra.id = 'g2h_izbor_igre';
             mIgra.style.padding = '10px';
@@ -1828,9 +1828,10 @@
 
             let skriveniMost = document.createElement('input');
             skriveniMost.type = 'hidden';
-            skriveniMost.id = 'zag_tekst';
+            skriveniMost.id = 'zag_tekst'; // On menja stari zag_tekst da bi JSON snimanje radilo bez izmena
 
-            let osveziTezine = function() {
+            // 2. Centralni registar težina za svaku igru
+            let osveziTezine = function(spreciZapis = false) {
                 let izabranaIgra = mIgra.value;
                 if (izabranaIgra === 'memorija') {
                     mTezina.innerHTML = `
@@ -1845,15 +1846,20 @@
                         <option value="3">🔴 Crvena staza (Klasičan najteži nivo)</option>
                     `;
                 }
-                skriveniMost.value = mIgra.value + mTezina.value;
+                if (!spreciZapis) {
+                    skriveniMost.value = mIgra.value + mTezina.value;
+                    window.promeneNisuSnimljene = true;
+                }
             };
 
-            mIgra.onchange = osveziTezine;
+            mIgra.onchange = function() { osveziTezine(false); };
             mTezina.onchange = function() {
                 skriveniMost.value = mIgra.value + mTezina.value;
+                window.promeneNisuSnimljene = true;
             };
 
-            osveziTezine();
+            // Inicijalno generisanje bez podizanja flag-a za nesnimljene promene
+            osveziTezine(true);
 
             kontejnerMenija.appendChild(mIgra);
             kontejnerMenija.appendChild(mTezina);
@@ -1863,9 +1869,10 @@
                 zagTekstPolje.parentNode.replaceChild(kontejnerMenija, zagTekstPolje);
             }
         }
-
-        window.osveziPinove(); 
     }
+
+    window.osveziPinove();
+};
 
     window.dodajNovoKvizPitanje = function() {
         window.kvizCount++; let div = document.createElement('div'); div.className = 'kviz-blok'; div.style.background = 'white'; div.style.padding = '15px'; div.style.borderRadius = '8px'; div.style.border = '1px solid #e2e8f0'; div.style.marginBottom = '15px';
