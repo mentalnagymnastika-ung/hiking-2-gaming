@@ -1753,7 +1753,7 @@ window.sakupiMultiZlatnik = function() {
     }, 600);
 };
 
-    // --- PROVERA ODGOVORA ---
+// --- PROVERA ODGOVORA ---
     window.proveriOdgovor = function() {
         let pin = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
         let tip = pin.zadatak?.tip || 'zagonetka';
@@ -1776,7 +1776,7 @@ window.sakupiMultiZlatnik = function() {
             return;
         }
 
-// ✨ PROVERA ZA SAMOSTALNI TIP IGRICE (Kada nije u sklopu Multi-ja)
+        // PROVERA ZA SAMOSTALNI TIP IGRICE (Kada nije u sklopu Multi-ja)
         if (tip === 'igrica') {
             if (window.G2H_trenutniStatusIgreUspeh) {
                 window.uspehZadatka();
@@ -1788,7 +1788,8 @@ window.sakupiMultiZlatnik = function() {
             return;
         }
         
-if (tip === 'multi') {
+        // --- MULTI ZADATAK KORAK PO KORAK ---
+        if (tip === 'multi') {
             let elovi = pin.zadatak.multi_elementi || [];
             let aktivniKoraci = elovi.filter(e => ['zlatnik', 'zagonetka', 'igrica', 'kreativni', 'pronadji', 'qr', 'kviz'].includes(e));
             let trenutnaKomponenta = aktivniKoraci[window.multiTrenutniKorak];
@@ -1796,9 +1797,7 @@ if (tip === 'multi') {
             let trenutniKorakTacan = true;
             let porukaGreske = "";
             
-            // --- PROVERA SAMO TRENUTNO AKTIVNOG KORAKA NA EKRANU ---
-            
-            // Provera za ZLATNIK: Gleda da li je ikona/boks dodirnuta
+            // Provera samo trenutno aktivnog koraka na ekranu
             if (trenutnaKomponenta === 'zlatnik') {
                 if (!window.multiZlatnikSakupljen) {
                     trenutniKorakTacan = false;
@@ -1855,38 +1854,38 @@ if (tip === 'multi') {
                 }
             }
             
-            // --- ISHOD PROVERE TRENUTNOG KORAKA ---
+            // Ishod provere trenutnog koraka
             if (trenutniKorakTacan) {
-                // Ako ima još zadataka u nizu, prebaci na sledeći korak
                 if (window.multiTrenutniKorak < aktivniKoraci.length - 1) {
                     window.multiTrenutniKorak++;
                     window.slikaSlikanaSada = false; 
-                    window.prikaziZadatak(); // Crta sledeći zadatak
+                    window.prikaziZadatak(); // Odmah briše stari i crta sledeći zadatak
                 } else {
-                    // ✨ KRAJ MULTI ZADATKA: Sve je uspešno rešeno!
-                    // Resetujemo brojač koraka za sledeće tačke da ne ostane zaglavljen
-                    window.multiTrenutniKorak = 0;
-                    
-                    // Pokrećemo uspeh zadatka koji će sam prepoznati ako treba dati zlato ili poene
-                    window.uspehZadatka(); 
+                    // Kraj multi zadatka: Sve faza su uspešno završene!
+                    window.multiTrenutniKorak = 0; // Reset brojača za sledeće pinove
+                    window.uspehZadatka(); // Zatvara tačku i pušta tim dalje na mapu
                 }
             } else {
-                // Ako trenutni zadatak nije tačan, kazni tim i prikaži grešku
                 window.azurirajZdravlje(-window.KAZNA_GRESKA); 
                 window.osveziSesijuNaServeru(); 
                 window.prikaziGresku(porukaGreske);
             }
-            return;
+            return; // Obavezni povratak koji sprečava pad u kod ispod!
         }
+
+        // Standardni pojedinačni mod (Kada je tačka podešena na samo jedan običan zadatak)
         let un = document.getElementById('unosOdgovor').value.trim().toLowerCase();
         if(!un) { alert(window.recnik[window.trenutniJezik].porukaPrazno || "Upišite odgovor!"); return; }
         
         let moguciOdgovori = window.TACAN_ODGOVOR.split(',').map(o=>o.trim().toLowerCase());
-        if(moguciOdgovori.includes(un)) { window.uspehZadatka(); } 
-        else { window.azurirajZdravlje(-window.KAZNA_GRESKA);
-              window.osveziSesijuNaServeru();
-              window.prikaziGresku(); }
-    }
+        if(moguciOdgovori.includes(un)) { 
+            window.uspehZadatka(); 
+        } else { 
+            window.azurirajZdravlje(-window.KAZNA_GRESKA);
+            window.osveziSesijuNaServeru();
+            window.prikaziGresku(); 
+        }
+    };
     
     // --- POMOĆNA KVIZ FUNKCIJA ---
     window.proveriSveKvizove = function(kvizData) {
