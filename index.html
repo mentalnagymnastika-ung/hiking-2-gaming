@@ -1764,24 +1764,31 @@ window.sakupiMultiZlatnik = function() {
 };
 
 window.otvoriG2HIgruUPunomEkranu = function() {
+    // 1. Hvatanje trenutne tačke i šifre igrice koju smo snimili u adminu
     let pin = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
-    let kodIgre = pin.zadatak?.igrica_kod || "";
+    let kodIgre = pin.zadatak?.igrica_kod || ""; 
     
     let prozor = document.getElementById('g2h_multi_puni_ekran');
     let kontejnerIgre = document.getElementById('multi_g2h_game_container');
     
-    if (prozor && kontejnerIgre && typeof window.pokreniG2HIgricu === 'function') {
-        kontejnerIgre.innerHTML = ''; // Čistimo boks pre pokretanja
-        prozor.style.display = 'block'; // Otvaramo prozor preko celog ekrana!
+    // Proveravamo da li elementi na ekranu i naša Fabrika Igara postoje u memoriji
+    if (prozor && kontejnerIgre && typeof window.G2H_FabrikaIgara !== 'undefined') {
         
-        // Pokrećemo tvoju originalnu funkciju igre unutar čistog, velikog prozora
-        window.pokreniG2HIgricu(kodIgre, kontejnerIgre);
-        
-        let proveraMreze = document.getElementById('g2h_okvir_igre') || document.getElementById('skockoMreza') || document.getElementById('memorijaMreza');
-        if (proveraMreze) {
-            kontejnerIgre.appendChild(proveraMreze);
-            proveraMreze.style.display = 'block';
+        kontejnerIgre.innerHTML = ''; // Potpuno čistimo boks da igra krene sveža
+        prozor.style.display = 'block'; // 🌟 OTKLJUČAVAMO PUNI EKRAN PREKO CELOG TELEFONA!
+
+        // ✨ DIREKTNO PREUSMERAVANJE NA TVOJU MODULARNU FABRIKU IGARA ✨
+        if (kodIgre.startsWith('memorija')) {
+            window.G2H_FabrikaIgara.pokreniMemoriju(kodIgre, kontejnerIgre);
+        } else if (kodIgre.startsWith('skocko')) {
+            window.G2H_FabrikaIgara.pokreniSkocka(kodIgre, kontejnerIgre);
+        } else {
+            console.error("Sistem ne prepoznaje šifru igre:", kodIgre);
+            kontejnerIgre.innerHTML = `<b style="color:red; display:block; text-align:center; padding:20px; font-size:18px;">⚠️ Greška: Igra sa šifrom (${kodIgre}) nije pronađena u sistemu staze!</b>`;
         }
+    } else {
+        console.error("Kritična greška: G2H_FabrikaIgara ili elementi prozora nisu učitani u index.html!");
+        alert("Sistem nije spreman za pokretanje igre. Proverite fabriku igara.");
     }
 };
 
