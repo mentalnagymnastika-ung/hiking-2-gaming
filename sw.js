@@ -1,5 +1,5 @@
 // 👇 NOVA SERIJA IGARA - KREĆEMO OD STOTKE 👇
-const CACHE_NAME = 'potraga-oflajn-v100.18'; 
+const CACHE_NAME = 'potraga-oflajn-v100.19'; 
 // 👆 ----------------------------------------------------------- 👆
 
 const OBAVEZNI_FAJLOVI = [
