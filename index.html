@@ -1793,6 +1793,7 @@ window.otvoriG2HIgruUPunomEkranu = function() {
 };
 
 // --- PROVERA ODGOVORA ---
+// --- PROVERA ODGOVORA (SA AUTOMATSKIM ČIŠĆENJEM I PRELASKOM) ---
     window.proveriOdgovor = function() {
         let pin = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
         let tip = pin.zadatak?.tip || 'zagonetka';
@@ -1815,7 +1816,6 @@ window.otvoriG2HIgruUPunomEkranu = function() {
             return;
         }
 
-        // PROVERA ZA SAMOSTALNI TIP IGRICE (Kada nije u sklopu Multi-ja)
         if (tip === 'igrica') {
             if (window.G2H_trenutniStatusIgreUspeh) {
                 window.uspehZadatka();
@@ -1827,7 +1827,7 @@ window.otvoriG2HIgruUPunomEkranu = function() {
             return;
         }
         
-        // --- MULTI ZADATAK KORAK PO KORAK ---
+        // --- MULTI ZADATAK LOGIKA ---
         if (tip === 'multi') {
             let elovi = pin.zadatak.multi_elementi || [];
             let aktivniKoraci = elovi.filter(e => ['zlatnik', 'zagonetka', 'igrica', 'kreativni', 'pronadji', 'qr', 'kviz'].includes(e));
@@ -1836,7 +1836,7 @@ window.otvoriG2HIgruUPunomEkranu = function() {
             let trenutniKorakTacan = true;
             let porukaGreske = "";
             
-            // Provera samo trenutno aktivnog koraka na ekranu
+            // 1. Provera trenutno aktivnog koraka
             if (trenutnaKomponenta === 'zlatnik') {
                 if (!window.multiZlatnikSakupljen) {
                     trenutniKorakTacan = false;
@@ -1893,26 +1893,38 @@ window.otvoriG2HIgruUPunomEkranu = function() {
                 }
             }
             
-            // Ishod provere trenutnog koraka
+            // 2. ISHOD: Šta se dešava nakon klika na dugme?
             if (trenutniKorakTacan) {
+                // Ako ima još zadataka u nizu, idemo na sledeći korak
                 if (window.multiTrenutniKorak < aktivniKoraci.length - 1) {
                     window.multiTrenutniKorak++;
                     window.slikaSlikanaSada = false; 
-                    window.prikaziZadatak(); // Odmah briše stari i crta sledeći zadatak
+                    window.G2H_trenutniStatusIgreUspeh = false; // Resetujemo uspeh igre za sledeći korak
+                    
+// 🌟 KLJUČNA POPRAVKA ZA DUPLIRANJE KONTEJNERA:
+// Pre nego što iscrtamo sledeći zadatak, praznimo stari sadržaj unutar panela!
+let glavniPanelZadatka = document.getElementById('tekstZadatkaUUI') || document.getElementById('sadrzajZadatka') || document.getElementById('multi_zadatak_boks');
+if (glavniPanelZadatka) {
+    glavniPanelZadatka.innerHTML = ''; // Briše sve stare zagonetke, inpute i dugmad
+}
+
+// Sada bezbedno crtamo sledeću komponentu na čistom ekranu
+window.prikaziZadatak(); 
                 } else {
-                    // Kraj multi zadatka: Sve faza su uspešno završene!
-                    window.multiTrenutniKorak = 0; // Reset brojača za sledeće pinove
-                    window.uspehZadatka(); // Zatvara tačku i pušta tim dalje na mapu
+                    // KRAJ MULTI NIZA: Sve faze su uspešno rešene!
+                    window.multiTrenutniKorak = 0; // Reset brojača za naredne tačke
+                    window.uspehZadatka(); // Zatvara prozor i daje zeleno svetlo na mapi
                 }
             } else {
+                // Odgovor nije tačan: kazna i poruka (Vraća ih nazad na isti zadatak)
                 window.azurirajZdravlje(-window.KAZNA_GRESKA); 
                 window.osveziSesijuNaServeru(); 
                 window.prikaziGresku(porukaGreske);
             }
-            return; // Obavezni povratak koji sprečava pad u kod ispod!
+            return;
         }
 
-        // Standardni pojedinačni mod (Kada je tačka podešena na samo jedan običan zadatak)
+        // Standardni pojedinačni mod
         let un = document.getElementById('unosOdgovor').value.trim().toLowerCase();
         if(!un) { alert(window.recnik[window.trenutniJezik].porukaPrazno || "Upišite odgovor!"); return; }
         
