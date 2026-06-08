@@ -1586,27 +1586,23 @@
             else if (myTip === 'qr') { document.getElementById('qr_uputstvo').value = p.zadatak.tekst_zadatka || ''; document.getElementById('qr_kod_vrednost').value = p.zadatak.odgovor || ''; } 
 
 else if (myTip === 'igrica') {
-                window.switchZadatak();
+
+                window.switchZadatak(); 
                 let mIgra = document.getElementById('g2h_izbor_igre');
                 let mTezina = document.getElementById('g2h_izbor_tezine');
-                let sacuvanaSifra = p.zadatak.tekst_zadatka || '';
+                let sacuvanaSifra = p.zadatak.tekst_zadatka || 'memorija1';
                 
-                if (sacuvanaSifra.startsWith('memorija')) {
-                    if (mIgra) mIgra.value = 'memorija';
-                    window.switchZadatak(); 
-                    if (mTezina) mTezina.value = sacuvanaSifra.replace('memorija', '');
-                } else if (sacuvanaSifra.startsWith('skocko')) {
-                    if (mIgra) mIgra.value = 'skocko';
-                    window.switchZadatak();
-                    if (mTezina) mTezina.value = sacuvanaSifra.replace('skocko', '');
-                } else if (sacuvanaSifra.startsWith('prekidaci')) {
-                    if (mIgra) mIgra.value = 'prekidaci';
-                    window.switchZadatak();
-                    if (mTezina) mTezina.value = sacuvanaSifra.replace('prekidaci', '');
+                let nadjenaIgra = sacuvanaSifra.startsWith('memorija') ? 'memorija' : 
+                                  sacuvanaSifra.startsWith('skocko') ? 'skocko' : 
+                                  sacuvanaSifra.startsWith('prekidaci') ? 'prekidaci' : 'memorija';
+                
+                if (mIgra) {
+                    mIgra.value = nadjenaIgra;
+                    mIgra.onchange(); // ⚡ Ovo aktivira osvežavanje pod-opcija za težinu BEZ brisanja menija!
                 }
-                
-                let most = document.getElementById('zag_tekst');
-                if (most) most.value = sacuvanaSifra;
+                if (mTezina) {
+                    mTezina.value = sacuvanaSifra.replace(nadjenaIgra, '');
+                }
             }
 
 
@@ -1648,7 +1644,7 @@ else if (myTip === 'igrica') {
                     });
                 }
             }
-            else if (myTip === 'multi') {
+else if (myTip === 'multi') {
                 document.getElementById('multi_uputstvo').value = p.zadatak.tekst_zadatka || '';
                 let elovi = p.zadatak.multi_elementi || [];
                 
@@ -1672,27 +1668,19 @@ else if (myTip === 'igrica') {
                 if(elovi.includes('igrica')) {
                     let mIgra = document.getElementById('g2h_izbor_igre');
                     let mTezina = document.getElementById('g2h_izbor_tezine');
-                    let mSifra = p.zadatak.igrica_kod || '';
-                    if (mSifra.startsWith('memorija')) {
-                        if (mIgra) mIgra.value = 'memorija';
-                        let resetMreze = document.getElementById('g2h_izbor_tezine'); // Osveži privremeno
-                        if (resetMreze) resetMreze.innerHTML = `<option value="1">⚪ Bela staza (Najlakše - mreža 3x4)</option><option value="2">🔵 Plava staza (Srednje - mreža 4x4)</option><option value="3">🔴 Crvena staza (Najteže - mreža 4x5)</option>`;
-                        if (mTezina) mTezina.value = mSifra.replace('memorija', '');
-                    } else if (mSifra.startsWith('skocko')) {
-                        if (mIgra) mIgra.value = 'skocko';
-                        let resetMreze = document.getElementById('g2h_izbor_tezine');
-                        if (resetMreze) resetMreze.innerHTML = `<option value="1">⚪ Bela staza (Lakši nivo pogađanja)</option><option value="2">🔵 Plava staza (Srednji nivo pogađanja)</option><option value="3">🔴 Crvena staza (Klasičan najteži nivo)</option>`;
-                        if (mTezina) mTezina.value = mSifra.replace('skocko', '');
-
-} else if (mSifra.startsWith('prekidaci')) {
-                        if (mIgra) mIgra.value = 'prekidaci';
-                        let resetMreze = document.getElementById('g2h_izbor_tezine');
-                        if (resetMreze) resetMreze.innerHTML = `<option value="1">⚪ Bela staza (Mreža 3x3 - 5 miksanja)</option><option value="2">🔵 Plava staza (Mreža 4x4 - 8 miksanja)</option><option value="3">🔴 Crvena staza (Mreža 5x5 - 12 miksanja)</option>`;
-                        if (mTezina) mTezina.value = mSifra.replace('prekidaci', '');
+                    let mSifra = p.zadatak.igrica_kod || 'memorija1';
+                    
+                    let nadjenaIgra = mSifra.startsWith('memorija') ? 'memorija' : 
+                                      mSifra.startsWith('skocko') ? 'skocko' : 
+                                      mSifra.startsWith('prekidaci') ? 'prekidaci' : 'memorija';
+                    
+                    if (mIgra) {
+                        mIgra.value = nadjenaIgra;
+                        mIgra.onchange(); // ⚡ Pokreće osvežavanje pod-opcija za težinu bez rušenja menija
                     }
-
-                    let most = document.getElementById('zag_tekst');
-                    if (most) most.value = mSifra;
+                    if (mTezina) {
+                        mTezina.value = mSifra.replace(nadjenaIgra, '');
+                    }
                 }
                 if(elovi.includes('pronadji')) {
                     document.getElementById('pronadji_opis').value = p.zadatak.pronadji_opis || '';
@@ -1760,136 +1748,125 @@ else if (myTip === 'igrica') {
 
     window.azurirajRadijusIzPanela = function() { window.aktivniPin.rad = document.getElementById('kRad').value; document.getElementById('vRad').innerText = window.aktivniPin.rad; window.aktivniPin.krug.setRadius(window.aktivniPin.rad); window.promeneNisuSnimljene = true; }
     
-    window.switchZadatak = function() { 
-        document.querySelectorAll('.zadatak-sekcija').forEach(s => s.style.display='none'); 
+window.switchZadatak = function() { 
+    document.querySelectorAll('.zadatak-sekcija').forEach(s => s.style.display='none'); 
+    
+    let tipEl = document.getElementById('tipZadatka');
+    if (!tipEl) return;
+    let tip = tipEl.value;
+    
+    let zagTekstPolje = document.getElementById('zag_tekst'); 
+    let zagOdgovorPolje = document.getElementById('zag_odgovor');
+    let lblZagOdgLabela = document.getElementById('lblZagOdg');
+    let lblZagTekst = document.getElementById('lblZagTekst');
+
+    // Resetuj podrazumevane vidljivosti standardnih polja
+    if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'block';
+    if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'block';
+    if(lblZagTekst) lblZagTekst.innerText = "Tekst zagonetke Pitanje";
+    if(zagTekstPolje) zagTekstPolje.style.display = 'block';
+
+    let igricaJeAktivna = false;
+
+    if (tip === 'multi') {
+        document.getElementById('sekcija_multi_kombinator').style.display='block';
+        if(document.getElementById('chk_multi_zlatnik').checked) document.getElementById('sekcija_zlatnik').style.display='block';
+        if(document.getElementById('chk_multi_zagonetka').checked) document.getElementById('sekcija_zagonetka').style.display='block';
+        if(document.getElementById('chk_multi_kviz').checked) document.getElementById('sekcija_kviz').style.display='block';
+        if(document.getElementById('chk_multi_kreativni').checked) document.getElementById('sekcija_kreativni').style.display='block';
+        if(document.getElementById('chk_multi_pronadji').checked) document.getElementById('sekcija_pronadji').style.display='block';
+        if(document.getElementById('chk_multi_qr').checked) document.getElementById('sekcija_qr').style.display='block';
         
-        let tipEl = document.getElementById('tipZadatka');
-        if (!tipEl) return;
-        let tip = tipEl.value;
-        
-        // 🚨 ODBRANA OD GOMILANJA: Kompletan reset i čišćenje starih menija rute pre crtanja 🚨
-        let proveraKontejnera = document.getElementById('g2h_kontejner_menija');
-        if (proveraKontejnera) {
-            let resetovanaTextarea = document.createElement('textarea');
-            resetovanaTextarea.id = 'zag_tekst';
-            resetovanaTextarea.rows = 3;
-            proveraKontejnera.parentNode.replaceChild(resetovanaTextarea, proveraKontejnera);
-        }
-
-        let zagTekstPolje = document.getElementById('zag_tekst'); 
-        let zagOdgovorPolje = document.getElementById('zag_odgovor');
-        let lblZagOdgLabela = document.getElementById('lblZagOdg');
-        let lblZagTekst = document.getElementById('lblZagTekst');
-
-        if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'block';
-        if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'block';
-        if(lblZagTekst) lblZagTekst.innerText = "Tekst zagonetke Pitanje";
-
-        let igricaJeAktivna = false;
-
-        if (tip === 'multi') {
-            document.getElementById('sekcija_multi_kombinator').style.display='block';
-            if(document.getElementById('chk_multi_zlatnik').checked) document.getElementById('sekcija_zlatnik').style.display='block';
-            if(document.getElementById('chk_multi_zagonetka').checked) document.getElementById('sekcija_zagonetka').style.display='block';
-            if(document.getElementById('chk_multi_kviz').checked) document.getElementById('sekcija_kviz').style.display='block';
-            if(document.getElementById('chk_multi_kreativni').checked) document.getElementById('sekcija_kreativni').style.display='block';
-            if(document.getElementById('chk_multi_pronadji').checked) document.getElementById('sekcija_pronadji').style.display='block';
-            if(document.getElementById('chk_multi_qr').checked) document.getElementById('sekcija_qr').style.display='block';
-            
-            if(document.getElementById('chk_multi_igrica').checked) {
-                document.getElementById('sekcija_zagonetka').style.display='block';
-                if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'none';
-                if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'none';
-                igricaJeAktivna = true;
-            }
-        } 
-        else if (tip === 'igrica') {
-            document.getElementById('sekcija_zagonetka').style.display='block'; 
+        if(document.getElementById('chk_multi_igrica').checked) {
+            document.getElementById('sekcija_zagonetka').style.display='block';
             if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'none';
-            if(zagOdgovorPolje && zagOdgovorPolje.previousElementSibling) {
-                zagOdgovorPolje.previousElementSibling.style.display = 'none';
-            }
+            if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'none';
             igricaJeAktivna = true;
-        } 
-        else {
-            let sekcija = document.getElementById('sekcija_' + tip);
-            if(sekcija) sekcija.style.display = 'block';
         }
-
-        // --- 3. PROVERA I INTEGRACIJA DUPLOG MENIJA ZA VOĆNE IGRE ---
-// --- 3. PROVERA I INTEGRACIJA DUPLOG MENIJA ZA VOĆNE I RETRO IGRE ---
-        if (igricaJeAktivna) {
-            if(lblZagTekst) lblZagTekst.innerText = "Konfiguracija logičke igre:";
-
-            let kontejnerMenija = document.createElement('div');
-            kontejnerMenija.id = 'g2h_kontejner_menija';
-            kontejnerMenija.style.display = 'flex';
-            kontejnerMenija.style.flexDirection = 'column';
-            kontejnerMenija.style.gap = '10px';
-
-            let mIgra = document.createElement('select');
-            mIgra.id = 'g2h_izbor_igre';
-            mIgra.style.padding = '10px';
-            mIgra.style.borderRadius = '6px';
-            mIgra.style.fontWeight = 'bold';
-            mIgra.innerHTML = `
-                <option value="memorija">🍓 Igra Memorije (G2H)</option>
-                <option value="skocko">🤠 Voćni Skočko (G2H)</option>
-                <option value="prekidaci">🔌 Sajber Prekidači (G2H)</option>
-            `;
-
-            let mTezina = document.createElement('select');
-            mTezina.id = 'g2h_izbor_tezine';
-            mTezina.style.padding = '10px';
-            mTezina.style.borderRadius = '6px';
-            mTezina.style.fontWeight = 'bold';
-
-            let skriveniMost = document.createElement('input');
-            skriveniMost.type = 'hidden';
-            skriveniMost.id = 'zag_tekst';
-
-            let osveziTezine = function() {
-                let izabranaIgra = mIgra.value;
-                if (izabranaIgra === 'memorija') {
-                    mTezina.innerHTML = `
-                        <option value="1">⚪ Bela staza (Najlakše - mreža 3x4)</option>
-                        <option value="2">🔵 Plava staza (Srednje - mreža 4x4)</option>
-                        <option value="3">🔴 Crvena staza (Najteže - mreža 4x5)</option>
-                    `;
-                } else if (izabranaIgra === 'skocko') {
-                    mTezina.innerHTML = `
-                        <option value="1">⚪ Bela staza (Lakši nivo pogađanja)</option>
-                        <option value="2">🔵 Plava staza (Srednji nivo pogađanja)</option>
-                        <option value="3">🔴 Crvena staza (Klasičan najteži nivo)</option>
-                    `;
-                } else if (izabranaIgra === 'prekidaci') {
-                    mTezina.innerHTML = `
-                        <option value="1">⚪ Bela staza (Mreža 3x3 - 5 miksanja)</option>
-                        <option value="2">🔵 Plava staza (Mreža 4x4 - 8 miksanja)</option>
-                        <option value="3">🔴 Crvena staza (Mreža 5x5 - 12 miksanja)</option>
-                    `;
-                }
-                skriveniMost.value = mIgra.value + mTezina.value;
-            };
-
-            mIgra.onchange = osveziTezine;
-            mTezina.onchange = function() {
-                skriveniMost.value = mIgra.value + mTezina.value;
-            };
-
-            osveziTezine();
-
-            kontejnerMenija.appendChild(mIgra);
-            kontejnerMenija.appendChild(mTezina);
-            kontejnerMenija.appendChild(skriveniMost);
-
-            if (zagTekstPolje && zagTekstPolje.parentNode) {
-                zagTekstPolje.parentNode.replaceChild(kontejnerMenija, zagTekstPolje);
-            }
-        }
-
-        window.osveziPinove(); 
+    } 
+    else if (tip === 'igrica') {
+        document.getElementById('sekcija_zagonetka').style.display='block'; 
+        if(zagOdgovorPolje) zagOdgovorPolje.style.display = 'none';
+        if(lblZagOdgLabela) lblZagOdgLabela.style.display = 'none';
+        igricaJeAktivna = true;
+    } 
+    else {
+        let sekcija = document.getElementById('sekcija_' + tip);
+        if(sekcija) sekcija.style.display = 'block';
     }
+
+    // --- KREIRANJE ILI AKTIVACIJA TRAJNOG MENIJA ZA IGRE ---
+    let kontejnerMenija = document.getElementById('g2h_kontejner_menija');
+    if (!kontejnerMenija && zagTekstPolje) {
+        kontejnerMenija = document.createElement('div');
+        kontejnerMenija.id = 'g2h_kontejner_menija';
+        kontejnerMenija.style.display = 'none';
+        kontejnerMenija.style.flexDirection = 'column';
+        kontejnerMenija.style.gap = '10px';
+        kontejnerMenija.style.marginTop = '5px';
+        kontejnerMenija.style.marginBottom = '10px';
+
+        let mIgra = document.createElement('select');
+        mIgra.id = 'g2h_izbor_igre';
+        mIgra.style.padding = '10px';
+        mIgra.style.borderRadius = '6px';
+        mIgra.style.fontWeight = 'bold';
+        mIgra.innerHTML = `
+            <option value="memorija">🍓 Igra Memorije (G2H)</option>
+            <option value="skocko">🤠 Voćni Skočko (G2H)</option>
+            <option value="prekidaci">🔌 Sajber Prekidači (G2H)</option>
+        `;
+
+        let mTezina = document.createElement('select');
+        mTezina.id = 'g2h_izbor_tezine';
+        mTezina.style.padding = '10px';
+        mTezina.style.borderRadius = '6px';
+        mTezina.style.fontWeight = 'bold';
+
+        let osveziTezine = function() {
+            let izabranaIgra = mIgra.value;
+            if (izabranaIgra === 'memorija') {
+                mTezina.innerHTML = `
+                    <option value="1">⚪ Bela staza (Najlakše - mreža 3x4)</option>
+                    <option value="2">🔵 Plava staza (Srednje - mreža 4x4)</option>
+                    <option value="3">🔴 Crvena staza (Najteže - mreža 4x5)</option>
+                `;
+            } else if (izabranaIgra === 'skocko') {
+                mTezina.innerHTML = `
+                    <option value="1">⚪ Bela staza (Lakši nivo pogađanja)</option>
+                    <option value="2">🔵 Plava staza (Srednji nivo pogađanja)</option>
+                    <option value="3">🔴 Crvena staza (Klasičan najteži nivo)</option>
+                `;
+            } else if (izabranaIgra === 'prekidaci') {
+                mTezina.innerHTML = `
+                    <option value="1">⚪ Bela staza (Mreža 3x3 - 5 miksanja)</option>
+                    <option value="2">🔵 Plava staza (Mreža 4x4 - 8 miksanja)</option>
+                    <option value="3">🔴 Crvena staza (Mreža 5x5 - 12 miksanja)</option>
+                `;
+            }
+        };
+
+        mIgra.onchange = osveziTezine;
+        osveziTezine();
+
+        kontejnerMenija.appendChild(mIgra);
+        kontejnerMenija.appendChild(mTezina);
+        
+        // Ubacujemo ga trajno u formu odmah iznad textarea polja
+        zagTekstPolje.parentNode.insertBefore(kontejnerMenija, zagTekstPolje);
+    }
+
+    // Upravljanje vidljivošću bez ikakvog brisanja
+    if (igricaJeAktivna) {
+        if(lblZagTekst) lblZagTekst.innerText = "Konfiguracija logičke igre:";
+        if(zagTekstPolje) zagTekstPolje.style.display = 'none'; 
+        if(kontejnerMenija) kontejnerMenija.style.display = 'flex'; 
+    } else {
+        if(kontejnerMenija) kontejnerMenija.style.display = 'none';
+    }
+
+    window.osveziPinove(); 
+};
 
     window.dodajNovoKvizPitanje = function() {
         window.kvizCount++; let div = document.createElement('div'); div.className = 'kviz-blok'; div.style.background = 'white'; div.style.padding = '15px'; div.style.borderRadius = '8px'; div.style.border = '1px solid #e2e8f0'; div.style.marginBottom = '15px';
@@ -1916,12 +1893,15 @@ else if (myTip === 'igrica') {
         let tipZ = document.getElementById('tipZadatka').value;
         let podaciZadatka = { tip: tipZ, tekst: '', odgovor: '', usmeravanje: document.getElementById('smernica_tekst').value, tekst_zadatka: '', isKrajnjaPoruka: isZavrsna };
 
-        if(tipZ === 'zlatnik') { podaciZadatka.tekst_zadatka = "Pokupi zlatnik"; podaciZadatka.tekst = "Zlatnik"; podaciZadatka.odgovor = "zlatnik"; }
+if(tipZ === 'zlatnik') { podaciZadatka.tekst_zadatka = "Pokupi zlatnik"; podaciZadatka.tekst = "Zlatnik"; podaciZadatka.odgovor = "zlatnik"; }
         else if(tipZ === 'zagonetka') { podaciZadatka.tekst_zadatka = document.getElementById('zag_tekst').value; podaciZadatka.tekst = podaciZadatka.tekst_zadatka; podaciZadatka.odgovor = document.getElementById('zag_odgovor').value; } 
         else if(tipZ === 'kreativni') { podaciZadatka.tekst_zadatka = document.getElementById('kre_uputstvo').value; podaciZadatka.tekst = podaciZadatka.tekst_zadatka; podaciZadatka.odgovor = window.trenutniJezik==='sr'?'Fotografija lokacije':'Location photo'; } 
         else if(tipZ === 'qr') { podaciZadatka.tekst_zadatka = document.getElementById('qr_uputstvo').value; podaciZadatka.tekst = podaciZadatka.tekst_zadatka; podaciZadatka.odgovor = document.getElementById('qr_kod_vrednost').value; } 
+        // OVAJ DEO ZA IGRICU JE SADA POTPUNO SIGURAN I ČIST:
         else if(tipZ === 'igrica') {
-            podaciZadatka.tekst_zadatka = document.getElementById('zag_tekst').value; 
+            let mIgra = document.getElementById('g2h_izbor_igre');
+            let mTezina = document.getElementById('g2h_izbor_tezine');
+            podaciZadatka.tekst_zadatka = (mIgra && mTezina) ? (mIgra.value + mTezina.value) : "memorija1"; 
             podaciZadatka.tekst = "G2H Logička Igra"; 
             podaciZadatka.odgovor = "igrica_uspeh"; 
         }
@@ -1938,10 +1918,12 @@ else if (myTip === 'igrica') {
                 podaciZadatka.zag_tekst = document.getElementById('zag_tekst').value;
                 podaciZadatka.zag_odgovor = document.getElementById('zag_odgovor').value;
             }
-            if(document.getElementById('chk_multi_igrica').checked) {
+                if(document.getElementById('chk_multi_igrica').checked) {
                 multiEl.push('igrica');
-                podaciZadatka.igrica_kod = document.getElementById('zag_tekst').value;
-            }
+                let mIgra = document.getElementById('g2h_izbor_igre');
+                let mTezina = document.getElementById('g2h_izbor_tezine');
+                podaciZadatka.igrica_kod = (mIgra && mTezina) ? (mIgra.value + mTezina.value) : "memorija1";
+            }      
             if(document.getElementById('chk_multi_kviz').checked) {
                 multiEl.push('kviz');
                 let kvizPodaci = []; 
