@@ -1305,19 +1305,26 @@
             let tip = pin.zadatak?.tip || 'zagonetka';
             let slikaUI = document.getElementById('slikaZadatkaUUI');
             
-            if (tip === 'igrica') {
+if (tip === 'igrica') {
                 let sifraIgre = pin.zadatak?.tekst_zadatka || ''; 
                 document.getElementById('tekstZadatkaUUI').style.display = 'none';
                 if(btnProveri) btnProveri.style.display = 'none'; 
                 
                 let kontejnerIgre = document.getElementById('g2hIgreUI');
                 kontejnerIgre.style.display = 'block';
+                kontejnerIgre.innerHTML = ''; // ⚡ Čistimo kontejner pre starta nove igre
                 
                 if (sifraIgre.startsWith('memorija')) {
                     window.G2H_FabrikaIgara.pokreniMemoriju(sifraIgre, kontejnerIgre);
                 } 
                 else if (sifraIgre.startsWith('skocko')) {
                     window.G2H_FabrikaIgara.pokreniSkocka(sifraIgre, kontejnerIgre);
+                }
+                else if (sifraIgre.startsWith('prekidaci')) {
+                    window.G2H_FabrikaIgara.pokreniPrekidace(sifraIgre, kontejnerIgre);
+                }
+                else if (sifraIgre.startsWith('slagalica')) {
+                    window.G2H_FabrikaIgara.pokreniSlagalicu(sifraIgre, kontejnerIgre);
                 }
                 return; 
             }
@@ -1601,29 +1608,32 @@
             uputstvo.style.color = 'white';
         }
     };
+// --- OTVORI U PUNOM EKRANU --
+window.otvoriG2HIgruUPunomEkranu = function() {
+    let pin = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
+    let kodIgre = pin.zadatak?.igrica_kod || ""; 
+    
+    let prozor = document.getElementById('g2h_multi_puni_ekran');
+    let kontejnerIgre = document.getElementById('multi_g2h_game_container');
+    
+    if (prozor && kontejnerIgre && typeof window.G2H_FabrikaIgara !== 'undefined') {
+        kontejnerIgre.innerHTML = ''; 
+        prozor.style.display = 'block'; 
 
-    window.otvoriG2HIgruUPunomEkranu = function() {
-        let pin = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
-        let kodIgre = pin.zadatak?.igrica_kod || ""; 
-        
-        let prozor = document.getElementById('g2h_multi_puni_ekran');
-        let kontejnerIgre = document.getElementById('multi_g2h_game_container');
-        
-        if (prozor && kontejnerIgre && typeof window.G2H_FabrikaIgara !== 'undefined') {
-            kontejnerIgre.innerHTML = ''; 
-            prozor.style.display = 'block'; 
-
-            if (kodIgre.startsWith('memorija')) {
-                window.G2H_FabrikaIgara.pokreniMemoriju(kodIgre, kontejnerIgre);
-            } else if (kodIgre.startsWith('skocko')) {
-                window.G2H_FabrikaIgara.pokreniSkocka(kodIgre, kontejnerIgre);
-            } else {
-                console.error("Sistem ne prepoznaje šifru igre:", kodIgre);
-                kontejnerIgre.innerHTML = `<b style="color:red; display:block; text-align:center; padding:20px; font-size:18px;">⚠️ Greška: Igra sa šifrom (${kodIgre}) nije pronađena!</b>`;
-            }
+if (kodIgre.startsWith('memorija')) {
+            window.G2H_FabrikaIgara.pokreniMemoriju(kodIgre, kontejnerIgre);
+        } else if (kodIgre.startsWith('skocko')) {
+            window.G2H_FabrikaIgara.pokreniSkocka(kodIgre, kontejnerIgre);
+        } else if (kodIgre.startsWith('prekidaci')) {
+            window.G2H_FabrikaIgara.pokreniPrekidace(kodIgre, kontejnerIgre);
+        } else if (kodIgre.startsWith('slagalica')) {
+            window.G2H_FabrikaIgara.pokreniSlagalicu(kodIgre, kontejnerIgre);
+        } else {
+            console.error("Sistem ne prepoznaje šifru igre:", kodIgre);
+            kontejnerIgre.innerHTML = `<b style="color:red; display:block; text-align:center; padding:20px; font-size:18px;">⚠️ Greška: Igra sa šifrom (${kodIgre}) nije pronađena!</b>`;
         }
-    };
-
+    }
+};
     // --- PROVERA ODGOVORA (POTPUNO REFORMISAN MULTI MEHANIZAM) ---
     window.proveriOdgovor = function() {
         let pin = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
@@ -2559,6 +2569,240 @@
             if (prvoPoljeNovogReda) prvoPoljeNovogReda.style.borderColor = '#f1c40f';
         };
     };
+
+// ================= pokreniPrekidace ========================
+
+window.G2H_FabrikaIgara.pokreniPrekidace = function(sifra, kontejner) {
+    window.G2H_trenutniStatusIgreUspeh = false; // 🔒 Sigurnosni reset uspeha na startu!
+    let velicina = 3;
+    let miksPoteza = 5;
+
+    if (sifra.endsWith('1')) { velicina = 3; miksPoteza = 5; }
+    else if (sifra.endsWith('2')) { velicina = 4; miksPoteza = 8; }
+    else if (sifra.endsWith('3')) { velicina = 5; miksPoteza = 12; }
+
+    let matrica = [];
+    for (let r = 0; r < velicina; r++) {
+        matrica[r] = [];
+        for (let c = 0; c < velicina; c++) {
+            matrica[r][c] = true; 
+        }
+    }
+
+    function pritisniPrekidac(r, c) {
+        let redovi = [0, -1, 1, 0, 0];
+        let kolone = [0, 0, 0, -1, 1];
+        for (let i = 0; i < 5; i++) {
+            let nr = r + redovi[i];
+            let nc = c + kolone[i];
+            if (nr >= 0 && nr < velicina && nc >= 0 && nc < velicina) {
+                matrica[nr][nc] = !matrica[nr][nc];
+            }
+        }
+    }
+
+    let tablaJeResena = true;
+    while (tablaJeResena) {
+        for (let i = 0; i < miksPoteza; i++) {
+            let randR = Math.floor(Math.random() * velicina);
+            let randC = Math.floor(Math.random() * velicina);
+            pritisniPrekidac(randR, randC);
+        }
+        tablaJeResena = true;
+        for (let r = 0; r < velicina; r++) {
+            for (let c = 0; c < velicina; c++) {
+                if (!matrica[r][c]) tablaJeResena = false;
+            }
+        }
+    }
+
+    kontejner.innerHTML = `
+        <div class="g2h-igra-omotac">
+            <h3 style="text-align:center; color:#347C17; margin:0 0 5px 0; font-size:22px; font-weight:bold;">🔌 SAJBER PREKIDAČI</h3>
+            <p style="font-size:14px; text-align:center; color:#555; margin:0 0 15px 0; font-weight:600;">
+                Svi energetski čvorovi moraju svetleti zeleno! Klik na čvor obrće njegovo stanje i stanje njegovih suseda.
+            </p>
+            <div id="mrezaPrekidaca" style="display:grid; gap:8px; margin:15px auto; width:100%; max-width:320px; box-sizing:border-box;"></div>
+        </div>
+    `;
+
+    let mreza = document.getElementById('mrezaPrekidaca');
+    mreza.style.gridTemplateColumns = `repeat(${velicina}, 1fr)`;
+
+    for (let r = 0; r < velicina; r++) {
+        for (let c = 0; c < velicina; c++) {
+            let dugme = document.createElement('div');
+            dugme.id = `prekidac-${r}-${c}`;
+            dugme.style.aspectRatio = "1 / 1";
+            dugme.style.borderRadius = "10px";
+            dugme.style.cursor = "pointer";
+            dugme.style.boxShadow = "0 4px 6px rgba(0,0,0,0.15)";
+            dugme.style.display = "flex";
+            dugme.style.justifyContent = "center";
+            dugme.style.alignItems = "center";
+            dugme.style.fontSize = velicina > 4 ? "20px" : "24px";
+            dugme.style.transition = "background 0.2s, transform 0.1s";
+            
+            osveziIzgled(dugme, matrica[r][c]);
+
+            dugme.onclick = function() {
+                dugme.style.transform = "scale(0.92)";
+                setTimeout(() => dugme.style.transform = "none", 100);
+                
+                pritisniPrekidac(r, c);
+                
+                for (let i = 0; i < velicina; i++) {
+                    for (let j = 0; j < velicina; j++) {
+                        let d = document.getElementById(`prekidac-${i}-${j}`);
+                        if (d) osveziIzgled(d, matrica[i][j]);
+                    }
+                }
+
+                let pobeda = true;
+                for (let i = 0; i < velicina; i++) {
+                    for (let j = 0; j < velicina; j++) {
+                        if (!matrica[i][j]) pobeda = false;
+                    }
+                }
+
+                if (pobeda) {
+                    document.querySelectorAll('[id^="prekidac-"]').forEach(d => d.onclick = null);
+                    
+                    setTimeout(() => {
+                        alert("⚡ Mreža je uspešno stabilizovana! Svi čvorovi su operativni.");
+                        window.G2H_trenutniStatusIgreUspeh = true;
+                        let puniEkranProzor = document.getElementById('g2h_multi_puni_ekran');
+                        if (puniEkranProzor) puniEkranProzor.style.display = 'none';
+                        window.proveriOdgovor();
+                    }, 400);
+                }
+            };
+            mreza.appendChild(dugme);
+        }
+    }
+
+    function osveziIzgled(el, upaljen) {
+        if (upaljen) { el.style.background = "#2ecc71"; el.innerText = "🟢"; } 
+        else { el.style.background = "#34495e"; el.innerText = "⚫"; }
+    }
+};
+
+// =================== IMPLEMENTACIJA KLIZNE SLAGALICE ===================
+window.G2H_FabrikaIgara.pokreniSlagalicu = function(sifra, kontejner) {
+    window.G2H_trenutniStatusIgreUspeh = false; 
+    let velicina = 3;
+    let miksPoteza = 20;
+
+    if (sifra.endsWith('1')) { velicina = 3; miksPoteza = 20; }
+    else if (sifra.endsWith('2')) { velicina = 4; miksPoteza = 45; }
+    else if (sifra.endsWith('3')) { velicina = 5; miksPoteza = 75; }
+
+    let ukupnoPolja = velicina * velicina;
+    let raspored = [];
+    
+    for (let i = 1; i < ukupnoPolja; i++) { raspored.push(i); }
+    raspored.push(""); 
+
+    function dajSusede(indeks) {
+        let susedi = [];
+        let r = Math.floor(indeks / velicina);
+        let c = indeks % velicina;
+        if (r > 0) susedi.push(indeks - velicina);      
+        if (r < velicina - 1) susedi.push(indeks + velicina); 
+        if (c > 0) susedi.push(indeks - 1);             
+        if (c < velicina - 1) susedi.push(indeks + 1);       
+        return susedi;
+    }
+
+    let zamenjenoPuta = 0;
+    let zadnjiIndeks = -1;
+    while (zamenjenoPuta < miksPoteza) {
+        let prazanIndeks = raspored.indexOf("");
+        let susedi = dajSusede(prazanIndeks);
+        let nasumicniSused = susedi[Math.floor(Math.random() * susedi.length)];
+        if (nasumicniSused !== zadnjiIndeks) {
+            raspored[prazanIndeks] = raspored[nasumicniSused];
+            raspored[nasumicniSused] = "";
+            zadnjiIndeks = prazanIndeks;
+            zamenjenoPuta++;
+        }
+    }
+
+    kontejner.innerHTML = `
+        <div class="g2h-igra-omotac" style="padding:10px; background:#fff; border-radius:12px; text-align:center;">
+            <h3 style="text-align:center; color:#1565c0; margin:0 0 5px 0; font-size:22px; font-weight:bold;">🧩 KLIZNA SLAGALICA</h3>
+            <p style="font-size:14px; text-align:center; color:#555; margin:0 0 15px 0; font-weight:600;">
+                Složite brojeve po redu (od 1 do ${ukupnoPolja - 1}) pomeranjem pločica u prazan prostor!
+            </p>
+            <div id="mrezaSlagalice" style="display:grid; gap:6px; margin:15px auto; width:100%; max-width:320px; box-sizing:border-box;"></div>
+        </div>
+    `;
+
+    let mreza = document.getElementById('mrezaSlagalice');
+    mreza.style.gridTemplateColumns = `repeat(${velicina}, 1fr)`;
+
+    function iscrtajTabluUI() {
+        mreza.innerHTML = '';
+        raspored.forEach((vrednost, indeks) => {
+            let plocica = document.createElement('div');
+            plocica.style.aspectRatio = "1 / 1";
+            plocica.style.borderRadius = "8px";
+            plocica.style.display = "flex";
+            plocica.style.justifyContent = "center";
+            plocica.style.alignItems = "center";
+            plocica.style.fontSize = velicina > 4 ? "18px" : "24px";
+            plocica.style.fontWeight = "bold";
+            plocica.style.userSelect = "none";
+            plocica.style.transition = "background 0.1s, transform 0.05s";
+            plocica.innerText = vrednost;
+
+            if (vrednost === "") {
+                plocica.style.background = "#f1f5f9"; 
+                plocica.style.border = "2px dashed #cbd5e1";
+            } else {
+                plocica.style.background = "#2563eb"; 
+                plocica.style.color = "white";
+                plocica.style.cursor = "pointer";
+                plocica.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
+                plocica.style.border = "1px solid #1d4ed8";
+
+                plocica.onclick = function() {
+                    let prazanIndeks = raspored.indexOf("");
+                    let susediValidni = dajSusede(indeks);
+                    if (susediValidni.includes(prazanIndeks)) {
+                        plocica.style.transform = "scale(0.95)";
+                        raspored[prazanIndeks] = vrednost;
+                        raspored[indeks] = "";
+                        setTimeout(() => { iscrtajTabluUI(); proveriPobedu(); }, 50);
+                    }
+                };
+            }
+            mreza.appendChild(plocica);
+        });
+    }
+
+    function proveriPobedu() {
+        let uspeh = true;
+        for (let i = 0; i < ukupnoPolja - 1; i++) {
+            if (raspored[i] !== i + 1) { uspeh = false; break; }
+        }
+        if (raspored[ukupnoPolja - 1] !== "") uspeh = false;
+
+        if (uspeh) {
+            document.querySelectorAll('#mrezaSlagalice div').forEach(p => p.onclick = null);
+            setTimeout(() => {
+                alert("🎉 Svaka čast! Logička slagalica je uspešno rešena!");
+                window.G2H_trenutniStatusIgreUspeh = true;
+                let puniEkranProzor = document.getElementById('g2h_multi_puni_ekran');
+                if (puniEkranProzor) puniEkranProzor.style.display = 'none';
+                window.proveriOdgovor();
+            }, 400);
+        }
+    }
+    iscrtajTabluUI();
+};
+// =================
+
 </script>
 </body>
 </html>
