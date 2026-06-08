@@ -1815,6 +1815,7 @@ window.switchZadatak = function() {
             <option value="memorija">🍓 Igra Memorije (G2H)</option>
             <option value="skocko">🤠 Voćni Skočko (G2H)</option>
             <option value="prekidaci">🔌 Sajber Prekidači (G2H)</option>
+            <option value="slagalica">🧩 Klizna Slagalica (G2H)</option>
         `;
 
         let mTezina = document.createElement('select');
@@ -1842,6 +1843,12 @@ window.switchZadatak = function() {
                     <option value="1">⚪ Bela staza (Mreža 3x3 - 5 miksanja)</option>
                     <option value="2">🔵 Plava staza (Mreža 4x4 - 8 miksanja)</option>
                     <option value="3">🔴 Crvena staza (Mreža 5x5 - 12 miksanja)</option>
+                `;
+            } else if (izabranaIgra === 'slagalica') {
+                mTezina.innerHTML = `
+                    <option value="1">⚪ Bela staza (Mreža 3x3 - 8 pločica)</option>
+                    <option value="2">🔵 Plava staza (Mreža 4x4 - 15 pločica)</option>
+                    <option value="3">🔴 Crvena staza (Mreža 5x5 - 24 pločice)</option>
                 `;
             }
         };
