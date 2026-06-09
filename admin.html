@@ -1909,7 +1909,8 @@ window.otvoriPanel = function(p, otvoriSkupljen = false) {
     }
     window.dodajOpciju = function(btn) { let opt = document.createElement('div'); opt.className = 'kviz-opcija'; opt.innerHTML = `<input type="text" placeholder="${window.trenutniJezik==='sr'?'Nova opcija':'New option'}"><input type="checkbox" title="Tačan odgovor"><span onclick="this.parentElement.remove()" class="ikona-brisi">&times;</span>`; btn.previousElementSibling.appendChild(opt); }
 
-    window.zatvoriPanelISacuvaj = function() { 
+    
+window.zatvoriPanelISacuvaj = function() { 
         if(!window.aktivniPin) {
             window.zatvoriPanel();
             return;
@@ -1926,7 +1927,14 @@ window.otvoriPanel = function(p, otvoriSkupljen = false) {
         else if(tipZ === 'kreativni') { podaciZadatka.tekst_zadatka = document.getElementById('kre_uputstvo').value; podaciZadatka.tekst = podaciZadatka.tekst_zadatka; podaciZadatka.odgovor = window.trenutniJezik==='sr'?'Fotografija lokacije':'Location photo'; } 
         else if(tipZ === 'qr') { podaciZadatka.tekst_zadatka = document.getElementById('qr_uputstvo').value; podaciZadatka.tekst = podaciZadatka.tekst_zadatka; podaciZadatka.odgovor = document.getElementById('qr_kod_vrednost').value; } 
         else if(tipZ === 'igrica') {
-            podaciZadatka.tekst_zadatka = document.getElementById('zag_tekst').value; 
+            // 🗸 POPRAVLJENO: Pravilno spajanje naziva igre i težine (npr. simon2, radna1)
+            let igraKod = "memorija1";
+            let mIgra = document.getElementById('g2h_izbor_igre');
+            let mTezina = document.getElementById('g2h_izbor_tezine');
+            if(mIgra && mTezina) {
+                igraKod = mIgra.value + mTezina.value;
+            }
+            podaciZadatka.tekst_zadatka = igraKod; 
             podaciZadatka.tekst = "G2H Logička Igra"; 
             podaciZadatka.odgovor = "igrica_uspeh"; 
         }
@@ -1939,13 +1947,20 @@ window.otvoriPanel = function(p, otvoriSkupljen = false) {
             if(document.getElementById('chk_multi_zlatnik').checked) multiEl.push('zlatnik');
             if(document.getElementById('chk_multi_zagonetka').checked) {
                 multiEl.push('zagonetka');
-                multiEl.push('zagonetka');
                 podaciZadatka.zag_tekst = document.getElementById('zag_tekst').value;
                 podaciZadatka.zag_odgovor = document.getElementById('zag_odgovor').value;
             }
             if(document.getElementById('chk_multi_igrica').checked) {
                 multiEl.push('igrica');
-                podaciZadatka.igrica_kod = document.getElementById('zag_tekst').value;
+                
+                // 🗸 POPRAVLJENO: Isti popravak primenjen i unutar Multi kombinacije zadataka
+                let igraKod = "memorija1";
+                let mIgra = document.getElementById('g2h_izbor_igre');
+                let mTezina = document.getElementById('g2h_izbor_tezine');
+                if(mIgra && mTezina) {
+                    igraKod = mIgra.value + mTezina.value;
+                }
+                podaciZadatka.igrica_kod = igraKod;
             }
             if(document.getElementById('chk_multi_kviz').checked) {
                 multiEl.push('kviz');
@@ -2035,7 +2050,7 @@ window.otvoriPanel = function(p, otvoriSkupljen = false) {
         setTimeout(() => {
             window.zatvoriPanel();
         }, 800);
-    }
+    };
 
     window.kreirajJednuRutu = function(pinoviOriginal, logika) {
         let nPinovi = [...pinoviOriginal]; if(nPinovi.length <= 2) return nPinovi;
