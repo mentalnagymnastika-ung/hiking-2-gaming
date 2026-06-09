@@ -1,5 +1,5 @@
 // Specifično ime keša za admina da se ne sudara sa običnim kreatorom
-const CACHE_NAME = 'admin-cache-v31.31';
+const CACHE_NAME = 'admin-cache-v31.32';
 
 // Spisak fajlova koje želimo odmah da sačuvamo za oflajn rad
 const urlsToCache = [
