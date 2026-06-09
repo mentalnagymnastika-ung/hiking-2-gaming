@@ -214,7 +214,7 @@
         .g2h-igra-omotac {
             width: 100%;
             max-width: 360px;
-            margin: 10px auto;
+            margin: 0px auto;
             padding: 10px;
             box-sizing: border-box;
             text-align: center;
@@ -417,33 +417,33 @@
             </div>
         </div>
         
-        <h3 style="margin:0 0 10px 0; color:#1abc9c; text-align:center; flex-shrink: 0;" id="txtTacka">Lokacija broj 1</h3>
+       <h3 style="margin:0 0 10px 0; color:#1abc9c; text-align:center; flex-shrink: 0;" id="txtTacka">Lokacija broj 1</h3>
         
-        <div class="health-container" id="healthBlocks"></div>
-        <div id="healthText" class="health-tekst">Energija: 100%</div>
-        <div id="prikazTipaZadatka" style="background: #e3f2fd; color: #0d47a1; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 15px; border: 2px solid #90caf9; text-transform: uppercase;">
-            TIP IGRE: ZAGONETKA
-        </div>
+<div class="health-container" id="healthBlocks"></div>
+<div id="healthText" class="health-tekst">Energija: 100%</div>
+<div id="prikazTipaZadatka" style="background: #e3f2fd; color: #0d47a1; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 15px; border: 2px solid #90caf9; text-transform: uppercase;">
+    TIP IGRE: ZAGONETKA
+</div>
         
-        <div id="lokacijaKontejner" style="text-align: center; margin-top: 10px; flex-grow: 1; overflow-y: auto;">
-            <div id="prikazOpisaLokacije" style="font-size: 16px; color: #475569; margin-bottom: 10px; font-weight: 600; display: none; line-height: 1.4;"></div>
-            <img id="slikaLokacijeIgrac" src="" style="width:100%; max-height:220px; object-fit:contain; border-radius:12px; margin-bottom:15px; display:none; border: 2px solid #347C17; background:#e0e0e0; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+<div id="lokacijaKontejner" style="text-align: center; margin-top: 0; flex-grow: 1; overflow-y: auto;">
+    <div id="prikazOpisaLokacije" style="font-size: 16px; color: #475569; margin-bottom: 10px; font-weight: 600; display: none; line-height: 1.4;"></div>
+    <img id="slikaLokacijeIgrac" src="" style="width:100%; max-height:220px; object-fit:contain; border-radius:12px; margin-bottom:15px; display:none; border: 2px solid #347C17; background:#e0e0e0; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
 
-            <div id="velikaNajavaZadatka" style="background: #e1f5fe; border: 2px solid #03a9f4; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(3,169,244,0.2);">
-                <span style="color:#0277bd; font-weight:bold; font-size:14px; text-transform:uppercase;">Vaš zadatak na cilju:</span><br>
-                <span id="txtVelikiZadatak" style="font-size: 24px; font-weight: 900; color: #000; display: block; margin-top: 10px; line-height: 1.3;"></span>
-            </div>
-            
-            <div style="font-size: 60px; margin-bottom: 5px;">🔒</div>
-            <div id="txtProveraMesta" style="font-weight: bold; color: #347C17; margin-bottom: 15px; font-size: 18px;">Proveri da li si na pravom mestu</div>
-            
-            <button class="btn-glavno" style="font-size: 20px; padding: 20px; box-shadow: 0 5px 15px rgba(26,188,156,0.4);" onclick="window.pokreniOtkljucavanje()" id="btnOtkljucaj">🔑 PROVERI LOKACIJU</button>
-            <div id="porukaLokacija" class="poruka"></div>
-            
-            <div style="font-size: 13px; color: #64748b; margin-top: 25px; margin-bottom: 5px; font-weight: bold;" id="txtNemaSignal">Nemaš GPS signal na ovoj lokaciji?</div>
-            <button class="btn-trag" style="background:#fff; color:#0f172a; border: 2px solid #cbd5e1; margin-top: 0; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.05); padding: 15px;" onclick="window.pokreniQRProveru()" id="btnPokreniQR">📷 SKENIRAJ QR KOD LOKACIJE</button>
-            
-            <div id="qrSkenerKontejner" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 10000; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px); box-sizing: border-box; padding: 20px;">
+    <div id="velikaNajavaZadatka" style="background: #e1f5fe; border: 2px solid #03a9f4; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(3,169,244,0.2);">
+        <span style="color:#0277bd; font-weight:bold; font-size:14px; text-transform:uppercase;">Vaš zadatak na cilju:</span><br>
+        <span id="txtVelikiZadatak" style="font-size: 24px; font-weight: 900; color: #000; display: block; margin-top: 10px; line-height: 1.3;"></span>
+    </div>
+         
+<div style="font-size: 60px; margin-bottom: 5px; cursor: pointer;" onclick="window.devBypassProvera();" title="Dev Bypass">🔒</div>
+    <div id="txtProveraMesta" style="font-weight: bold; color: #347C17; margin-bottom: 15px; font-size: 18px;">Proveri da li si na pravom mestu</div>
+         
+    <button class="btn-glavno" style="font-size: 20px; padding: 20px; box-shadow: 0 5px 15px rgba(26,188,156,0.4);" onclick="window.pokreniOtkljucavanje()" id="btnOtkljucaj">🔑 PROVERI LOKACIJU</button>
+    <div id="porukaLokacija" class="poruka"></div>
+         
+    <div style="font-size: 13px; color: #64748b; margin-top: 25px; margin-bottom: 5px; font-weight: bold;" id="txtNemaSignal">Nemaš GPS signal na ovoj lokaciji?</div>
+    <button class="btn-trag" style="background:#fff; color:#0f172a; border: 2px solid #cbd5e1; margin-top: 0; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.05); padding: 15px;" onclick="window.pokreniQRProveru()" id="btnPokreniQR">📷 SKENIRAJ QR KOD LOKACIJE</button>
+         
+    <div id="qrSkenerKontejner" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 10000; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px); box-sizing: border-box; padding: 20px;">
                 <h3 style="color: white; margin-top: 0; text-align: center; font-size: 24px;">📷 Skener Lokacije</h3>
                 <p id="porukaSkenera" style="color: #cbd5e1; text-align: center; font-size: 15px; margin-bottom: 20px;">Izoštri kod u kvadratu i klikni Skeniraj.</p>
                 <div id="qrSkener" style="width: 100%; max-width: 300px; border: 4px solid #10b981; border-radius: 16px; overflow: hidden; background: #000; box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);"></div>
@@ -1617,7 +1617,9 @@ if (tip === 'igrica') {
 // --- OTVORI U PUNOM EKRANU --
 window.otvoriG2HIgruUPunomEkranu = function() {
     let pin = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
-    let kodIgre = pin.zadatak?.igrica_kod || ""; 
+    
+    // POPRAVKA: Proverava oba polja, čisti prazne razmake i pretvara u mala slova
+    let kodIgre = (pin.zadatak?.igrica_kod || pin.zadatak?.tekst_zadatka || "").trim().toLowerCase(); 
     
     let prozor = document.getElementById('g2h_multi_puni_ekran');
     let kontejnerIgre = document.getElementById('multi_g2h_game_container');
@@ -1626,7 +1628,8 @@ window.otvoriG2HIgruUPunomEkranu = function() {
         kontejnerIgre.innerHTML = ''; 
         prozor.style.display = 'block'; 
 
-if (kodIgre.startsWith('memorija')) {
+        // Provera i pokretanje adekvatnog modularnog modula
+        if (kodIgre.startsWith('memorija')) {
             window.G2H_FabrikaIgara.pokreniMemoriju(kodIgre, kontejnerIgre);
         } else if (kodIgre.startsWith('skocko')) {
             window.G2H_FabrikaIgara.pokreniSkocka(kodIgre, kontejnerIgre);
@@ -1639,8 +1642,15 @@ if (kodIgre.startsWith('memorija')) {
         } else if (kodIgre.startsWith('radna')) {
             window.G2H_FabrikaIgara.pokreniRadnu(kodIgre, kontejnerIgre);
         } else {
+            // Ako je kôd i dalje prazan ili nepoznat, ispisuje lepu i jasnu poruku na ekranu telefona
             console.error("Sistem ne prepoznaje šifru igre:", kodIgre);
-            kontejnerIgre.innerHTML = `<b style="color:red; display:block; text-align:center; padding:20px; font-size:18px;">⚠️ Greška: Igra sa šifrom (${kodIgre}) nije pronađena!</b>`;
+            kontejnerIgre.innerHTML = `
+                <b style="color:#dc2626; display:block; text-align:center; padding:20px; font-size:18px; line-height:1.4;">
+                    ⚠️ Greška: Sistem ne prepoznaje šifru igre!<br>
+                    <span style="font-size:14px; color:#475569; font-weight:normal; display:block; margin-top:8px;">
+                        Učitana vrednost iz baze: "${kodIgre || 'PRAZNO'}"
+                    </span>
+                </b>`;
         }
     }
 };
@@ -2864,6 +2874,7 @@ window.G2H_FabrikaIgara.pokreniSimon = function(sifra, kontejner) {
 
     aktivneBoje.forEach((boja, indeks) => {
         let dugme = document.createElement('div');
+        dugme.style.width = "100%";
         dugme.id = `simon-btn-${indeks}`;
         dugme.style.aspectRatio = "1 / 1";
         dugme.style.background = boja;
@@ -2972,6 +2983,7 @@ window.G2H_FabrikaIgara.pokreniRadnu = function(sifra, kontejner) {
     for (let i = 0; i < 25; i++) {
         let kockica = document.createElement('div');
         kockica.id = `radna-polje-${i}`;
+        kockica.style.width = "100%";
         kockica.style.aspectRatio = "1 / 1";
         kockica.style.background = "#34495e";
         kockica.style.borderRadius = "6px";
@@ -3089,7 +3101,22 @@ window.G2H_FabrikaIgara.pokreniRadnu = function(sifra, kontejner) {
         setTimeout(izvrsiSledeciKrug, 300);
     };
 };
+// ================= tajni proLAZ mg77
+window.devBypassProvera = function() {
+    let unetaSifra = prompt(
+        "⚠️ SISTEMSKO UPOZORENJE!\n\n" +
+        "Pokušavate da pristupite zaštićenom režimu za programere i kalibraciju satelita.\n" +
+        "Neovlašćeno zaobilaženje GPS protokola može trajno blokirati sesiju vašeg tima i poništiti sakupljene zlatnike.\n\n" +
+        "Unesite administratorski ključ za verifikaciju:"
+    );
 
+    // Šifra je ovde postavljena na 'mg77', možeš je promeniti u šta god želiš
+    if (unetaSifra === "mg77") {
+        window.prikaziZadatak();
+    } else if (unetaSifra !== null) {
+        alert("❌ KOD NETAČAN!\nPristup odbijen. Pokušaj neovlašćenog pristupa je zabeležen i poslat administratoru.");
+    }
+};
 // =================
 </script>
 </body>
