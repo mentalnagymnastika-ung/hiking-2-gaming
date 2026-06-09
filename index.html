@@ -1312,6 +1312,7 @@ if (tip === 'igrica') {
     
     let kontejnerIgre = document.getElementById('g2hIgreUI');
     kontejnerIgre.style.display = 'block';
+    kontejnerIgre.innerHTML = ''; // Osigurava pražnjenje ekrana prije starta nove igre
     
     if (sifraIgre.startsWith('memorija')) {
         window.G2H_FabrikaIgara.pokreniMemoriju(sifraIgre, kontejnerIgre);
@@ -1321,6 +1322,15 @@ if (tip === 'igrica') {
     }
     else if (sifraIgre.startsWith('prekidaci')) {
         window.G2H_FabrikaIgara.pokreniPrekidace(sifraIgre, kontejnerIgre);
+    }
+    else if (sifraIgre.startsWith('slagalica')) {
+        window.G2H_FabrikaIgara.pokreniSlagalicu(sifraIgre, kontejnerIgre);
+    }
+    else if (sifraIgre.startsWith('simon')) {
+        window.G2H_FabrikaIgara.pokreniSimon(sifraIgre, kontejnerIgre);
+    }
+    else if (sifraIgre.startsWith('radna')) {
+        window.G2H_FabrikaIgara.pokreniRadnu(sifraIgre, kontejnerIgre);
     }
     return; 
 }
@@ -1616,16 +1626,22 @@ window.otvoriG2HIgruUPunomEkranu = function() {
         kontejnerIgre.innerHTML = ''; 
         prozor.style.display = 'block'; 
 
-        if (kodIgre.startsWith('memorija')) {
-            window.G2H_FabrikaIgara.pokreniMemoriju(kodIgre, kontejnerIgre);
-        } else if (kodIgre.startsWith('skocko')) {
-            window.G2H_FabrikaIgara.pokreniSkocka(kodIgre, kontejnerIgre);
-        } else if (kodIgre.startsWith('prekidaci')) {
-            window.G2H_FabrikaIgara.pokreniPrekidace(kodIgre, kontejnerIgre);
-        } else {
-            console.error("Sistem ne prepoznaje šifru igre:", kodIgre);
-            kontejnerIgre.innerHTML = `<b style="color:red; display:block; text-align:center; padding:20px; font-size:18px;">⚠️ Greška: Igra sa šifrom (${kodIgre}) nije pronađena!</b>`;
-        }
+if (kodIgre.startsWith('memorija')) {
+    window.G2H_FabrikaIgara.pokreniMemoriju(kodIgre, kontejnerIgre);
+} else if (kodIgre.startsWith('skocko')) {
+    window.G2H_FabrikaIgara.pokreniSkocka(kodIgre, kontejnerIgre);
+} else if (kodIgre.startsWith('prekidaci')) {
+    window.G2H_FabrikaIgara.pokreniPrekidace(kodIgre, kontejnerIgre);
+} else if (kodIgre.startsWith('slagalica')) {
+    window.G2H_FabrikaIgara.pokreniSlagalicu(kodIgre, kontejnerIgre);
+} else if (kodIgre.startsWith('simon')) {
+    window.G2H_FabrikaIgara.pokreniSimon(kodIgre, kontejnerIgre);
+} else if (kodIgre.startsWith('radna')) {
+    window.G2H_FabrikaIgara.pokreniRadnu(kodIgre, kontejnerIgre);
+} else {
+    console.error("Sistem ne prepoznaje šifru igre:", kodIgre);
+    kontejnerIgre.innerHTML = `<b style="color:red; display:block; text-align:center; padding:20px; font-size:18px;">⚠️ Greška: Igra sa šifrom (${kodIgre}) nije pronađena!</b>`;
+}
     }
 };
     // --- PROVERA ODGOVORA (POTPUNO REFORMISAN MULTI MEHANIZAM) ---
@@ -1814,7 +1830,7 @@ window.otvoriG2HIgruUPunomEkranu = function() {
 
             let sledeciTip = originalniSledeciPin.zadatak?.tip || 'zagonetka';
             let nazivTipaSledece = "ZAGONETKA";
-            if (sledeciTip === 'kviz') sizeofTipaSledece = "KVIZ SA OPCIJAMA";
+            if (sledeciTip === 'kviz') nazivTipaSledece = "KVIZ SA OPCIJAMA"; // Ispravljeno ime varijable!
             else if (sledeciTip === 'kreativni') nazivTipaSledece = "KREATIVNI ZADATAK (FOTO)";
             else if (sledeciTip === 'pronadji') nazivTipaSledece = "PRONAĐI OVO I FOTOGRAFIŠI";
             else if (sledeciTip === 'zlatnik') nazivTipaSledece = "SAKUPLJANJE ZLATNIKA";
