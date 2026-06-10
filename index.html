@@ -1270,7 +1270,7 @@
         }
     };
 
-    window.prikaziZadatak = function() {
+window.prikaziZadatak = function() {
         try {
             document.getElementById('lokacijaKontejner').style.display = 'none';
             document.getElementById('zadatakKontejner').style.display = 'flex';
@@ -1305,35 +1305,44 @@
             let tip = pin.zadatak?.tip || 'zagonetka';
             let slikaUI = document.getElementById('slikaZadatkaUUI');
             
-if (tip === 'igrica') {
-    let sifraIgre = pin.zadatak?.tekst_zadatka || ''; 
-    document.getElementById('tekstZadatkaUUI').style.display = 'none';
-    if(btnProveri) btnProveri.style.display = 'none'; 
-    
-    let kontejnerIgre = document.getElementById('g2hIgreUI');
-    kontejnerIgre.style.display = 'block';
-    kontejnerIgre.innerHTML = ''; // Čisti kontejner pre starta nove igre
-    
-    if (sifraIgre.startsWith('memorija')) {
-        window.G2H_FabrikaIgara.pokreniMemoriju(sifraIgre, kontejnerIgre);
-    } 
-    else if (sifraIgre.startsWith('skocko')) {
-        window.G2H_FabrikaIgara.pokreniSkocka(sifraIgre, kontejnerIgre);
-    }
-    else if (sifraIgre.startsWith('prekidaci')) {
-        window.G2H_FabrikaIgara.pokreniPrekidace(sifraIgre, kontejnerIgre);
-    }
-    else if (sifraIgre.startsWith('slagalica')) {
-        window.G2H_FabrikaIgara.pokreniSlagalicu(sifraIgre, kontejnerIgre);
-    }
-    else if (sifraIgre.startsWith('simon')) {
-        window.G2H_FabrikaIgara.pokreniSimon(sifraIgre, kontejnerIgre);
-    }
-    else if (sifraIgre.startsWith('radna')) {
-        window.G2H_FabrikaIgara.pokreniRadnu(sifraIgre, kontejnerIgre);
-    }
-    return; 
-}
+            // ===================================================================
+            // SADA JE SKRETNICA KOMPLETNA I ZA SAMOSTALNE IGRE NA LOKACIJI
+            // ===================================================================
+            if (tip === 'igrica') {
+                let sifraIgre = pin.zadatak?.tekst_zadatka || ''; 
+                document.getElementById('tekstZadatkaUUI').style.display = 'none';
+                if(btnProveri) btnProveri.style.display = 'none'; 
+                
+                let kontejnerIgre = document.getElementById('g2hIgreUI');
+                kontejnerIgre.style.display = 'block';
+                kontejnerIgre.innerHTML = ''; // Čisti kontejner pre starta nove igre
+                
+                if (sifraIgre.startsWith('memorija')) {
+                    window.G2H_FabrikaIgara.pokreniMemoriju(sifraIgre, kontejnerIgre);
+                } 
+                else if (sifraIgre.startsWith('skocko')) {
+                    window.G2H_FabrikaIgara.pokreniSkocka(sifraIgre, kontejnerIgre);
+                }
+                else if (sifraIgre.startsWith('prekidaci')) {
+                    window.G2H_FabrikaIgara.pokreniPrekidace(sifraIgre, kontejnerIgre);
+                }
+                else if (sifraIgre.startsWith('slagalica')) {
+                    window.G2H_FabrikaIgara.pokreniSlagalicu(sifraIgre, kontejnerIgre);
+                }
+                else if (sifraIgre.startsWith('matricaboja')) { // 🗸 UKLJUČENA I NOVA MATRICA BOJA
+                    window.G2H_FabrikaIgara.pokreniMatricuBoja(sifraIgre, kontejnerIgre);
+                }
+                else if (sifraIgre.startsWith('staza')) { // 🗸 UKLJUČENA I NOVA SVETLOSNA STAZA
+                    window.G2H_FabrikaIgara.pokreniSvetlosnuStazu(sifraIgre, kontejnerIgre);
+                }
+                else if (sifraIgre.startsWith('simon')) {
+                    window.G2H_FabrikaIgara.pokreniSimon(sifraIgre, kontejnerIgre);
+                }
+                else if (sifraIgre.startsWith('radna')) {
+                    window.G2H_FabrikaIgara.pokreniRadnu(sifraIgre, kontejnerIgre);
+                }
+                return; 
+            }
 
             document.getElementById('tekstZadatkaUUI').style.display = 'block';
 
