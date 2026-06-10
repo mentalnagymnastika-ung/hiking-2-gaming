@@ -1603,6 +1603,7 @@ window.otvoriPanel = function(p, otvoriSkupljen = false) {
                                   sacuvanaSifra.startsWith('slagalica') ? 'slagalica' : 
                                   sacuvanaSifra.startsWith('simon') ? 'simon' :
                                   sacuvanaSifra.startsWith('matricaboja') ? 'matricaboja' :
+                                  sacuvanaSifra.startsWith('staza') ? 'staza' :
                                   sacuvanaSifra.startsWith('radna') ? 'radna' : 'memorija';
                 
                 if (mIgra) {
@@ -1831,6 +1832,7 @@ window.otvoriPanel = function(p, otvoriSkupljen = false) {
                 <option value="simon">🚥 Simon Says (G2H)</option>
                 <option value="radna">🧠 Radna Memorija (G2H)</option>
                 <option value="matricaboja">🎨 Matrica Boja (G2H)</option>
+                <option value="staza">⚡ Svetlosna Staza (G2H)</option>
             `;
 
             let mTezina = document.createElement('select');
@@ -1872,6 +1874,12 @@ window.otvoriPanel = function(p, otvoriSkupljen = false) {
                         <option value="2">🔵 Plava staza (Srednje mešanje - 40 poteza)</option>
                         <option value="3">🔴 Crvena staza (Najteže mešanje - 75 poteza)</option>
                     `;
+                } else if (izabranaIgra === 'staza') { // 👈 DODAJ OVAJ ELSE IF BLOK
+                      mTezina.innerHTML = `
+                        <option value="1">⚪ Bela staza (Mreža 4x4 - 2 prepreke)</option>
+                        <option value="2">🔵 Plava staza (Mreža 5x5 - 3 prepreke)</option>
+                        <option value="3">🔴 Crvena staza (Mreža 6x6 - 4 prepreke)</option>
+                     `;
                 } else if (izabranaIgra === 'simon') {
                     mTezina.innerHTML = `
                         <option value="1">⚪ Bela staza (6 polja - niz od 4 koraka)</option>
