@@ -40,6 +40,9 @@ self.addEventListener('activate', (event) => {
 
 /////////// "Network First" strategija
 self.addEventListener('fetch', (event) => {
+    // 🚀 OVO JE TA DOPUNA: Preskačemo sve što nije http ili https (blokira chrome-extension grešku)
+    if (!event.request.url.startsWith('http')) return;
+
     if (event.request.method !== 'GET') return;
 
     if (event.request.url.includes('firestore.googleapis.com') || 
