@@ -1637,8 +1637,10 @@ window.otvoriG2HIgruUPunomEkranu = function() {
             window.G2H_FabrikaIgara.pokreniPrekidace(kodIgre, kontejnerIgre);
         } else if (kodIgre.startsWith('slagalica')) {
             window.G2H_FabrikaIgara.pokreniSlagalicu(kodIgre, kontejnerIgre);
-        } else if (kodIgre.startsWith('matricaboja')) { // 👈 DODAJ OVU PROVERU ZA NOVU IGRU
+        } else if (kodIgre.startsWith('matricaboja')) { 
             window.G2H_FabrikaIgara.pokreniMatricuBoja(kodIgre, kontejnerIgre);  
+        } else if (kodIgre.startsWith('staza')) { // 👈 DODAJ OVAJ USLOV
+             window.G2H_FabrikaIgara.pokreniSvetlosnuStazu(kodIgre, kontejnerIgre);
         } else if (kodIgre.startsWith('simon')) {
             window.G2H_FabrikaIgara.pokreniSimon(kodIgre, kontejnerIgre);
         } else if (kodIgre.startsWith('radna')) {
@@ -3362,6 +3364,362 @@ document.getElementById('btnStartRadna').onclick = function() {
             setTimeout(izvrsiSledeciKrug, 300);
         };
     }; // 🗸 Pravilno zatvorena funkcija pokreniRadnu
+
+// =====================================================================================
+// =================== IMPLEMENTACIJA SVETLOSNE STAZE (PRO VERZIJA) ====================
+// =====================================================================================
+window.G2H_FabrikaIgara.pokreniSvetlosnuStazu = function(sifra, kontejner) {
+    window.G2H_trenutniStatusIgreUspeh = false;
+
+    // MAPIRANJE: Izbacili smo nivo 3x3. Bela, Plava i Crvena staza sada koriste tvoje tačne pro nivoe:
+    let nazivStaze = "BELA STAZA ⚪";
+    let bojaStazeTekst = "#ffffff";
+    let velicina = 4;
+    let ulazIndeks = 3;
+    let izlazIndeks = 12;
+    let preprekeMreze = [5, 10];
+
+    if (sifra.endsWith('1')) {
+        // Bela staza koristi tvoj originalni Nivo 2 (4x4)
+        nazivStaze = "BELA STAZA ⚪";
+        bojaStazeTekst = "#ffffff";
+        velicina = 4;
+        ulazIndeks = 3;
+        izlazIndeks = 12;
+        preprekeMreze = [5, 10];
+    } else if (sifra.endsWith('2')) {
+        // Plava staza koristi tvoj originalni Nivo 3 (5x5)
+        nazivStaze = "PLAVA STAZA 🔵";
+        bojaStazeTekst = "#3b82f6";
+        velicina = 5;
+        ulazIndeks = 4;
+        izlazIndeks = 20;
+        preprekeMreze = [6, 12, 18];
+    } else if (sifra.endsWith('3')) {
+        // Crvena staza koristi tvoj originalni Nivo 4 (6x6)
+        nazivStaze = "CRVENA STAZA 🔴";
+        bojaStazeTekst = "#ef4444";
+        velicina = 6;
+        ulazIndeks = 5;
+        izlazIndeks = 30;
+        preprekeMreze = [7, 14, 21, 28];
+    }
+
+    let ukupnoPolja = velicina * velicina;
+    let streliceSimboli = ["➡️", "⬇️", "⬅️", "⬆️"];
+    let rasporedSmerova = [];
+    let strujaJePustena = false;
+    let potezi = 0;
+    let uspehOstvaren = false;
+
+    // Web Audio API Sintisajzer za audio efekte (click, flow, success, explosion)
+    let audioMuted = false;
+    let audioCtx = null;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+
+    function playSound(tip) {
+        if (audioMuted) return;
+        initAudio();
+        if (!audioCtx) return;
+
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        let now = audioCtx.currentTime;
+
+        if (tip === 'click') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.exponentialRampToValueAtTime(300, now + 0.08);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+            osc.start(now); osc.stop(now + 0.08);
+        } else if (tip === 'flow') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(250, now);
+            osc.frequency.exponentialRampToValueAtTime(450, now + 0.15);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+            osc.start(now); osc.stop(now + 0.15);
+        } else if (tip === 'success') {
+            let tonovi = [261.63, 329.63, 392.00, 523.25];
+            tonovi.forEach((f, index) => {
+                let o = audioCtx.createOscillator();
+                let g = audioCtx.createGain();
+                o.connect(g); g.connect(audioCtx.destination);
+                o.frequency.setValueAtTime(f, now + index * 0.08);
+                g.gain.setValueAtTime(0.15, now + index * 0.08);
+                g.gain.exponentialRampToValueAtTime(0.01, now + index * 0.08 + 0.3);
+                o.start(now + index * 0.08); o.stop(now + index * 0.08 + 0.3);
+            });
+        } else if (tip === 'explosion') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(180, now);
+            osc.frequency.linearRampToValueAtTime(50, now + 0.4);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            osc.start(now); osc.stop(now + 0.4);
+        }
+    }
+
+    function generisiRasporedSmerova() {
+        rasporedSmerova = [];
+        for (let i = 0; i < ukupnoPolja; i++) {
+            rasporedSmerova.push(Math.floor(Math.random() * 4));
+        }
+        let proracun = izracunajPutStruje();
+        let petljaZastita = 0;
+        while (proracun.uspeh && petljaZastita < 100) {
+            rasporedSmerova[Math.floor(Math.random() * ukupnoPolja)] = Math.floor(Math.random() * 4);
+            proracun = izracunajPutStruje();
+            petljaZastita++;
+        }
+    }
+
+    // HTML Konstruktor prilagođen tvojoj aplikaciji
+    kontejner.innerHTML = `
+        <div id="g2h_staza_omotac" style="padding:15px; background:#090d16; color:#f1f5f9; border-radius:16px; text-align:center; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: 2px solid #1e293b; transition: all 0.3s; width:100%; max-width:360px; margin:0 auto; font-family:'Segoe UI', Roboto, sans-serif;">
+            <h3 style="text-align:center; color:#38bdf8; margin:0 0 5px 0; font-size:22px; font-weight:bold; letter-spacing:1px;">⚡ SVETLOSNA STAZA</h3>
+            
+            <div style="display:flex; justify-content:space-between; background:rgba(15,23,42,0.6); padding:6px 12px; border-radius:10px; margin-bottom:12px; font-size:12px; font-weight:bold; border:1px solid #1e293b;">
+                <div style="color:${bojaStazeTekst}; font-weight:900; text-transform:uppercase;">${nazivStaze}</div>
+                <div>POTEZI: <span id="g2h_staza_potezi" style="color:#f59e0b;">0</span></div>
+                <div id="g2h_staza_zvuk_btn" style="cursor:pointer; color:#38bdf8;">🔊 ZVUK</div>
+            </div>
+
+            <p style="font-size:13px; text-align:center; color:#94a3b8; margin:0 0 12px 0; line-height:1.4;" id="stazaUputstvo">
+                Posložite strelice da struja sa crvenog ulaza stigne do sijalice! <span style="color:#f59e0b; display:block; font-weight:bold;">⚠️ Klik okreće i susednu pločicu!</span>
+            </p>
+            
+            <div id="mrezaStaze" style="display:grid; gap:8px; margin:15px auto; width:100%; box-sizing:border-box;"></div>
+            
+            <div style="display:flex; gap:10px; justify-content:center; width:100%;">
+                <button id="btnPustiStruju" style="flex:2; padding:14px; font-size:15px; font-weight:900; color:#090d16; background:#38bdf8; border:none; border-radius:12px; cursor:pointer; box-shadow:0 4px 12px rgba(56,189,248,0.3); text-transform:uppercase; transition: all 0.2s;">
+                    🔌 PUSTI STRUJU
+                </button>
+                <button id="btnRestartStaze" style="flex:1; padding:14px; font-size:14px; font-weight:bold; color:white; background:#1e293b; border:1px solid #334155; border-radius:12px; cursor:pointer; transition: all 0.2s;">
+                    🔄 RESTART
+                </button>
+            </div>
+        </div>
+    `;
+
+    let mreza = document.getElementById('mrezaStaze');
+
+    function iscrtajMrezuUI(osvetljenaPutanja = []) {
+        mreza.innerHTML = '';
+        mreza.style.gridTemplateColumns = `repeat(${velicina}, minmax(0, 1fr))`;
+
+        for (let i = 0; i < ukupnoPolja; i++) {
+            let plocica = document.createElement('div');
+            plocica.style.width = "100%";
+            plocica.style.aspectRatio = "1 / 1";
+            plocica.style.borderRadius = "12px";
+            plocica.style.display = "flex";
+            plocica.style.justifyContent = "center";
+            plocica.style.alignItems = "center";
+            plocica.style.fontSize = velicina > 5 ? "20px" : velicina > 4 ? "24px" : "28px";
+            plocica.style.cursor = "pointer";
+            plocica.style.userSelect = "none";
+            plocica.style.transition = "all 0.15s ease";
+            plocica.style.border = "2px solid #1e293b";
+            
+            plocica.innerText = streliceSimboli[rasporedSmerova[i]];
+
+            // Postavljanje uloga na osnovu prosleđenih parametara nivoa
+            if (i === ulazIndeks) {
+                plocica.style.borderColor = "#f43f5e";
+                plocica.style.background = "rgba(157,23,77,0.3)";
+            } else if (i === izlazIndeks) {
+                plocica.style.borderColor = "#10b981";
+                plocica.style.background = "rgba(6,78,59,0.3)";
+                plocica.innerText = "💡";
+            } else if (preprekeMreze.includes(i)) {
+                plocica.style.borderColor = "#334155";
+                plocica.style.background = "#1e293b";
+                plocica.style.color = "#64748b";
+                plocica.innerText = "✖️";
+                plocica.style.cursor = "not-allowed";
+            } else {
+                plocica.style.background = "rgba(30,41,59,0.6)";
+            }
+
+            // Osvetljavanje neon-tokom uživo
+            if (osvetljenaPutanja.includes(i) && !preprekeMreze.includes(i)) {
+                if (i === izlazIndeks) {
+                    plocica.style.background = "#10b981";
+                    plocica.style.color = "#090d16";
+                    plocica.style.borderColor = "#34d399";
+                    plocica.style.boxShadow = "0 0 15px #10b981, 0 0 25px #10b981";
+                } else {
+                    plocica.style.background = "#38bdf8";
+                    plocica.style.color = "#090d16";
+                    plocica.style.borderColor = "#7dd3fc";
+                    plocica.style.boxShadow = "0 0 12px #38bdf8, 0 0 20px #38bdf8";
+                }
+            }
+
+            // Klik i rotacija (Sprečeno preskakanje prepreka)
+            plocica.onclick = function() {
+                if (strujaJePustena || uspehOstvaren) return;
+                if (preprekeMreze.includes(i)) return;
+
+                playSound('click');
+                rasporedSmerova[i] = (rasporedSmerova[i] + 1) % 4;
+
+                // Mehanika predikcije suseda
+                let susedniIndeks = (i % velicina < velicina - 1) ? i + 1 : i - 1;
+                if (!preprekeMreze.includes(susedniIndeks)) {
+                    rasporedSmerova[susedniIndeks] = (rasporedSmerova[susedniIndeks] + 1) % 4;
+                }
+
+                potezi++;
+                document.getElementById('g2h_staza_potezi').innerText = potezi;
+
+                plocica.style.transform = "scale(0.9) rotate(90deg)";
+                setTimeout(() => {
+                    plocica.style.transform = "none";
+                    iscrtajMrezuUI();
+                }, 100);
+            };
+
+            mreza.appendChild(plocica);
+        }
+    }
+
+    function izracunajPutStruje() {
+        let putanja = [];
+        let trenutno = ulazIndeks;
+        let uspeh = false;
+        let uzrokKraha = null;
+
+        while (trenutno >= 0 && trenutno < ukupnoPolja) {
+            if (preprekeMreze.includes(trenutno)) {
+                putanja.push(trenutno);
+                uzrokKraha = "prepreka";
+                break;
+            }
+            if (putanja.includes(trenutno)) {
+                uzrokKraha = "petlja";
+                break;
+            }
+
+            putanja.push(trenutno);
+
+            if (trenutno === izlazIndeks) {
+                uspeh = true;
+                break;
+            }
+
+            let smer = rasporedSmerova[trenutno];
+            let r = Math.floor(trenutno / velicina);
+            let c = trenutno % velicina;
+
+            if (smer === 0) c++;
+            else if (smer === 1) r++;
+            else if (smer === 2) c--;
+            else if (smer === 3) r--;
+
+            if (r >= 0 && r < velicina && c >= 0 && c < velicina) {
+                trenutno = r * velicina + c;
+            } else {
+                uzrokKraha = "zid";
+                break;
+            }
+        }
+        return { putanja, uspeh, uzrokKraha };
+    }
+
+    function pokreniAnalizuToka() {
+        if (strujaJePustena || uspehOstvaren) return;
+
+        strujaJePustena = true;
+        let uputstvo = document.getElementById('stazaUputstvo');
+        let dugme = document.getElementById('btnPustiStruju');
+
+        dugme.disabled = true;
+        dugme.style.opacity = "0.5";
+        dugme.innerText = "⚡ ANALIZA TOKA...";
+        uputstvo.innerHTML = `<span style="color:#38bdf8; font-weight:bold;" class="animate-pulse">⚡ STRUJA TEČE KROZ MREŽU...</span>`;
+
+        let proracun = izracunajPutStruje();
+        let i = 0;
+        let vizuelnaPutanja = [];
+
+        function pustiSledeciSnop() {
+            if (i < proracun.putanja.length) {
+                vizuelnaPutanja.push(proracun.putanja[i]);
+                iscrtajMrezuUI(vizuelnaPutanja);
+                playSound('flow');
+                i++;
+                setTimeout(pustiSledeciSnop, 200);
+            } else {
+                evaluirajKrajnjiIshod(proracun);
+            }
+        }
+        pustiSledeciSnop();
+    }
+
+    function evaluirajKrajnjiIshod(proracun) {
+        let omotac = document.getElementById('g2h_staza_omotac');
+        let uputstvo = document.getElementById('stazaUputstvo');
+        let dugme = document.getElementById('btnPustiStruju');
+
+        if (proracun.uspeh) {
+            uspehOstvaren = true;
+            playSound('success');
+
+            omotac.style.borderColor = "#10b981";
+            uputstvo.innerHTML = `🎉 <span style="color:#10b981; font-weight:bold;">MREŽA STABILIZOVANA! Lampa svetli!</span>`;
+
+            setTimeout(() => {
+                alert("🎉 Odlična predikcija! Uspešno ste stabilizovali elektro-mrežu i upalili lampu bez kratkog spoja!");
+                window.G2H_trenutniStatusIgreUspeh = true;
+                let puniEkranProzor = document.getElementById('g2h_multi_puni_ekran');
+                if (puniEkranProzor) puniEkranProzor.style.display = 'none';
+                window.proveriOdgovor();
+            }, 500);
+        } else {
+            playSound('explosion');
+            omotac.style.borderColor = "#ef4444";
+            uputstvo.innerHTML = `💥 <span style="color:#ef4444; font-weight:bold;">KRATAK SPOJ! Osigurač je iskočio!</span>`;
+
+            setTimeout(() => {
+                if (proracun.uzrokKraha === "zid") {
+                    alert("💥 KRATAK SPOJ! Struja je udarila u spoljni zid mreže! Osigurači su iskočili, sistem vrši hitan restart...");
+                } else if (proracun.uzrokKraha === "prepreka") {
+                    alert("💥 KVAR NA MREŽI! Struja je udarila u neprohodni čvor i izazvala kratak spoj!");
+                } else {
+                    alert("⚠️ PREKID TOKA! Struja se zavrtela u beskonačnu petlju i ispraznila kapacitet!");
+                }
+                window.G2H_FabrikaIgara.pokreniSvetlosnuStazu(sifra, kontejner);
+            }, 600);
+        }
+    }
+
+    document.getElementById('btnPustiStruju').onclick = pokreniAnalizuToka;
+    document.getElementById('btnRestartStaze').onclick = function() {
+        window.G2H_FabrikaIgara.pokreniSvetlosnuStazu(sifra, kontejner);
+    };
+
+    document.getElementById('g2h_staza_zvuk_btn').onclick = function() {
+        audioMuted = !audioMuted;
+        this.innerText = audioMuted ? "🔇 ZVUK" : "🔊 ZVUK";
+    };
+
+    generisiRasporedSmerova();
+    iscrtajMrezuUI();
+};
+// =====================================================================================
+
+
+
 // =====================================================================================
 </script> <script>
     window.devBypassProvera = function() {
