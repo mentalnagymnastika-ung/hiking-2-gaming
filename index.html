@@ -416,14 +416,14 @@
                 <button class="btn-produzi" onclick="window.produziVreme(60)">+ 1 Sat</button>
             </div>
         </div>
-        
-       <h3 style="margin:0 0 10px 0; color:#1abc9c; text-align:center; flex-shrink: 0;" id="txtTacka">Lokacija broj 1</h3>
+
+        <h3 style="margin:0 0 10px 0; color:#1abc9c; text-align:center; flex-shrink: 0;" id="txtTacka">Lokacija broj 1</h3>
         
 <div class="health-container" id="healthBlocks"></div>
 <div id="healthText" class="health-tekst">Energija: 100%</div>
-<div id="prikazTipaZadatka" style="background: #e3f2fd; color: #0d47a1; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 15px; border: 2px solid #90caf9; text-transform: uppercase;">
-    TIP IGRE: ZAGONETKA
-</div>
+
+<div id="prikazTipaZadatka" style="display: none !important;"></div>
+
         
 <div id="lokacijaKontejner" style="text-align: center; margin-top: 0; flex-grow: 1; overflow-y: auto;">
     <div id="prikazOpisaLokacije" style="font-size: 16px; color: #475569; margin-bottom: 10px; font-weight: 600; display: none; line-height: 1.4;"></div>
@@ -2219,8 +2219,14 @@ window.otvoriG2HIgruUPunomEkranu = function() {
     window.html5QrCode = null;
     window.traziSeKod = false; 
     window.tajmerZaSkeniranje = null;
-
+// 1. POPRAVLJENA FUNKCIJA ZA POKRETANJE SKENIRANJA
     window.pokreniQRProveru = function() {
+        // Bezbednosna kočnica: Ako skener već radi, nemoj ga pokretati ponovo
+        if (window.html5QrCode && window.html5QrCode.isScanning) {
+            console.log("Skener je već aktivan.");
+            return;
+        }
+
         document.getElementById('qrSkenerKontejner').style.display = 'flex';
         window.traziSeKod = false; 
 
@@ -2231,6 +2237,7 @@ window.otvoriG2HIgruUPunomEkranu = function() {
         const config = { fps: 15, qrbox: { width: 180, height: 180 } };
         window.html5QrCode.start({ facingMode: "environment" }, config, window.naUspesnoSkeniranje, window.naGreskuSkeniranja)
         .then(() => {
+            window.html5QrCode.isScanning = true; // Eksplicitno postavljamo zastavicu da radi
             document.getElementById('btnSkenirajSada').style.display = 'block';
             document.getElementById('btnSkenirajSada').innerText = "🎯 SKENIRAJ";
             document.getElementById('btnSkenirajSada').style.opacity = "1";
@@ -2241,6 +2248,22 @@ window.otvoriG2HIgruUPunomEkranu = function() {
         });
     };
 
+    // 2. POPRAVLJENA FUNKCIJA ZA ZAUSTAVLJANJE SKENIRANJA
+    window.zaustaviQRProveru = function() {
+        if (window.html5QrCode && window.html5QrCode.isScanning) {
+            // Odmah isključujemo zastavicu da blokiramo duple komande tokom gašenja
+            window.html5QrCode.isScanning = false; 
+            
+            window.html5QrCode.stop().then(() => {
+                document.getElementById('qrSkenerKontejner').style.display = 'none';
+            }).catch(err => {
+                console.log("QR usporavanje ugašeno bezbedno:", err);
+                document.getElementById('qrSkenerKontejner').style.display = 'none';
+            });
+        } else {
+            document.getElementById('qrSkenerKontejner').style.display = 'none';
+        }
+    };
     window.okiniSkeniranje = function() {
         window.traziSeKod = true; 
         document.getElementById('btnSkenirajSada').innerText = "⏳ ČITAM...";
@@ -2793,6 +2816,7 @@ window.G2H_FabrikaIgara.pokreniSlagalicu = function(sifra, kontejner) {
         mreza.innerHTML = '';
         raspored.forEach((vrednost, indeks) => {
             let plocica = document.createElement('div');
+            plocica.style.width = "100%";
             plocica.style.aspectRatio = "1 / 1";
             plocica.style.borderRadius = "8px";
             plocica.style.display = "flex";
@@ -2852,23 +2876,31 @@ window.G2H_FabrikaIgara.pokreniSlagalicu = function(sifra, kontejner) {
 
 // =================== NOVA MEHANIKA: Fabrika boja KLIZNA SLAGALICA ===================
 
+// =================== ISPRAVLJENA MATRICA BOJA (4x4) ===================
+// =================== MATEMATIČKI TAČNA MATRICA BOJA (4x4) ===================
 window.G2H_FabrikaIgara.pokreniMatricuBoja = function(sifra, kontejner) {
     window.G2H_trenutniStatusIgreUspeh = false;
     
     let velicina = 4; 
     let ukupnoPolja = velicina * velicina;
     
-    let R = "🔴"; let B = "🔵"; let G = "🟢";
-    let ciljneBojePoKolonama = [R, B, G, ""]; 
+    // Definišemo 4 boje za 4 kolone
+    let R = "🔴"; // 1. Kolona
+    let B = "🔵"; // 2. Kolona
+    let G = "🟢"; // 3. Kolona
+    let Y = "🟡"; // 4. Kolona (Žuta)
+    
+    let ciljneBojePoKolonama = [R, B, G, Y]; 
 
+    // MATEMATIČKI MODEL: 15 žetona i tačno JEDNO prazno polje ("") na indeksu 3
     let raspored = [
-        R, R, R, R,
-        B, B, B, B,
-        G, G, G, "",
-        "", "", "", ""
+        R, B, G, "",  // Indeks 3 je jedina rupa (otvor) na celoj tabli
+        R, B, G, Y,
+        R, B, G, Y,
+        R, B, G, Y
     ];
     
-    let slobodanElementGore = G; 
+    let slobodanElementGore = Y; // Žuti žeton čeka na vrhu da zatvori krug
     let zetonJeSpusten = false;
 
     function dajSusede(indeks) {
@@ -2882,11 +2914,11 @@ window.G2H_FabrikaIgara.pokreniMatricuBoja = function(sifra, kontejner) {
         return susedi;
     }
 
-    // POPRAVKA: Broj poteza za miksanje sada zavisi od težine izabrane u Adminu (1=20, 2=40, 3=75)
+    // Savršeno mešanje pomeranjem samo tog jednog slobodnog polja (Garantuje 100% rešivost)
     let miksPoteza = 40;
     if (sifra.endsWith('1')) miksPoteza = 20;
-    else if (sifra.endsWith('2')) miksPoteza = 40;
-    else if (sifra.endsWith('3')) miksPoteza = 75;
+    else if (sifra.endsWith('2')) miksPoteza = 45;
+    else if (sifra.endsWith('3')) miksPoteza = 80;
 
     let zamenjenoPuta = 0;
     let zadnjiIndeks = -1;
@@ -2894,7 +2926,7 @@ window.G2H_FabrikaIgara.pokreniMatricuBoja = function(sifra, kontejner) {
         let prazanIndeks = raspored.indexOf("");
         let susedi = dajSusede(prazanIndeks);
         let nasumicniSused = susedi[Math.floor(Math.random() * susedi.length)];
-        if (nasumicniSused !== zadnjiIndeks && raspored[nasumicniSused] !== "") {
+        if (nasumicniSused !== zadnjiIndeks) {
             raspored[prazanIndeks] = raspored[nasumicniSused];
             raspored[nasumicniSused] = "";
             zadnjiIndeks = prazanIndeks;
@@ -2904,22 +2936,25 @@ window.G2H_FabrikaIgara.pokreniMatricuBoja = function(sifra, kontejner) {
 
     kontejner.innerHTML = `
         <div class="g2h-igra-omotac" style="padding:10px; background:#fff; border-radius:12px; text-align:center;">
-            <h3 style="text-align:center; color:#1565c0; margin:0 0 5px 0; font-size:22px; font-weight:bold;">🧩 MATRICA BOJA</h3>
+            <h3 style="text-align:center; color:#1565c0; margin:0 0 5px 0; font-size:22px; font-weight:bold;">🎨 MATRICA BOJA</h3>
+            
             <div style="background:#f8fafc; border:2px solid #e2e8f0; padding:8px; border-radius:8px; margin-bottom:10px;">
-                <b style="font-size:13px; color:#64748b; display:block; margin-bottom:5px;">📋 CILJ: Složi kolone po bojama:</b>
-                <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; max-width:280px; margin:0 auto; font-size:14px; font-weight:bold; color:#475569;">
-                    <div>1. Kolona<br><span style="font-size:20px;">🔴</span></div>
-                    <div>2. Kolona<br><span style="font-size:20px;">🔵</span></div>
-                    <div>3. Kolona<br><span style="font-size:20px;">🟢</span></div>
-                    <div>Otvor<br><span style="font-size:20px;">🕳️</span></div>
+                <b style="font-size:13px; color:#64748b; display:block; margin-bottom:5px;">📋 CILJ: Složi sve 4 kolone po bojama:</b>
+                <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; max-width:280px; margin:0 auto; font-size:13px; font-weight:bold; color:#475569;">
+                    <div>1. Kolona<br><span style="font-size:18px;">🔴</span></div>
+                    <div>2. Kolona<br><span style="font-size:18px;">🔵</span></div>
+                    <div>3. Kolona<br><span style="font-size:18px;">🟢</span></div>
+                    <div>4. Kolona<br><span style="font-size:18px;">🟡</span></div>
                 </div>
             </div>
-            <div id="g2h_slobodan_zeton_okvir" style="background:#fffde7; border:2px dashed #f59e0b; padding:10px; border-radius:10px; max-width:280px; margin:10px auto; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer;">
-                <span style="font-size:14px; font-weight:900; color:#b45309;">SLOBODAN ŽETON IZNAĐ:</span>
-                <div id="g2h_plutajuci_zeton" style="width:40px; height:40px; background:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; box-shadow:0 4px 6px rgba(0,0,0,0.1); border:2px solid #f59e0b;">
+
+            <div id="g2h_slobodan_zeton_okvir" style="background:#fffbeb; border:2px dashed #f59e0b; padding:10px; border-radius:10px; max-width:280px; margin:10px auto; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer;">
+                <span style="font-size:13px; font-weight:900; color:#b45309;">SLOBODAN ŽETON IZNAD:</span>
+                <div id="g2h_plutajuci_zeton" style="width:36px; height:36px; background:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 4px 6px rgba(0,0,0,0.1); border:2px solid #f59e0b;">
                     ${slobodanElementGore}
                 </div>
             </div>
+
             <div id="mrezaMatriceBoja" style="display:grid; gap:6px; margin:15px auto; width:100%; max-width:320px; box-sizing:border-box;"></div>
         </div>
     `;
@@ -2931,12 +2966,13 @@ window.G2H_FabrikaIgara.pokreniMatricuBoja = function(sifra, kontejner) {
         mreza.innerHTML = '';
         raspored.forEach((vrednost, indeks) => {
             let plocica = document.createElement('div');
+            plocica.style.width = "100%"; 
             plocica.style.aspectRatio = "1 / 1";
             plocica.style.borderRadius = "50%"; 
             plocica.style.display = "flex";
             plocica.style.justifyContent = "center";
             plocica.style.alignItems = "center";
-            plocica.style.fontSize = "28px";
+            plocica.style.fontSize = "26px";
             plocica.style.userSelect = "none";
             plocica.style.transition = "all 0.1s ease";
             plocica.innerText = vrednost;
@@ -2945,7 +2981,7 @@ window.G2H_FabrikaIgara.pokreniMatricuBoja = function(sifra, kontejner) {
                 if (indeks === 3 && !zetonJeSpusten) {
                     plocica.style.background = "#fffbeb";
                     plocica.style.border = "3px dashed #f59e0b";
-                    plocica.innerText = "🕳️";
+                    plocica.innerText = "🕳️"; // Oznaka otvora pod žetonom
                 } else {
                     plocica.style.background = "#f1f5f9"; 
                     plocica.style.border = "2px dashed #cbd5e1";
@@ -2954,11 +2990,13 @@ window.G2H_FabrikaIgara.pokreniMatricuBoja = function(sifra, kontejner) {
                 if (vrednost === R) plocica.style.background = "#fef2f2";
                 else if (vrednost === B) plocica.style.background = "#eff6ff";
                 else if (vrednost === G) plocica.style.background = "#f0fdf4";
+                else if (vrednost === Y) plocica.style.background = "#fefce8";
                 
                 plocica.style.border = "2px solid #cbd5e1";
                 plocica.style.cursor = "pointer";
                 plocica.style.boxShadow = "0 4px 6px rgba(0,0,0,0.08)";
 
+                // ČISTA KLIZNA MEHANIKA: Žeton ide u prazno polje samo ako je direktno pored njega
                 plocica.onclick = function() {
                     let prazanIndeks = raspored.indexOf("");
                     let susediValidni = dajSusede(indeks);
@@ -2986,7 +3024,7 @@ window.G2H_FabrikaIgara.pokreniMatricuBoja = function(sifra, kontejner) {
             iscrtajTabluUI();
             proveriKonacnuPobedu();
         } else {
-            alert("❌ Otvor je zatvoren! Pomjeraj žetone na tabli tako da isprazniš gornje desno polje ispod otvora 🕳️ kako bi spustio žeton!");
+            alert("❌ Otvor je zatvoren! Složi elemente na tabli tako da gornje desno polje 🕳️ ostane slobodno, pa onda spusti žeton!");
         }
     };
 
@@ -2997,7 +3035,7 @@ window.G2H_FabrikaIgara.pokreniMatricuBoja = function(sifra, kontejner) {
             let kolona = i % velicina;
             let trenutnaVrednost = raspored[i];
             let zahtevanaBoja = ciljneBojePoKolonama[kolona];
-            if (zahtevanaBoja !== "" && trenutnaVrednost !== zahtevanaBoja) {
+            if (trenutnaVrednost !== zahtevanaBoja) {
                 sveKoloneTacne = false;
                 break;
             }
@@ -3006,7 +3044,7 @@ window.G2H_FabrikaIgara.pokreniMatricuBoja = function(sifra, kontejner) {
         if (sveKoloneTacne) {
             document.querySelectorAll('#mrezaMatriceBoja div').forEach(p => p.onclick = null);
             setTimeout(() => {
-                alert("🎉 Fantastično! Matrica boja je potpuno usklađena i uspešno rešena!");
+                alert("🎉 Izvanredno! Matrica boja je potpuno usklađena i uspešno rešena!");
                 window.G2H_trenutniStatusIgreUspeh = true;
                 let puniEkranProzor = document.getElementById('g2h_multi_puni_ekran');
                 if (puniEkranProzor) puniEkranProzor.style.display = 'none';
@@ -3014,11 +3052,11 @@ window.G2H_FabrikaIgara.pokreniMatricuBoja = function(sifra, kontejner) {
             }, 400);
         } else {
             setTimeout(() => {
-                alert("💡 Žeton je spušten, ali kolone nisu poređane po zadatim bojama! Vraćamo žeton na vrh da završiš sortiranje.");
+                alert("💡 Žeton je spušten, ali kolone nisu idealno poređane po bojama! Vraćamo žeton na vrh da završiš sortiranje.");
                 zetonJeSpusten = false;
                 raspored[3] = "";
                 document.getElementById('g2h_plutajuci_zeton').innerText = slobodanElementGore;
-                document.getElementById('g2h_slobodan_zeton_okvir').style.background = "#fffde7";
+                document.getElementById('g2h_slobodan_zeton_okvir').style.background = "#fffbeb";
                 document.getElementById('g2h_slobodan_zeton_okvir').style.borderColor = "#f59e0b";
                 iscrtajTabluUI();
             }, 1500);
