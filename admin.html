@@ -1601,7 +1601,8 @@ window.otvoriPanel = function(p, otvoriSkupljen = false) {
                                   sacuvanaSifra.startsWith('skocko') ? 'skocko' : 
                                   sacuvanaSifra.startsWith('prekidaci') ? 'prekidaci' : 
                                   sacuvanaSifra.startsWith('slagalica') ? 'slagalica' : 
-                                  sacuvanaSifra.startsWith('simon') ? 'simon' : 
+                                  sacuvanaSifra.startsWith('simon') ? 'simon' :
+                                  sacuvanaSifra.startsWith('matricaboja') ? 'matricaboja' :
                                   sacuvanaSifra.startsWith('radna') ? 'radna' : 'memorija';
                 
                 if (mIgra) {
@@ -1681,7 +1682,8 @@ window.otvoriPanel = function(p, otvoriSkupljen = false) {
                                       mSifra.startsWith('skocko') ? 'skocko' : 
                                       mSifra.startsWith('prekidaci') ? 'prekidaci' : 
                                       mSifra.startsWith('slagalica') ? 'slagalica' : 
-                                      mSifra.startsWith('simon') ? 'simon' : 
+                                      mSifra.startsWith('simon') ? 'simon' :
+                                      mSifra.startsWith('matricaboja') ? 'matricaboja' :
                                       mSifra.startsWith('radna') ? 'radna' : 'memorija';
                     
                     if (mIgra) {
@@ -1828,6 +1830,7 @@ window.otvoriPanel = function(p, otvoriSkupljen = false) {
                 <option value="slagalica">🧩 Klizna Slagalica (G2H)</option>
                 <option value="simon">🚥 Simon Says (G2H)</option>
                 <option value="radna">🧠 Radna Memorija (G2H)</option>
+                <option value="matricaboja">🎨 Matrica Boja (G2H)</option>
             `;
 
             let mTezina = document.createElement('select');
@@ -1861,6 +1864,13 @@ window.otvoriPanel = function(p, otvoriSkupljen = false) {
                         <option value="1">⚪ Bela staza (Mreža 3x3 - 8 pločica)</option>
                         <option value="2">🔵 Plava staza (Mreža 4x4 - 15 pločica)</option>
                         <option value="3">🔴 Crvena staza (Mreža 5x5 - 24 pločice)</option>
+                    `;
+                // 2. DODAT USLOV: Težine i opisi koraka mešanja za novu Matricu Boja
+                } else if (izabranaIgra === 'matricaboja') { 
+                    mTezina.innerHTML = `
+                        <option value="1">⚪ Bela staza (Lakše mešanje - 20 poteza)</option>
+                        <option value="2">🔵 Plava staza (Srednje mešanje - 40 poteza)</option>
+                        <option value="3">🔴 Crvena staza (Najteže mešanje - 75 poteza)</option>
                     `;
                 } else if (izabranaIgra === 'simon') {
                     mTezina.innerHTML = `
