@@ -400,7 +400,7 @@
         <button class="btn-glavno" style="margin-top: auto; flex-shrink: 0;" onclick="window.kreniNaZadatke()" id="btnDalje">DALJE</button>
     </div>
 
-    <div id="ekranZadatak" class="ekran">
+<div id="ekranZadatak" class="ekran">
         <div class="top-bar">
             <span class="tim-info" id="prikazTim">Tim</span>
             <div class="tajmer-info">
@@ -419,31 +419,36 @@
 
         <h3 style="margin:0 0 10px 0; color:#1abc9c; text-align:center; flex-shrink: 0;" id="txtTacka">Lokacija broj 1</h3>
         
-<div class="health-container" id="healthBlocks"></div>
-<div id="healthText" class="health-tekst">Energija: 100%</div>
+        <div class="health-container" id="healthBlocks"></div>
+        <div id="healthText" class="health-tekst">Energija: 100%</div>
 
-<div id="prikazTipaZadatka" style="display: none !important;"></div>
-
+        <div id="prikazTipaZadatka" style="display: none !important;"></div>
         
-<div id="lokacijaKontejner" style="text-align: center; margin-top: 0; flex-grow: 1; overflow-y: auto;">
-    <div id="prikazOpisaLokacije" style="font-size: 16px; color: #475569; margin-bottom: 10px; font-weight: 600; display: none; line-height: 1.4;"></div>
-    <img id="slikaLokacijeIgrac" src="" style="width:100%; max-height:220px; object-fit:contain; border-radius:12px; margin-bottom:15px; display:none; border: 2px solid #347C17; background:#e0e0e0; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+        <div id="lokacijaKontejner" style="text-align: center; margin-top: 0; flex-grow: 1; overflow-y: auto;">
+            
+            <button id="btnTrag" class="btn-trag" style="margin-top: 0; margin-bottom: 10px; padding: 14px; font-weight: bold; font-size: 16px; border-radius: 10px; width: 100%;" onclick="window.zatraziTrag()">
+                <span id="txtDugmeTrag">Aktiviraj sonar (košta energije)</span>
+            </button>
+            <div id="kompasPolje" class="poruka" style="background:#e3f2fd; color:#1565c0; border: 1px solid #bbdefb; margin-top: 0; margin-bottom: 15px; padding:0; display: none; width: 100%;"></div>
 
-    <div id="velikaNajavaZadatka" style="background: #e1f5fe; border: 2px solid #03a9f4; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(3,169,244,0.2);">
-        <span style="color:#0277bd; font-weight:bold; font-size:14px; text-transform:uppercase;">Vaš zadatak na cilju:</span><br>
-        <span id="txtVelikiZadatak" style="font-size: 24px; font-weight: 900; color: #000; display: block; margin-top: 10px; line-height: 1.3;"></span>
-    </div>
-         
-<div style="font-size: 60px; margin-bottom: 5px; cursor: pointer;" onclick="window.devBypassProvera();" title="Dev Bypass">🔒</div>
-    <div id="txtProveraMesta" style="font-weight: bold; color: #347C17; margin-bottom: 15px; font-size: 18px;">Proveri da li si na pravom mestu</div>
-         
-    <button class="btn-glavno" style="font-size: 20px; padding: 20px; box-shadow: 0 5px 15px rgba(26,188,156,0.4);" onclick="window.pokreniOtkljucavanje()" id="btnOtkljucaj">🔑 PROVERI LOKACIJU</button>
-    <div id="porukaLokacija" class="poruka"></div>
-         
-    <div style="font-size: 13px; color: #64748b; margin-top: 25px; margin-bottom: 5px; font-weight: bold;" id="txtNemaSignal">Nemaš GPS signal na ovoj lokaciji?</div>
-    <button class="btn-trag" style="background:#fff; color:#0f172a; border: 2px solid #cbd5e1; margin-top: 0; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.05); padding: 15px;" onclick="window.pokreniQRProveru()" id="btnPokreniQR">📷 SKENIRAJ QR KOD LOKACIJE</button>
-         
-    <div id="qrSkenerKontejner" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 10000; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px); box-sizing: border-box; padding: 20px;">
+            <div id="prikazOpisaLokacije" style="font-size: 16px; color: #475569; margin-bottom: 10px; font-weight: 600; display: none; line-height: 1.4;"></div>
+            <img id="slikaLokacijeIgrac" src="" style="width:100%; max-height:220px; object-fit:contain; border-radius:12px; margin-bottom:15px; display:none; border: 2px solid #347C17; background:#e0e0e0; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+
+            <div id="velikaNajavaZadatka" style="background: #e1f5fe; border: 2px solid #03a9f4; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(3,169,244,0.2);">
+                <span style="color:#0277bd; font-weight:bold; font-size:14px; text-transform:uppercase;">Vaš zadatak na cilju:</span><br>
+                <span id="txtVelikiZadatak" style="font-size: 24px; font-weight: 900; color: #000; display: block; margin-top: 10px; line-height: 1.3;"></span>
+            </div>
+                 
+            <div style="font-size: 60px; margin-bottom: 5px; cursor: pointer;" onclick="window.devBypassProvera();" title="Dev Bypass">🔒</div>
+            <div id="txtProveraMesta" style="font-weight: bold; color: #347C17; margin-bottom: 15px; font-size: 18px;">Proveri da li si na pravom mestu</div>
+                 
+            <button class="btn-glavno" style="font-size: 20px; padding: 20px; box-shadow: 0 5px 15px rgba(26,188,156,0.4);" onclick="window.pokreniOtkljucavanje()" id="btnOtkljucaj">🔑 PROVERI LOKACIJU</button>
+            <div id="porukaLokacija" class="poruka"></div>
+                 
+            <div style="font-size: 13px; color: #64748b; margin-top: 25px; margin-bottom: 5px; font-weight: bold;" id="txtNemaSignal">Nemaš GPS signal na ovoj lokaciji?</div>
+            <button class="btn-trag" style="background:#fff; color:#0f172a; border: 2px solid #cbd5e1; margin-top: 0; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.05); padding: 15px;" onclick="window.pokreniQRProveru()" id="btnPokreniQR">📷 SKENIRAJ QR KOD LOKACIJE</button>
+                 
+            <div id="qrSkenerKontejner" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); z-index: 10000; display: none; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(5px); box-sizing: border-box; padding: 20px;">
                 <h3 style="color: white; margin-top: 0; text-align: center; font-size: 24px;">📷 Skener Lokacije</h3>
                 <p id="porukaSkenera" style="color: #cbd5e1; text-align: center; font-size: 15px; margin-bottom: 20px;">Izoštri kod u kvadratu i klikni Skeniraj.</p>
                 <div id="qrSkener" style="width: 100%; max-width: 300px; border: 4px solid #10b981; border-radius: 16px; overflow: hidden; background: #000; box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);"></div>
@@ -454,12 +459,7 @@
             <button id="btnNazadNaUputstvo" onclick="window.prikaziEkran('ekranUspeh')" style="background: transparent; color: #475569; border: 2px solid #cbd5e1; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; margin-top: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 100%;">
                 📖 Zaboravio sam kuda treba da idem (Podseti me)
             </button>
-
-            <button id="btnTrag" class="btn-trag" style="margin-top: 15px;" onclick="window.zatraziTrag()"><span id="txtDugmeTrag">Aktiviraj sonar (košta energije)</span></button>
-            <div id="kompasPolje" class="poruka" style="background:#e3f2fd; color:#1565c0; border: 1px solid #bbdefb; margin-top: 15px; padding:0;"></div>
-        </div>
-        
-        <div id="zadatakKontejner" style="display: none; flex-direction: column; width: 100%; margin-top: 15px; flex-grow: 1; overflow-y: auto;">
+        </div> <div id="zadatakKontejner" style="display: none; flex-direction: column; width: 100%; margin-top: 15px; flex-grow: 1; overflow-y: auto;">
             <div id="tekstZadatkaUUI" class="zadatak-box" style="transition: all 0.3s ease;">Učitavanje zadatka...</div>
             <img id="slikaZadatkaUUI" src="" style="display:none; width:100%; border-radius:12px; margin-bottom:15px; max-height:250px; object-fit:contain; border: 2px solid #1abc9c; background:#f8fafc;">
             <div class="zadatak-napomena" id="txtNapomena" style="display:none;">Napomena: odgovor možete upisati brojem ili slovima (veličina slova nije bitna).</div>
@@ -1276,7 +1276,11 @@
             document.getElementById('zadatakKontejner').style.display = 'flex';
             document.getElementById('porukaPolje').style.display = 'none';
             document.getElementById('kompasPolje').style.display = 'none';
-            
+
+            // 🔋 OPTIMIZACIJA: Ako je sonar ostao upaljen, gasimo GPS praćenje radi uštede baterije
+            if (typeof window.zaustaviSonar === 'function') {
+                window.zaustaviSonar();
+            }
             document.getElementById('unosOdgovor').value = '';
             document.getElementById('unosOdgovor').style.display = 'none';
             document.getElementById('g2hIgreUI').style.display = 'none'; 
