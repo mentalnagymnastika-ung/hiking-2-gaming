@@ -1326,6 +1326,12 @@ if (tip === 'igrica') {
     else if (sifraIgre.startsWith('slagalica')) {
         window.G2H_FabrikaIgara.pokreniSlagalicu(sifraIgre, kontejnerIgre);
     }
+   else if (sifraIgre.startsWith('matricaboja')) { // 👈 DODATO: Pokretanje samostalne matrice boja
+        window.G2H_FabrikaIgara.pokreniMatricuBoja(sifraIgre, kontejnerIgre);
+    }
+    else if (sifraIgre.startsWith('staza')) { // 👈 DODATO: Pokretanje samostalne svetlosne staze
+        window.G2H_FabrikaIgara.pokreniSvetlosnuStazu(sifraIgre, kontejnerIgre);
+    }
     else if (sifraIgre.startsWith('simon')) {
         window.G2H_FabrikaIgara.pokreniSimon(sifraIgre, kontejnerIgre);
     }
@@ -1906,7 +1912,7 @@ let ukupnoMetara = 0;
         let ukupnoZlatnika = brZlatnikaNaRuti + bonusZlatnici;
 
         document.getElementById('statKm').innerText = (ukupnoMetara / 1000).toFixed(1);
-        document.getElementById('statZag').innerText = brZagonetki;
+        document.getElementById('statZag').innerText = brIzazova;
         document.getElementById('statZlaOsnovno').innerText = brZlatnikaNaRuti;
         document.getElementById('prikazVremenaBonus').innerText = formatiranoVreme;
         document.getElementById('bonusZlatniciKolicina').innerText = bonusZlatnici;
@@ -2788,6 +2794,7 @@ window.G2H_FabrikaIgara.pokreniSlagalicu = function(sifra, kontejner) {
 
     let zamenjenoPuta = 0;
     let zadnjiIndeks = -1;
+
     while (zamenjenoPuta < miksPoteza) {
         let prazanIndeks = raspored.indexOf("");
         let susedi = dajSusede(prazanIndeks);
@@ -3381,7 +3388,7 @@ window.G2H_FabrikaIgara.pokreniSvetlosnuStazu = function(sifra, kontejner) {
     let velicina = 4;
     let ulazIndeks = 3;
     let izlazIndeks = 12;
-    let preprekeMreze = [5, 10];
+    let preprekeMreze = [];
 
 if (sifra.endsWith('1')) {
         // Bela staza koristi tvoj originalni Nivo 2 (4x4)
@@ -3412,13 +3419,14 @@ if (sifra.endsWith('1')) {
     let ukupnoPolja = velicina * velicina;
 
     // 🚀 OVO JE KLJUČNA DOPUNA: Sistem sam bira nasumična polja koja nisu ulaz ili izlaz
-    let preprekeMreze = [];
-    while (preprekeMreze.length < brojPrepreka) {
-        let randPozicija = Math.floor(Math.random() * ukupnoPolja);
-        if (randPozicija !== ulazIndeks && randPozicija !== izlazIndeks && !preprekeMreze.includes(randPozicija)) {
-            preprekeMreze.push(randPozicija);
-        }
+   //---- let preprekeMreze = [];
+while (preprekeMreze.length < brojPrepreka) {
+    let randPozicija = Math.floor(Math.random() * ukupnoPolja);
+    if (randPozicija !== ulazIndeks && randPozicija !== izlazIndeks && !preprekeMreze.includes(randPozicija)) {
+        preprekeMreze.push(randPozpacka = randPozicija);
+        preprekeMreze.push(randPozicija);
     }
+}
 
     let streliceSimboli = ["➡️", "⬇️", "⬅️", "⬆️"];
     let rasporedSmerova = [];
