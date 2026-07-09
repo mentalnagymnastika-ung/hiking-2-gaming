@@ -1779,17 +1779,26 @@ window.otvoriPanel = function(p, otvoriSkupljen = false) {
                     document.getElementById('qr_uputstvo').value = p.zadatak.qr_uputstvo || '';
                     document.getElementById('qr_kod_vrednost').value = p.zadatak.qr_odg || '';
                 }
-                if(elovi.includes('kviz')) {
+if(elovi.includes('kviz')) {
                     if (p.zadatak.kvizData) {
                         p.zadatak.kvizData.forEach(q => {
                             window.kvizCount++; let div = document.createElement('div'); div.className = 'kviz-blok'; div.style.background = 'white'; div.style.padding = '15px'; div.style.borderRadius = '8px'; div.style.border = '1px solid #e2e8f0'; div.style.marginBottom = '15px';
-                            let html = `<label style="margin-top:0; color:#0f172a; font-size:16px; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">${window.trenutniJezik==='sr'?'Pitanje':'Question'} ${window.kvizCount} <span onclick="this.parentElement.parentElement.remove()" class="ikona-brisi" title="Obriši pitanje">&times;</span></label><textarea rows="2" style="margin-top:10px; margin-bottom:15px;">${q.pitanje}</textarea><div class="opcije">`;
+                            let slikaPrikaz = q.slika ? 'block' : 'none';
+                            let slikaSrc = q.slika ? q.slika : '';
+                            let html = `<label style="margin-top:0; color:#0f172a; font-size:16px; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">${window.trenutniJezik==='sr'?'Pitanje':'Question'} ${window.kvizCount} <span onclick="this.parentElement.parentElement.remove()" class="ikona-brisi" title="Obriši pitanje">&times;</span></label><textarea rows="2" style="margin-top:10px; margin-bottom:10px;">${q.pitanje}</textarea>
+                            <div style="margin-bottom: 15px; padding: 10px; background: #f1f5f9; border-radius: 6px; border: 1px dashed #cbd5e1;">
+                                <label style="font-size: 12px; color: #475569; display: block; margin-top: 0; margin-bottom: 5px;">📷 Slika uz ovo pitanje (opciono)</label>
+                                <input type="file" class="kviz-slika-upload" accept="image/*" onchange="window.pripremiSlikuPitanja(event)" style="padding: 4px; font-size: 12px; width: 100%; box-sizing: border-box; background: white;">
+                                <div style="position: relative; margin-top: 5px;">
+                                    <img class="kviz-slika-preview" src="${slikaSrc}" style="width: 100%; max-height: 150px; object-fit: contain; border-radius: 6px; display: ${slikaPrikaz}; border: 2px solid #3b82f6;">
+                                    <button class="btn-obrisi-sliku-pitanja" onclick="window.obrisiSlikuPitanja(this)" style="position: absolute; top: 5px; right: 5px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-weight: bold; cursor: pointer; display: ${slikaPrikaz}; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">X</button>
+                                </div>
+                            </div><div class="opcije">`;
                             q.opcije.forEach(opt => { let isChecked = q.tacni.includes(opt) ? 'checked' : ''; html += `<div class="kviz-opcija"><input type="text" value="${opt.replace(/"/g, '&quot;')}"><input type="checkbox" title="Tačan odgovor" ${isChecked}><span onclick="this.parentElement.remove()" class="ikona-brisi">&times;</span></div>`; });
                             html += `</div><button class="btn-dodaj" onclick="window.dodajOpciju(this)"> ${window.trenutniJezik==='sr'?'Dodaj opciju':'Add option'}</button>`; div.innerHTML = html; document.getElementById('kviz_pitanja_container').appendChild(div);
                         });
                     }
                 }
-            }
         } else { document.getElementById('tipZadatka').value = 'zlatnik'; }
 
         window.switchZadatak(); window.toggleZavrsna(); 
@@ -1982,10 +1991,18 @@ window.otvoriPanel = function(p, otvoriSkupljen = false) {
 
         window.osveziPinove(); 
     };
-    window.dodajNovoKvizPitanje = function() {
+window.dodajNovoKvizPitanje = function() {
         window.kvizCount++; let div = document.createElement('div'); div.className = 'kviz-blok'; div.style.background = 'white'; div.style.padding = '15px'; div.style.borderRadius = '8px'; div.style.border = '1px solid #e2e8f0'; div.style.marginBottom = '15px';
         div.innerHTML = `<label style="margin-top:0; color:#0f172a; font-size:16px; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">${window.trenutniJezik==='sr'?'Pitanje':'Question'} ${window.kvizCount} <span onclick="this.parentElement.parentElement.remove()" class="ikona-brisi" title="Obriši pitanje">&times;</span></label>
-            <textarea rows="2" placeholder="${window.trenutniJezik==='sr'?'Upišite tekst pitanja':'Enter question text'}" style="margin-top:10px; margin-bottom:15px;"></textarea>
+            <textarea rows="2" placeholder="${window.trenutniJezik==='sr'?'Upišite tekst pitanja':'Enter question text'}" style="margin-top:10px; margin-bottom:10px;"></textarea>
+            <div style="margin-bottom: 15px; padding: 10px; background: #f1f5f9; border-radius: 6px; border: 1px dashed #cbd5e1;">
+                <label style="font-size: 12px; color: #475569; display: block; margin-top: 0; margin-bottom: 5px;">📷 Slika uz ovo pitanje (opciono)</label>
+                <input type="file" class="kviz-slika-upload" accept="image/*" onchange="window.pripremiSlikuPitanja(event)" style="padding: 4px; font-size: 12px; width: 100%; box-sizing: border-box; background: white;">
+                <div style="position: relative; margin-top: 5px;">
+                    <img class="kviz-slika-preview" src="" style="width: 100%; max-height: 150px; object-fit: contain; border-radius: 6px; display: none; border: 2px solid #3b82f6;">
+                    <button class="btn-obrisi-sliku-pitanja" onclick="window.obrisiSlikuPitanja(this)" style="position: absolute; top: 5px; right: 5px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-weight: bold; cursor: pointer; display: none; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">X</button>
+                </div>
+            </div>
             <div class="opcije">
                 <div class="kviz-opcija"><input type="text" placeholder="${window.trenutniJezik==='sr'?'Tačan odgovor':'Correct answer'}"><input type="checkbox" title="Tačan odgovor" checked><span onclick="this.parentElement.remove()" class="ikona-brisi">&times;</span></div>
                 <div class="kviz-opcija"><input type="text" placeholder="${window.trenutniJezik==='sr'?'Netačan odgovor':'Wrong answer'}"><input type="checkbox" title="Tačan odgovor"><span onclick="this.parentElement.remove()" class="ikona-brisi">&times;</span></div>
@@ -2053,11 +2070,13 @@ window.zatvoriPanelISacuvaj = function() {
                 let kvizPodaci = []; 
                 document.querySelectorAll('.kviz-blok').forEach((blok) => {
                     let tekstPitanja = blok.querySelector('textarea').value || 'Pitanje'; let opcije = []; let tacni = [];
+                    let previewSlika = blok.querySelector('.kviz-slika-preview');
+                    let slikaPodatak = previewSlika && previewSlika.src.startsWith('data:image') ? previewSlika.src : "";
                     blok.querySelectorAll('.kviz-opcija').forEach(opt => {
                         let checkbox = opt.querySelector('input[type="checkbox"]'); let tekstOpcije = opt.querySelector('input[type="text"]').value.trim();
                         if(tekstOpcije !== '') { opcije.push(tekstOpcije); if(checkbox && checkbox.checked) tacni.push(tekstOpcije); }
                     });
-                    kvizPodaci.push({ pitanje: tekstPitanja, opcije: opcije, tacni: tacni });
+                    kvizPodaci.push({ pitanje: tekstPitanja, opcije: opcije, tacni: tacni, slika: slikaPodatak });
                 });
                 podaciZadatka.kvizData = kvizPodaci;
             }
