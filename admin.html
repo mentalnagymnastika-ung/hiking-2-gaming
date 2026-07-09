@@ -1590,7 +1590,7 @@
         document.getElementById('pDist').innerText = (ukupnaDistancaM / 1000).toFixed(2);
     }
 
-window.otvoriPanel = function(p, otvoriSkupljen = false) {
+window.otvoriPanel = function(p, otvoriSkupljen = false) { 
         window.aktivniPin = p;
         let trenutnaPoz = p.marker.getLatLng();
         document.getElementById('rucniLat').value = trenutnaPoz.lat.toFixed(6);
@@ -1779,7 +1779,7 @@ window.otvoriPanel = function(p, otvoriSkupljen = false) {
                     document.getElementById('qr_uputstvo').value = p.zadatak.qr_uputstvo || '';
                     document.getElementById('qr_kod_vrednost').value = p.zadatak.qr_odg || '';
                 }
-if(elovi.includes('kviz')) {
+                if(elovi.includes('kviz')) {
                     if (p.zadatak.kvizData) {
                         p.zadatak.kvizData.forEach(q => {
                             window.kvizCount++; let div = document.createElement('div'); div.className = 'kviz-blok'; div.style.background = 'white'; div.style.padding = '15px'; div.style.borderRadius = '8px'; div.style.border = '1px solid #e2e8f0'; div.style.marginBottom = '15px';
@@ -1799,6 +1799,7 @@ if(elovi.includes('kviz')) {
                         });
                     }
                 }
+            } // <--- EVO JE ZAGRADA KOJA JE FALILA DA ZATVORI MULTI!
         } else { document.getElementById('tipZadatka').value = 'zlatnik'; }
 
         window.switchZadatak(); window.toggleZavrsna(); 
