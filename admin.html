@@ -392,8 +392,20 @@
                 </button>
             </div>
 
+            <label id="lblJezikStaze">Jezik staze / Language</label>
+            <select id="unosJezikStaze" style="width: 100%; padding: 12px 15px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; color: #0f172a; outline:none; font-size:16px;">
+                <option value="sr">Srpski</option>
+                <option value="en">Engleski</option>
+                <option value="sl">Slovenački</option>
+                <option value="de">Nemački</option>
+                <option value="hr">Hrvatski</option>
+            </select>
+
             <label id="lblPromo">Promo slika</label>
-            <input type="file" id="promoSlikaUpload" accept="image/*" onchange="window.pripremiSliku(event)" style="padding: 8px; background:white;">
+            <div style="display:flex; gap:10px; align-items: stretch;">
+                <input type="file" id="promoSlikaUpload" accept="image/*" onchange="window.pripremiSliku(event)" style="padding: 8px; background:white; flex-grow: 1;">
+                <button onclick="window.obrisiPromoSliku()" title="Poništi učitanu sliku" style="background:#ef4444; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; padding: 0 15px;">X</button>
+            </div>
             
             <label id="lblObjasnjenje">Objašnjenje / Uputstvo za početak <span style="color:#ef4444;">*</span></label>
             <textarea id="promoTekst" rows="3" placeholder="Gde igrači treba da odu da bi našli prvu tačku" oninput="window.ukloniGresku(this)"></textarea>
@@ -1268,6 +1280,49 @@
         }; reader.readAsDataURL(file);
     }
 
+    window.obrisiPromoSliku = function() {
+        document.getElementById('promoSlikaUpload').value = ''; 
+        window.promoSlikaBase64 = ""; 
+        window.promeneNisuSnimljene = true; 
+    }
+
+    window.pripremiSlikuPitanja = function(event) {
+        let file = event.target.files[0]; if(!file) return;
+        let blok = event.target.closest('.kviz-blok'); 
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let img = new Image();
+            img.onload = function() {
+                let canvas = document.createElement('canvas');
+                let max_size = 400; let width = img.width; let height = img.height;
+                if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } } 
+                else { if (height > max_size) { width *= max_size / height; height = max_size; } }
+                canvas.width = width; canvas.height = height;
+                let ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+                let base64 = canvas.toDataURL('image/jpeg', 0.4); 
+
+                let preview = blok.querySelector('.kviz-slika-preview');
+                let btnObrisi = blok.querySelector('.btn-obrisi-sliku-pitanja');
+                preview.src = base64;
+                preview.style.display = 'block';
+                btnObrisi.style.display = 'inline-block';
+                window.promeneNisuSnimljene = true;
+            }
+            img.src = e.target.result;
+        }; reader.readAsDataURL(file);
+    }
+
+    window.obrisiSlikuPitanja = function(btn) {
+        let blok = btn.closest('.kviz-blok');
+        let preview = blok.querySelector('.kviz-slika-preview');
+        let input = blok.querySelector('.kviz-slika-upload');
+        preview.src = '';
+        preview.style.display = 'none';
+        btn.style.display = 'none';
+        input.value = '';
+        window.promeneNisuSnimljene = true;
+    }
+
     window.pripremiSlikaPronadji = function(event) {
         let file = event.target.files[0]; if(!file || !window.aktivniPin) return;
         let reader = new FileReader();
@@ -1399,6 +1454,7 @@
         if(!window.proveriNesacuvano()) return;
         ['gradPotrage','imePotrage','sifraPotrage','promoTekst'].forEach(id => window.ukloniGresku(document.getElementById(id)));
         document.getElementById('gradPotrage').value = ''; document.getElementById('imePotrage').value = '';
+     if(document.getElementById('unosJezikStaze')) document.getElementById('unosJezikStaze').value = 'sr';
         document.getElementById('autorPotrage').value = '';
         document.getElementById('sifraPotrage').value = ''; document.getElementById('promoTekst').value = '';
         document.getElementById('promoSlikaUpload').value = ''; document.getElementById('mesanjeRute').checked = false;
@@ -1638,7 +1694,19 @@ window.otvoriPanel = function(p, otvoriSkupljen = false) {
                         div.style.border = '1px solid #e2e8f0'; 
                         div.style.marginBottom = '15px';
                         
-                        let html = `<label style="margin-top:0; color:#0f172a; font-size:16px; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">${window.trenutniJezik==='sr'?'Pitanje':'Question'} ${window.kvizCount} <span onclick="this.parentElement.parentElement.remove()" class="ikona-brisi" title="Obriši pitanje">&times;</span></label><textarea rows="2" style="margin-top:10px; margin-bottom:15px;">${q.pitanje}</textarea><div class="opcije">`;
+                        let slikaPrikaz = q.slika ? 'block' : 'none';
+                        let slikaSrc = q.slika ? q.slika : '';
+                        
+                        let html = `<label style="margin-top:0; color:#0f172a; font-size:16px; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">${window.trenutniJezik==='sr'?'Pitanje':'Question'} ${window.kvizCount} <span onclick="this.parentElement.parentElement.remove()" class="ikona-brisi" title="Obriši pitanje">&times;</span></label>
+                        <textarea rows="2" style="margin-top:10px; margin-bottom:10px;">${q.pitanje}</textarea>
+                        <div style="margin-bottom: 15px; padding: 10px; background: #f1f5f9; border-radius: 6px; border: 1px dashed #cbd5e1;">
+                            <label style="font-size: 12px; color: #475569; display: block; margin-top: 0; margin-bottom: 5px;">📷 Slika uz ovo pitanje (opciono)</label>
+                            <input type="file" class="kviz-slika-upload" accept="image/*" onchange="window.pripremiSlikuPitanja(event)" style="padding: 4px; font-size: 12px; width: 100%; box-sizing: border-box; background: white;">
+                            <div style="position: relative; margin-top: 5px;">
+                                <img class="kviz-slika-preview" src="${slikaSrc}" style="width: 100%; max-height: 150px; object-fit: contain; border-radius: 6px; display: ${slikaPrikaz}; border: 2px solid #3b82f6;">
+                                <button class="btn-obrisi-sliku-pitanja" onclick="window.obrisiSlikuPitanja(this)" style="position: absolute; top: 5px; right: 5px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-weight: bold; cursor: pointer; display: ${slikaPrikaz}; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">X</button>
+                            </div>
+                        </div><div class="opcije">`;
                         
                         q.opcije.forEach(opt => { 
                             let isChecked = q.tacni.includes(opt) ? 'checked' : ''; 
@@ -2013,11 +2081,15 @@ window.zatvoriPanelISacuvaj = function() {
             let kvizPodaci = []; let listaPitanja = [];
             document.querySelectorAll('.kviz-blok').forEach((blok, indeks) => {
                 let tekstPitanja = blok.querySelector('textarea').value || 'Pitanje bez teksta'; let opcije = []; let tacni = [];
+                let previewSlika = blok.querySelector('.kviz-slika-preview');
+                let slikaPodatak = previewSlika && previewSlika.src.startsWith('data:image') ? previewSlika.src : "";
+                
                 blok.querySelectorAll('.kviz-opcija').forEach(opt => {
                     let checkbox = opt.querySelector('input[type="checkbox"]'); let tekstOpcije = opt.querySelector('input[type="text"]').value.trim();
                     if(tekstOpcije !== '') { opcije.push(tekstOpcije); if(checkbox && checkbox.checked) tacni.push(tekstOpcije); }
                 });
-                kvizPodaci.push({ pitanje: tekstPitanja, opcije: opcije, tacni: tacni }); listaPitanja.push('Pitanje ' + (indeks+1) + ': ' + tekstPitanja + ' Tačno: ' + tacni.join(' i '));
+                kvizPodaci.push({ pitanje: tekstPitanja, opcije: opcije, tacni: tacni, slika: slikaPodatak }); 
+                listaPitanja.push('Pitanje ' + (indeks+1) + ': ' + tekstPitanja + ' Tačno: ' + tacni.join(' i '));
             });
             podaciZadatka.tekst = listaPitanja.join('   '); podaciZadatka.odgovor = 'Kviz sa više opcija'; podaciZadatka.kvizData = kvizPodaci; 
         }
@@ -2327,7 +2399,7 @@ window.zatvoriPanelISacuvaj = function() {
 
     window.zatvoriModalAktivnih = function() { document.getElementById('aktivnePotrageModal').style.display = 'none'; }
 
-    window.ucitajListuSaServera = async function() {
+window.ucitajListuSaServera = async function() {
         let ul = document.getElementById('listaAktivnihUI');
         ul.innerHTML = '<li style="color:#2563eb; text-align:center;">⏳ Učitavanje baze...</li>';
         try {
@@ -2335,21 +2407,42 @@ window.zatvoriPanelISacuvaj = function() {
             ul.innerHTML = '';
             if(querySnapshot.empty) { ul.innerHTML = '<li style="color:#64748b; text-align:center;">Na serveru nema sačuvanih potraga.</li>'; return; }
             
+            let potrageArr = [];
             querySnapshot.forEach((docSnap) => {
-                let d = docSnap.data();
-                let sifra = docSnap.id; 
+                potrageArr.push({ id: docSnap.id, data: docSnap.data() });
+            });
+            
+            potrageArr.sort((a, b) => {
+                let aktivnaA = !!a.data.aktivna;
+                let aktivnaB = !!b.data.aktivna;
+                if (aktivnaA !== aktivnaB) return aktivnaA ? -1 : 1; 
+                let redA = parseInt(a.data.redosled) || 999;
+                let redB = parseInt(b.data.redosled) || 999;
+                return redA - redB;
+            });
+            
+            potrageArr.forEach((potraga) => {
+                let d = potraga.data;
+                let sifra = potraga.id; 
                 let status = d.aktivna ? '<span style="color:#10b981; font-weight:bold;">Aktivna</span>' : '<span style="color:#ef4444; font-weight:bold;">Neaktivna</span>';
                 let toggleBtnTekst = d.aktivna ? '⏸ Deaktiviraj' : '▶️ Aktiviraj';
                 let toggleBtnBoja = d.aktivna ? '#f59e0b' : '#10b981';
                 let grupnaOznaka = d.isGrupna ? `<span style="background:#eff6ff; color:#1d4ed8; padding:3px 6px; border-radius:4px; font-size:12px; margin-left:10px;">🏆 Grupna (${d.brojTimova})</span>` : '';
+                let trenutniRedosled = d.redosled || 0;
 
                 ul.innerHTML += `
                 <li>
                     <div style="flex-grow: 1;">
                         <h4>${d.ime || 'Bez imena'} ${grupnaOznaka}</h4>
-                        <div style="font-size: 14px; color: #64748b;">Šifra: <b style="color:#0f172a;">${sifra}</b> | ${status} | Grad: ${d.grad || '?'}</div>
+                        <div style="font-size: 14px; color: #64748b; margin-top:5px;">
+                            Šifra: <b style="color:#0f172a;">${sifra}</b> | ${status} | Grad: ${d.grad || '?'}
+                        </div>
+                        <div style="margin-top: 8px; display:flex; align-items:center; gap: 8px;">
+                            <label style="font-size: 13px; font-weight:bold; color: #475569; margin:0;">Redosled prikaza (0-99):</label>
+                            <input type="number" value="${trenutniRedosled}" onchange="window.azurirajRedosledNaServeru('${sifra}', this.value)" style="width: 50px; padding: 4px; border: 1px solid #cbd5e1; border-radius: 6px; text-align: center; font-weight:bold; margin:0; background: #fff;">
+                        </div>
                     </div>
-                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap; align-items: flex-start;">
                         <button onclick="window.otvoriDashboard('${sifra}', '${(d.ime || 'Potraga').replace(/'/g, "\\'")}')" style="background:#8b5cf6; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:13px;">📊 Uživo</button>
                         <button onclick="window.ucitajSaServera('${sifra}')" style="background:#3b82f6; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:13px;">✏️ Izmeni</button>
                         <button onclick="window.toggleStatusNaServeru('${sifra}', ${d.aktivna})" style="background:${toggleBtnBoja}; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:13px;">${toggleBtnTekst}</button>
@@ -2358,6 +2451,16 @@ window.zatvoriPanelISacuvaj = function() {
                 </li>`;
             });
         } catch(e) { ul.innerHTML = `<li style="color:#dc2626; text-align:center;">Greška: ${e.message}</li>`; }
+    }
+
+    window.azurirajRedosledNaServeru = async function(sifra, novaVrednost) {
+        try {
+            let broj = parseInt(novaVrednost) || 0;
+            await window.updateDoc(window.doc(window.db, "potrage", sifra), { redosled: broj });
+            window.ucitajListuSaServera(); 
+        } catch(e) { 
+            alert("Greška pri snimanju redosleda: " + e.message); 
+        }
     }
 
     window.otvoriDashboard = function(sifra, imeStaze) {
@@ -2478,6 +2581,7 @@ window.zatvoriPanelISacuvaj = function() {
 
     window.ucitajPodatkeIzObjekta = function(d) {
         document.getElementById('gradPotrage').value = d.grad || ''; 
+      if(document.getElementById('unosJezikStaze')) document.getElementById('unosJezikStaze').value = d.jezik || 'sr';  
         document.getElementById('imePotrage').value = d.ime || ''; 
         document.getElementById('sifraPotrage').value = d.sifra || ''; 
         document.getElementById('promoTekst').value = d.objasnjenje || ''; 
