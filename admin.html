@@ -441,6 +441,7 @@
                         <div class="kretanje-grupa">
                             <button id="btnPesak" class="kretanje-btn aktivno" onclick="window.postaviKretanje('Pešak', this)">🚶 Pešak</button>
                             <button id="btnBicikl" class="kretanje-btn" onclick="window.postaviKretanje('Bicikl', this)">🚲 Bicikl</button>
+                            <button id="btnAuto" class="kretanje-btn" onclick="window.postaviKretanje('Automobil', this)" style="background:#fef2f2; border-color:#fecaca; color:#dc2626;">🚗 Auto-ruta</button>
                         </div>
                         <input type="hidden" id="izabranTipKretanja" value="Pešak">
 
@@ -758,6 +759,7 @@
             "lblTipKretanja": "Tip kretanja",
             "btnPesak": "🚶 Pešak",
             "btnBicikl": "🚲 Bicikl",
+            "btnAuto": "🚗 Auto-ruta",
             "lblMesanje": "🔀 Nasumičan redosled",
             "ttMesanje": "Zadaci će svakom igraču biti prikazani drugačijim redosledom.",
             "lblZdravlje": "🍏 Energija Bodovi",
@@ -828,6 +830,7 @@
             "lblTipKretanja": "Movement type",
             "btnPesak": "🚶 Walking",
             "btnBicikl": "🚲 Cycling",
+            "btnAuto": "🚗 Car route",
             "lblMesanje": "🔀 Randomize order",
             "ttMesanje": "Tasks will be shown to each player in a different random order.",
             "lblZdravlje": "🍏 Energy Points",
@@ -937,6 +940,7 @@
         document.getElementById('lblTipKretanja').innerText = r.lblTipKretanja;
         document.getElementById('btnPesak').innerText = r.btnPesak;
         document.getElementById('btnBicikl').innerText = r.btnBicikl;
+        document.getElementById('btnAuto').innerText = r.btnAuto;
         
         document.getElementById('lblMesanje').innerText = r.lblMesanje;
         document.getElementById('lblZdravlje').innerHTML = `🍏 ${r.lblZdravlje}`;
