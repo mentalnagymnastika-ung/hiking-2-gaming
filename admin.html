@@ -2472,7 +2472,7 @@ window.ucitajListuSaServera = async function() {
         } catch(e) { ul.innerHTML = `<li style="color:#dc2626; text-align:center;">Greška: ${e.message}</li>`; }
     }
 
-    window.azurirajRedosledNaServeru = async function(sifra, novaVrednost) {
+window.azurirajRedosledNaServeru = async function(sifra, novaVrednost) {
         try {
             let broj = parseInt(novaVrednost) || 0;
             await window.updateDoc(window.doc(window.db, "potrage", sifra), { redosled: broj });
