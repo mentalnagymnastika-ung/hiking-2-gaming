@@ -420,6 +420,18 @@
             </div>
         </div>
 
+        <!-- RPG MONETIZACIJA: BESPLATNO ILI ZAKLJUČANO -->
+<label style="margin-top: 20px;">🔓 Vrsta pristupa stazi</label>
+<select id="unosPristupTip" onchange="window.skretniPrikazCene()" style="width: 100%; padding: 12px 15px; border-radius: 8px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: bold; color: #0f172a; outline:none;">
+    <option value="da">🔓 Besplatna staza (Otvorena za sve letnje posetioce)</option>
+    <option value="ne">🔒 Zaključana staza (Kupuje se sakupljenim zlatnicima)</option>
+</select>
+
+<div id="kontejnerCeneMreze" style="display: none; margin-top: 15px; background: #fff3e0; padding: 15px; border-radius: 8px; border: 1px dashed #e65100;">
+    <label style="margin-top:0; font-size:16px; color:#e65100; font-weight: bold;">🪙 Cena ove staze u zlatnicima</label>
+    <input type="number" id="cenaStazeZlatnici" value="70" min="1" style="background: white; border: 1px solid #cbd5e1; font-weight: bold; color: #e65100; text-align: center;">
+</div>
+
         <div class="paralelne-karte">
             <div class="karta-pola">
                 <details class="napredno">
@@ -714,6 +726,12 @@
     window.mojKrugPreciznosti = null;
     window.pracenjeLokacijeId = null;
     window.dashUnsubscribe = null;
+
+    window.skretniPrikazCene = function() {
+    let tip = document.getElementById('unosPristupTip').value;
+    document.getElementById('kontejnerCeneMreze').style.display = (tip === 'ne') ? 'block' : 'none';
+    window.promeneNisuSnimljene = true;
+};
 
     window.pocniPrevlacenjePanela = function(e) {
         if (e.target.closest('button')) return;
@@ -1465,6 +1483,11 @@
         document.getElementById('checkGrupna').checked = false;
         window.promoSlikaBase64 = ''; window.slikeZadatakaMap = {}; document.getElementById('trajanjePotrage').selectedIndex = 0;
         window.postaviKretanje('Pešak', document.getElementById('btnPesak'));
+        
+        document.getElementById('unosPristupTip').value = 'da';
+        document.getElementById('cenaStazeZlatnici').value = 50;
+        window.skretniPrikazCene();
+        
         window.obrisiSveBezPitanja(); window.izracunajVarijacije(); window.promeneNisuSnimljene = false;
     }
 
@@ -2299,6 +2322,8 @@ window.zatvoriPanelISacuvaj = function() {
 
         let data = { 
             grad: document.getElementById('gradPotrage').value || "Nepoznata lokacija", ime: document.getElementById('imePotrage').value || "Nova Potraga", sifra: sifra, autor: autor,
+            besplatna: document.getElementById('unosPristupTip').value === 'da',
+            cena: parseInt(document.getElementById('cenaStazeZlatnici').value) || 50,
             aktivna: false, trajanje: document.getElementById('trajanjePotrage').value, tip: document.getElementById('izabranTipKretanja').value, objasnjenje: document.getElementById('promoTekst').value, promoSlika: window.promoSlikaBase64,
             mesanjeRute: isGrupna ? false : document.getElementById('mesanjeRute').checked, 
             isGrupna: isGrupna, brojTimova: isGrupna ? brojTimova : 0, grupnaLogika: isGrupna ? grupnaLogika : "",
@@ -2385,6 +2410,8 @@ window.zatvoriPanelISacuvaj = function() {
             ime: document.getElementById('imePotrage').value || "Nova Potraga", 
             sifra: sifra, 
             autor: autor,
+            besplatna: document.getElementById('unosPristupTip').value === 'da',
+            cena: parseInt(document.getElementById('cenaStazeZlatnici').value) || 50,
             aktivna: isAktivna, 
             trajanje: document.getElementById('trajanjePotrage').value, 
             tip: document.getElementById('izabranTipKretanja').value, 
@@ -2584,6 +2611,8 @@ window.azurirajRedosledNaServeru = async function(sifra, novaVrednost) {
             ime: document.getElementById('imePotrage').value || "", 
             sifra: document.getElementById('sifraPotrage').value || "", 
             autor: document.getElementById('autorPotrage').value || "",
+            besplatna: document.getElementById('unosPristupTip').value === 'da',
+            cena: parseInt(document.getElementById('cenaStazeZlatnici').value) || 50,
             trajanje: document.getElementById('trajanjePotrage').value, 
             tip: document.getElementById('izabranTipKretanja').value, 
             objasnjenje: document.getElementById('promoTekst').value, 
@@ -2613,6 +2642,14 @@ window.azurirajRedosledNaServeru = async function(sifra, novaVrednost) {
         document.getElementById('autorPotrage').value = d.autor || '';
         document.getElementById('mesanjeRute').checked = !!d.mesanjeRute; 
         document.getElementById('checkGrupna').checked = !!d.isGrupna;
+        
+        if (d.besplatna !== undefined) {
+            document.getElementById('unosPristupTip').value = d.besplatna ? 'da' : 'ne';
+        } else {
+            document.getElementById('unosPristupTip').value = 'da';
+        }
+        document.getElementById('cenaStazeZlatnici').value = d.cena || 50;
+        window.skretniPrikazCene();
         
         if (document.getElementById('checkTakmicarski')) {
             document.getElementById('checkTakmicarski').checked = !!d.takmicarskiMod;
