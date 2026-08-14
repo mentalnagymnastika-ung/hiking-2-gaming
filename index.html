@@ -2930,6 +2930,24 @@ window.prikaziZadatak = function() {
 
             let pin = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
             let tip = pin.zadatak?.tip || 'zagonetka';
+            
+            // =====================================================================
+            // 🌟 NOVO: AUTOMATSKO PRESKAKANJE (Ako nema pravog zadatka na lokaciji)
+            // =====================================================================
+            let prazanTekst = !pin.zadatak?.tekst_zadatka || pin.zadatak.tekst_zadatka.trim() === '';
+            // Preskačemo ekran zadatka ako je tip čisto 'zlatnik', ili ako si ostavio zagonetku skroz praznu!
+            let nemaPravogZadatka = (tip === 'zlatnik') || (prazanTekst && (tip === 'zagonetka' || tip === 'info'));
+
+            if (nemaPravogZadatka) {
+                // Sakrivamo kontejner da ne blinka prazan UI dok se animacija završava
+                document.getElementById('zadatakKontejner').style.display = 'none';
+                
+                // Automatski proglašavamo zadatak uspešnim (upisuje zlatnik i baca na ekran "Kuda dalje")
+                window.uspehZadatka();
+                return; 
+            }
+            // =====================================================================
+
             let slikaUI = document.getElementById('slikaZadatkaUUI');
             
             if (tip === 'igrica') {
@@ -3817,6 +3835,14 @@ window.pokreniOtkljucavanje = function() {
 
                 if (udaljenostDoSledece <= radijusSledece) {
                     document.getElementById('txtZavesa').innerText = window.recnik[window.trenutniJezik].lokacijaTacna || "DA! Stigli ste na pravu lokaciju!";
+                    
+                    // =========================================================
+                    // 🌟 NOVO: ULAZAK U PORTAL (Automatski zvuk i animacija)
+                    // =========================================================
+                    if (typeof window.pokaziZlatnikAnimaciju === 'function') {
+                        window.pokaziZlatnikAnimaciju();
+                    }
+
                     setTimeout(() => {
                         document.getElementById('zavesaProvere').style.display = 'none';
                         window.prikaziZadatak();
@@ -4058,7 +4084,7 @@ window.pokreniSonarTrag = function() {
         }, 2000);
     }
 
-    window.naUspesnoSkeniranje = function(dekodiranTekst, decodedResult) {
+window.naUspesnoSkeniranje = function(dekodiranTekst, decodedResult) {
         if(!window.traziSeKod) return; 
 
         window.traziSeKod = false;
@@ -4079,7 +4105,15 @@ window.pokreniSonarTrag = function() {
                 
                 if(String(procSifra).toLowerCase() === String(pravaSifra).toLowerCase() && String(procId) === String(trenutniPin.id)) {
                     alert(window.trenutniJezik === 'sr' ? "✅ Lokacija uspešno potvrđena preko QR koda!" : "✅ Location confirmed via QR code!");
-                    window.prikaziZadatak(); 
+                    
+                    // =========================================================
+                    // 🌟 NOVO: ULAZAK U PORTAL (Preko QR Koda)
+                    // =========================================================
+                    if (typeof window.pokaziZlatnikAnimaciju === 'function') {
+                        window.pokaziZlatnikAnimaciju();
+                    }
+
+                    setTimeout(() => { window.prikaziZadatak(); }, 500); 
                 } else {
                     alert(window.trenutniJezik === 'sr' ? "❌ Ovo je QR kod sa pogrešne lokacije ili iz druge potrage!" : "❌ Wrong location or quest QR code!");
                 }
