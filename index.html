@@ -1593,41 +1593,43 @@ window.prikaziEkran = function(idEkrana) {
     }
 
 // 🔄 AUTOMATSKA SINHRONIZACIJA OTKLJUČANIH STAZA IZ SERVERSKOG SEFA
-    window.sinhronizujOtkljucaneStazeIzSefa = async function() {
-        try {
-            let otisak = window.dajOtisakUredjaja();
-            if (!otisak) return;
+window.sinhronizujOtkljucaneStazeIzSefa = async function() {
+    try {
+        let sacuvaniEmail = localStorage.getItem('korisnik_email');
+        
+        if (!sacuvaniEmail) {
+            localStorage.setItem('otkljucane_staze', JSON.stringify([]));
+            return;
+        }
 
-            // Pretražujemo sefove u bazi koji su vezani za ovaj telefon
-            const q = window.query(
-                window.collection(window.db, "sefovi"), 
-                window.where("registeredDeviceId", "==", otisak)
-            );
-            const querySnapshot = await window.getDocs(q);
+        // Povlačimo Sef striktno preko e-mail adrese, NEMA MEŠANJA PROFILA
+        const sefRef = window.doc(window.db, "sefovi", sacuvaniEmail);
+        const sefSnap = await window.getDoc(sefRef);
 
-            if (!querySnapshot.empty) {
-                let sefDoc = querySnapshot.docs[0];
-                let sefData = sefDoc.data();
+        if (sefSnap.exists()) {
+            let sefData = sefSnap.data();
+            let trenutniOtisak = window.dajOtisakUredjaja();
+            
+            // Provera: Da li e-mail zaista pripada ovom uređaju?
+            if (sefData.registeredDeviceId === trenutniOtisak) {
                 let stazeIzBaze = sefData.otkljucaneStaze || [];
-
-                // Ažuriramo lokalnu memoriju telefona na osnovu stanja iz BAZA SEFA
                 localStorage.setItem('otkljucane_staze', JSON.stringify(stazeIzBaze));
-                localStorage.setItem('korisnik_email', sefDoc.id);
+                
                 if (sefData.zlatnici !== undefined) {
                     localStorage.setItem('lokalni_zlatnici', sefData.zlatnici);
                 }
             } else {
-                // Ako telefon nije vezan ni za jedan sef, brišemo stare lokalne dozvole
-                // (Ovo garantuje da su sve premium staze zaključane za nove/anonimne korisnike)
-                let sacuvaniEmail = localStorage.getItem('korisnik_email');
-                if (!sacuvaniEmail) {
-                    localStorage.setItem('otkljucane_staze', JSON.stringify([]));
-                }
+                // Ako je Sef vezan za tuđi telefon, brišemo lokalne podatke
+                localStorage.removeItem('korisnik_email');
+                localStorage.setItem('otkljucane_staze', JSON.stringify([]));
             }
-        } catch (e) {
-            console.error("Greška pri sinhronizaciji Sefa:", e);
+        } else {
+            localStorage.setItem('otkljucane_staze', JSON.stringify([]));
         }
-    };
+    } catch (e) {
+        console.error("Greška pri sinhronizaciji Sefa:", e);
+    }
+};
 
 window.ucitajAktivnePotrage = async function() {
         let kontejner = document.getElementById('listaPotraga');
