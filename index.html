@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -2015,12 +2015,38 @@ let safeSifra = String(podaci.sifra).replace(/'/g, "\\'");
         return R * c;
     }
 
-    window.izaberiPotraguPoSifri = function(sifra) {
+window.izaberiPotraguPoSifri = function(sifra) {
+        window.VIP_SIFRA_ZA_AUTOFIL = null; // 🌟 OVO JE TA JEDNA DODATA LINIJA
         let podaci = window.sveAktivnePotrage.find(p => String(p.sifra).toLowerCase() === String(sifra).toLowerCase());
         if(podaci) window.izaberiPotragu(podaci);
     }
- // --- PAMETNI IZBOR TEŽINE STAZE deo jedan---
+// --- PAMETNI IZBOR TEŽINE STAZE deo jedan---
 window.izaberiPotragu = function(podaci) {
+        
+        // 🌟 PAMETNO OKRETANJE LINIJSKE STAZE ZAVISNO OD LOKACIJE IGRAČA
+        if (window.zadnjaGeoPozicija && podaci.pinovi && podaci.pinovi.length > 1) {
+            let userLat = window.zadnjaGeoPozicija.lat;
+            let userLng = window.zadnjaGeoPozicija.lng;
+            
+            let prvaTacka = podaci.pinovi[0];
+            let poslednjaTacka = podaci.pinovi[podaci.pinovi.length - 1];
+            
+            // Merimo vazdušnu liniju od igrača do prvog i do poslednjeg zadatka
+            let udaljenostStart = window.izracunajUdaljenost(userLat, userLng, prvaTacka.lat, prvaTacka.lng);
+            let udaljenostCilj = window.izracunajUdaljenost(userLat, userLng, poslednjaTacka.lat, poslednjaTacka.lng);
+            
+            // Ako je cilj bliži, okrećemo stazu unazad
+            if (udaljenostCilj < udaljenostStart) {
+                console.log("Igrač je bliži kraju staze. Okrećem redosled zadataka!");
+                podaci.pinovi.reverse(); // Magija koja preokreće niz
+                
+                // Ažuriramo startne koordinate kako bi mapa pokazala pravo mesto
+                podaci.startLat = poslednjaTacka.lat;
+                podaci.startLng = poslednjaTacka.lng;
+            }
+        }
+        // -------------------------------------------------------------
+
         window.odabranaPotraga = podaci;
         
         // 1. KORAK: Priprema ekrana sa informacijama o stazi (Intro ekran)
@@ -2035,7 +2061,7 @@ window.izaberiPotragu = function(podaci) {
         
         // Odmah prikazujemo info ekran umesto prijave
         window.prikaziEkran('ekranIntro');
-    }
+    };
 
  // NOVA FUNKCIJA: Kada igrač na Intro ekranu klikne "PRIJAVI EKIPU"
 // FUNKCIJA ZA OTVARANJE PRIJAVE TIMA (Ekran gde biraju boju)
