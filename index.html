@@ -2330,61 +2330,93 @@ window.idiNaPrijavu = function() {
 
 window.napraviNovuSesiju = async function() {
     window.potragaPodaci = JSON.parse(JSON.stringify(window.odabranaPotraga)); 
+    let tipKretanja = window.potragaPodaci.tip || 'Pešak';
 
-    // 1. GEOFENCING PROVERA (3 kilometra)
     if (window.zadnjaGeoPozicija && window.potragaPodaci.pinovi && window.potragaPodaci.pinovi.length > 1) {
         let userLat = window.zadnjaGeoPozicija.lat;
         let userLng = window.zadnjaGeoPozicija.lng;
+        
         let prvaTacka = window.potragaPodaci.pinovi[0];
         let poslednjaTacka = window.potragaPodaci.pinovi[window.potragaPodaci.pinovi.length - 1];
         
-        // Koristimo tvoju postojeću funkciju za računanje udaljenosti (u metrima)
         let distStart = window.izracunajUdaljenost(userLat, userLng, prvaTacka.lat, prvaTacka.lng);
         let distCilj = window.izracunajUdaljenost(userLat, userLng, poslednjaTacka.lat, poslednjaTacka.lng);
-        
-        // 3000 metara = 3km
-        if (distStart > 3000 && distCilj > 3000) {
-            if (typeof window.prikaziObavestenjeSredina === 'function') {
-                window.prikaziObavestenjeSredina("Niste na lokaciji", "Da biste započeli ovu avanturu, morate se nalaziti na lokaciji staze (najdalje 3km od starta ili cilja).", "🛑", "#ef4444");
-            } else {
-                alert("Da biste započeli ovu avanturu, morate se nalaziti na lokaciji staze (najdalje 3km).");
+        let razmakStartCilj = window.izracunajUdaljenost(prvaTacka.lat, prvaTacka.lng, poslednjaTacka.lat, poslednjaTacka.lng);
+
+        let jeKruzna = razmakStartCilj <= 80;
+
+        if (jeKruzna) {
+            // ==========================================
+            // SCENARIO 1: KRUŽNA STAZA (Multi-entry krug)
+            // ==========================================
+            let sviPinovi = [...window.potragaPodaci.pinovi];
+            let krajnjiPinIndeks = sviPinovi.findIndex(p => p.zadatak && p.zadatak.isKrajnjaPoruka === true);
+
+            if (krajnjiPinIndeks !== -1) {
+                let krajnjiPin = sviPinovi[krajnjiPinIndeks];
+                let obicniPinovi = sviPinovi.filter((_, idx) => idx !== krajnjiPinIndeks);
+
+                let minUd = 999999;
+                let najbliziObicniIndeks = 0;
+
+                for (let i = 0; i < obicniPinovi.length; i++) {
+                    let ud = window.izracunajUdaljenost(userLat, userLng, obicniPinovi[i].lat, obicniPinovi[i].lng);
+                    if (ud < minUd) {
+                        minUd = ud;
+                        najbliziObicniIndeks = i;
+                    }
+                }
+                
+                let rotiraniObicni = obicniPinovi.slice(najbliziObicniIndeks).concat(obicniPinovi.slice(0, najbliziObicniIndeks));
+                window.potragaPodaci.pinovi = [...rotiraniObicni, krajnjiPin];
             }
-            let btnKreni = document.getElementById('btnKreni');
-            if(btnKreni) btnKreni.innerText = window.recnik[window.trenutniJezik].btnKreni; 
-            return; // Blokira kreiranje sesije
+            window.zavrsiKreiranjeSesije(false); 
+
+        } else {
+            // ==========================================
+            // SCENARIO 2: LINIJSKA STAZA (> 80m razmaka)
+            // ==========================================
+            
+            if (tipKretanja === 'Pešak') {
+                // A) PEŠACI: Nema blokade ulaska! Sistem sam odlučuje smer 
+                // ako su bliži cilju, inače ih mehanika čeka na proveri lokacije zadatka 1.
+                let okreniStazu = distCilj < distStart;
+                window.zavrsiKreiranjeSesije(okreniStazu);
+
+            } else {
+                // B) AUTO/BICIKL: Nema blokade! Izbacujemo modal da sami odaberu smer putovanja.
+                let imePocetka = prvaTacka.imeLokacije || "Glavni Start";
+                let imeCilja = poslednjaTacka.imeLokacije || "Druga strana staze";
+                
+                let modal = document.createElement('div');
+                modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100000; display:flex; justify-content:center; align-items:center; padding:20px; backdrop-filter:blur(5px);";
+                
+                modal.innerHTML = `
+                    <div style="background:#fff; padding:25px; border-radius:16px; max-width:400px; width:100%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.3); border:4px solid #3b82f6;">
+                        <h2 style="margin-top:0; color:#0f172a; font-size:22px; font-weight:900; text-transform:uppercase;">U kom pravcu idete?</h2>
+                        <p style="color:#475569; font-size:15px; margin-bottom:20px; font-weight:bold;">Odaberite vaš željeni smer putovanja:</p>
+                        <button id="btnSmerStart" style="width:100%; padding:15px; background:#10b981; color:white; border:none; border-radius:10px; font-weight:900; font-size:16px; cursor:pointer; margin-bottom:12px; box-shadow:0 4px 6px rgba(16,185,129,0.3);">
+                            ➡️ IDEM KA: ${imePocetka.toUpperCase()}
+                        </button>
+                        <button id="btnSmerCilj" style="width:100%; padding:15px; background:#f59e0b; color:white; border:none; border-radius:10px; font-weight:900; font-size:16px; cursor:pointer; box-shadow:0 4px 6px rgba(245,158,11,0.3);">
+                            ➡️ IDEM KA: ${imeCilja.toUpperCase()}
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+                document.getElementById('btnSmerStart').onclick = function() {
+                    modal.remove();
+                    window.zavrsiKreiranjeSesije(true); // Ako ide ka startu, znači da okreće stazu unazad
+                };
+                document.getElementById('btnSmerCilj').onclick = function() {
+                    modal.remove();
+                    window.zavrsiKreiranjeSesije(false); // Ako ide ka cilju, ide normalnim redosledom
+                };
+            }
         }
-
-        // 2. POP-UP ZA IZBOR LOKACIJE
-        let imePocetka = prvaTacka.imeLokacije || "Glavni Start";
-        let imeCilja = poslednjaTacka.imeLokacije || "Druga strana staze";
-        
-        let modal = document.createElement('div');
-        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100000; display:flex; justify-content:center; align-items:center; padding:20px; backdrop-filter:blur(5px);";
-        
-        modal.innerHTML = `
-            <div style="background:#fff; padding:25px; border-radius:16px; max-width:400px; width:100%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.3); border:4px solid #3b82f6;">
-                <h2 style="margin-top:0; color:#0f172a; font-size:22px; font-weight:900; text-transform:uppercase;">Odakle krećete?</h2>
-                <p style="color:#475569; font-size:15px; margin-bottom:20px; font-weight:bold;">Odaberite lokaciju na kojoj se trenutno nalazite:</p>
-                <button id="btnSmerStart" style="width:100%; padding:15px; background:#10b981; color:white; border:none; border-radius:10px; font-weight:900; font-size:16px; cursor:pointer; margin-bottom:12px; box-shadow:0 4px 6px rgba(16,185,129,0.3);">
-                    📍 LOKACIJA: ${imePocetka.toUpperCase()}
-                </button>
-                <button id="btnSmerCilj" style="width:100%; padding:15px; background:#f59e0b; color:white; border:none; border-radius:10px; font-weight:900; font-size:16px; cursor:pointer; box-shadow:0 4px 6px rgba(245,158,11,0.3);">
-                    📍 LOKACIJA: ${imeCilja.toUpperCase()}
-                </button>
-            </div>
-        `;
-        document.body.appendChild(modal);
-
-        document.getElementById('btnSmerStart').onclick = function() {
-            modal.remove();
-            window.zavrsiKreiranjeSesije(false);
-        };
-        document.getElementById('btnSmerCilj').onclick = function() {
-            modal.remove();
-            window.zavrsiKreiranjeSesije(true);
-        };
     } else {
-        // Nema GPS-a ili je staza prekratka - kreće normalno
+        // Nema GPS-a - kreće po difoltu (bez okretanja)
         window.zavrsiKreiranjeSesije(false);
     }
 };
