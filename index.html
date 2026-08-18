@@ -2329,138 +2329,167 @@ window.idiNaPrijavu = function() {
     };
 
 window.napraviNovuSesiju = async function() {
-        window.potragaPodaci = JSON.parse(JSON.stringify(window.odabranaPotraga)); 
+    window.potragaPodaci = JSON.parse(JSON.stringify(window.odabranaPotraga)); 
 
-        let jeRotirana = false; // 🌟 Definissano na vrhu da bude dostupno celoj funkciji
-
-        // 🌟 MULTI-ENTRY KRUGOVI I FINIŠ
-        if (window.zadnjaGeoPozicija && window.potragaPodaci.pinovi && window.potragaPodaci.pinovi.length > 1) {
-            let userLat = window.zadnjaGeoPozicija.lat;
-            let userLng = window.zadnjaGeoPozicija.lng;
-            let sviPinovi = [...window.potragaPodaci.pinovi];
-
-            let krajnjiPinIndeks = sviPinovi.findIndex(p => p.zadatak && p.zadatak.isKrajnjaPoruka === true);
-
-            if (krajnjiPinIndeks !== -1) {
-                let krajnjiPin = sviPinovi[krajnjiPinIndeks];
-                let obicniPinovi = sviPinovi.filter((_, idx) => idx !== krajnjiPinIndeks);
-
-                let minUd = 999999;
-                let najbliziObicniIndeks = 0;
-
-                for (let i = 0; i < obicniPinovi.length; i++) {
-                    let ud = window.izracunajUdaljenost(userLat, userLng, obicniPinovi[i].lat, obicniPinovi[i].lng);
-                    if (ud < minUd) {
-                        minUd = ud;
-                        najbliziObicniIndeks = i;
-                    }
-                }
-
-                if (najbliziObicniIndeks > 0) {
-                    jeRotirana = true; // Zabeženo da je igrač krenuo sa druge tačke
-                }
-
-                let rotiraniObicni = obicniPinovi.slice(najbliziObicniIndeks).concat(obicniPinovi.slice(0, najbliziObicniIndeks));
-                window.potragaPodaci.pinovi = [...rotiraniObicni, krajnjiPin];
-
-            } else {
-                let prviPin = sviPinovi[0];
-                let zadnjiPin = sviPinovi[sviPinovi.length - 1];
-                let isKruzna = window.izracunajUdaljenost(prviPin.lat, prviPin.lng, zadnjiPin.lat, zadnjiPin.lng) <= 80;
-
-                let minUd = 999999;
-                let najbliziIndeks = 0;
-
-                for (let i = 0; i < sviPinovi.length; i++) {
-                    let ud = window.izracunajUdaljenost(userLat, userLng, sviPinovi[i].lat, sviPinovi[i].lng);
-                    if (ud < minUd) {
-                        minUd = ud;
-                        najbliziIndeks = i;
-                    }
-                }
-
-                if (najbliziIndeks > 0) {
-                    jeRotirana = true;
-                }
-
-                if (isKruzna && najbliziIndeks > 0) {
-                    window.potragaPodaci.pinovi = sviPinovi.slice(najbliziIndeks).concat(sviPinovi.slice(0, najbliziIndeks));
-                } else if (!isKruzna && najbliziIndeks >= Math.floor(sviPinovi.length / 2)) {
-                    window.potragaPodaci.pinovi.reverse();
-                }
-            }
-        }
+    // 1. GEOFENCING PROVERA (3 kilometra)
+    if (window.zadnjaGeoPozicija && window.potragaPodaci.pinovi && window.potragaPodaci.pinovi.length > 1) {
+        let userLat = window.zadnjaGeoPozicija.lat;
+        let userLng = window.zadnjaGeoPozicija.lng;
+        let prvaTacka = window.potragaPodaci.pinovi[0];
+        let poslednjaTacka = window.potragaPodaci.pinovi[window.potragaPodaci.pinovi.length - 1];
         
-        // --- LOGIKA ZA GRUPE I NASUMIČNO MEŠANJE ZADATAKA ---
-        if (window.potragaPodaci.isGrupna && window.potragaPodaci.ruteTimova) {
-            let br = document.getElementById('unosBrojTima').value;
-            if(window.potragaPodaci.ruteTimova[br]) window.potragaPodaci.pinovi = window.potragaPodaci.ruteTimova[br];
-        } else if(window.potragaPodaci.mesanjeRute && window.potragaPodaci.pinovi && window.potragaPodaci.pinovi.length > 1) {
-            if (window.potragaPodaci.pinovi[0].isPocetna) {
-                let prviPin = window.potragaPodaci.pinovi[0]; 
-                let ostaliPinovi = window.potragaPodaci.pinovi.slice(1); 
-                for (let i = ostaliPinovi.length - 1; i > 0; i--) { 
-                    const j = Math.floor(Math.random() * (i + 1)); 
-                    [ostaliPinovi[i], ostaliPinovi[j]] = [ostaliPinovi[j], ostaliPinovi[i]]; 
-                }
-                window.potragaPodaci.pinovi = [prviPin, ...ostaliPinovi]; 
+        // Koristimo tvoju postojeću funkciju za računanje udaljenosti (u metrima)
+        let distStart = window.izracunajUdaljenost(userLat, userLng, prvaTacka.lat, prvaTacka.lng);
+        let distCilj = window.izracunajUdaljenost(userLat, userLng, poslednjaTacka.lat, poslednjaTacka.lng);
+        
+        // 3000 metara = 3km
+        if (distStart > 3000 && distCilj > 3000) {
+            if (typeof window.prikaziObavestenjeSredina === 'function') {
+                window.prikaziObavestenjeSredina("Niste na lokaciji", "Da biste započeli ovu avanturu, morate se nalaziti na lokaciji staze (najdalje 3km od starta ili cilja).", "🛑", "#ef4444");
             } else {
-                let sh = [...window.potragaPodaci.pinovi];
-                for (let i = sh.length - 1; i > 0; i--) { 
-                    const j = Math.floor(Math.random() * (i + 1)); 
-                    [sh[i], sh[j]] = [sh[j], sh[i]]; 
-                }
-                window.potragaPodaci.pinovi = sh;
+                alert("Da biste započeli ovu avanturu, morate se nalaziti na lokaciji staze (najdalje 3km).");
             }
+            let btnKreni = document.getElementById('btnKreni');
+            if(btnKreni) btnKreni.innerText = window.recnik[window.trenutniJezik].btnKreni; 
+            return; // Blokira kreiranje sesije
         }
 
-        let tezinaSelect = document.getElementById('unosTezina');
-        let odabranaBoja = "bela";
-        if (tezinaSelect && tezinaSelect.value) {
-            let odabranaDuzina = parseInt(tezinaSelect.value);
-            if (odabranaDuzina > 0 && odabranaDuzina < window.potragaPodaci.pinovi.length) {
-                window.potragaPodaci.pinovi = window.potragaPodaci.pinovi.slice(0, odabranaDuzina);
-            }
-            if (tezinaSelect.options[tezinaSelect.selectedIndex]) {
-                let tekstOpcije = tezinaSelect.options[tezinaSelect.selectedIndex].text.toLowerCase();
-                if (tekstOpcije.includes("plava")) {
-                    odabranaBoja = "plava";
-                } else if (tekstOpcije.includes("crvena")) {
-                    odabranaBoja = "crvena";
-                }
-            }
-        }
+        // 2. POP-UP ZA IZBOR LOKACIJE
+        let imePocetka = prvaTacka.imeLokacije || "Glavni Start";
+        let imeCilja = poslednjaTacka.imeLokacije || "Druga strana staze";
+        
+        let modal = document.createElement('div');
+        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100000; display:flex; justify-content:center; align-items:center; padding:20px; backdrop-filter:blur(5px);";
+        
+        modal.innerHTML = `
+            <div style="background:#fff; padding:25px; border-radius:16px; max-width:400px; width:100%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.3); border:4px solid #3b82f6;">
+                <h2 style="margin-top:0; color:#0f172a; font-size:22px; font-weight:900; text-transform:uppercase;">Odakle krećete?</h2>
+                <p style="color:#475569; font-size:15px; margin-bottom:20px; font-weight:bold;">Odaberite lokaciju na kojoj se trenutno nalazite:</p>
+                <button id="btnSmerStart" style="width:100%; padding:15px; background:#10b981; color:white; border:none; border-radius:10px; font-weight:900; font-size:16px; cursor:pointer; margin-bottom:12px; box-shadow:0 4px 6px rgba(16,185,129,0.3);">
+                    📍 LOKACIJA: ${imePocetka.toUpperCase()}
+                </button>
+                <button id="btnSmerCilj" style="width:100%; padding:15px; background:#f59e0b; color:white; border:none; border-radius:10px; font-weight:900; font-size:16px; cursor:pointer; box-shadow:0 4px 6px rgba(245,158,11,0.3);">
+                    📍 LOKACIJA: ${imeCilja.toUpperCase()}
+                </button>
+            </div>
+        `;
+        document.body.appendChild(modal);
 
-        let sada = new Date().getTime();
-        window.sesijaPodaci = { 
-            timId: window.timIdentifikator, 
-            imePrikaz: window.tempImeTimaZaBazu, 
-            sifra: window.odabranaPotraga.sifra, 
-            partner: window.trenutniAmbasador || "", 
-            bojaStaze: odabranaBoja,
-            trenutniIndeks: 0, 
-            zdravlje: 100, 
-            expiresAt: sada + window.racunajTrajanjeUMs(window.potragaPodaci.trajanje), 
-            kreirano: sada, 
-            zavrsena: false, 
-            pinovi: window.potragaPodaci.pinovi,
-            zavrseneTacke: [],
-            preskoceneTacke: 0,
-            stazaRotirana: jeRotirana // Safe reading!
+        document.getElementById('btnSmerStart').onclick = function() {
+            modal.remove();
+            window.zavrsiKreiranjeSesije(false);
         };
-        
-        try {
-            localStorage.setItem('aktivna_sesija_id', window.timIdentifikator);
-            localStorage.setItem('offline_sesija_' + window.timIdentifikator, JSON.stringify(window.sesijaPodaci));
-            localStorage.setItem('offline_potraga_' + window.timIdentifikator, JSON.stringify(window.potragaPodaci));
+        document.getElementById('btnSmerCilj').onclick = function() {
+            modal.remove();
+            window.zavrsiKreiranjeSesije(true);
+        };
+    } else {
+        // Nema GPS-a ili je staza prekratka - kreće normalno
+        window.zavrsiKreiranjeSesije(false);
+    }
+};
+
+window.zavrsiKreiranjeSesije = async function(okreniStazu) {
+    let jeRotirana = okreniStazu;
+    let pinovi = window.potragaPodaci.pinovi;
+
+    // A) SPAŠAVANJE ZAVRŠNE PORUKE
+    window.GlavnaZavrsnaPoruka = "";
+    let indexKrajnje = pinovi.findIndex(p => p.zadatak && p.zadatak.isKrajnjaPoruka);
+    if (indexKrajnje !== -1) {
+        window.GlavnaZavrsnaPoruka = pinovi[indexKrajnje].zadatak.usmeravanje;
+        pinovi[indexKrajnje].zadatak.isKrajnjaPoruka = false;
+        pinovi[indexKrajnje].zadatak.usmeravanje = ""; // Praznimo, biće popunjeno novom rutom
+    }
+
+    // B) OKRETANJE I PEGLANJE SMERNICA
+    if (okreniStazu) {
+        pinovi.reverse();
+        for (let i = 0; i < pinovi.length - 1; i++) {
+            let sledecaTacka = pinovi[i + 1];
+            let ime = sledecaTacka.imeLokacije || `Tačka ${sledecaTacka.broj}`;
+            let opis = sledecaTacka.opisLokacije ? ` - ${sledecaTacka.opisLokacije}` : "";
             
-            await window.setDoc(window.doc(window.db, "sesije", window.timIdentifikator), window.sesijaPodaci);
-            window.pokreniPrikaz();
-        } catch(e) {
-            console.error("Greška pri komunikaciji sa serverom:", e);
-            window.pokreniPrikaz(); 
+            if (pinovi[i].zadatak) {
+                pinovi[i].zadatak.usmeravanje = `${window.trenutniJezik === 'sr' ? 'Sledeća lokacija:' : 'Next location:'} ${ime}${opis}`;
+            }
         }
+        // Ostavljamo zadnju tačku novog niza potpuno praznom
+        if (pinovi[pinovi.length - 1].zadatak) {
+            pinovi[pinovi.length - 1].zadatak.usmeravanje = "";
+        }
+    }
+
+    // --- LOGIKA ZA GRUPE I NASUMIČNO MEŠANJE ZADATAKA ---
+    if (window.potragaPodaci.isGrupna && window.potragaPodaci.ruteTimova) {
+        let br = document.getElementById('unosBrojTima').value;
+        if(window.potragaPodaci.ruteTimova[br]) window.potragaPodaci.pinovi = window.potragaPodaci.ruteTimova[br];
+    } else if(window.potragaPodaci.mesanjeRute && window.potragaPodaci.pinovi && window.potragaPodaci.pinovi.length > 1) {
+        if (window.potragaPodaci.pinovi[0].isPocetna) {
+            let prviPin = window.potragaPodaci.pinovi[0]; 
+            let ostaliPinovi = window.potragaPodaci.pinovi.slice(1); 
+            for (let i = ostaliPinovi.length - 1; i > 0; i--) { 
+                const j = Math.floor(Math.random() * (i + 1)); 
+                [ostaliPinovi[i], ostaliPinovi[j]] = [ostaliPinovi[j], ostaliPinovi[i]]; 
+            }
+            window.potragaPodaci.pinovi = [prviPin, ...ostaliPinovi]; 
+        } else {
+            let sh = [...window.potragaPodaci.pinovi];
+            for (let i = sh.length - 1; i > 0; i--) { 
+                const j = Math.floor(Math.random() * (i + 1)); 
+                [sh[i], sh[j]] = [sh[j], sh[i]]; 
+            }
+            window.potragaPodaci.pinovi = sh;
+        }
+    }
+
+    let tezinaSelect = document.getElementById('unosTezina');
+    let odabranaBoja = "bela";
+    if (tezinaSelect && tezinaSelect.value) {
+        let odabranaDuzina = parseInt(tezinaSelect.value);
+        if (odabranaDuzina > 0 && odabranaDuzina < window.potragaPodaci.pinovi.length) {
+            window.potragaPodaci.pinovi = window.potragaPodaci.pinovi.slice(0, odabranaDuzina);
+        }
+        if (tezinaSelect.options[tezinaSelect.selectedIndex]) {
+            let tekstOpcije = tezinaSelect.options[tezinaSelect.selectedIndex].text.toLowerCase();
+            if (tekstOpcije.includes("plava")) {
+                odabranaBoja = "plava";
+            } else if (tekstOpcije.includes("crvena")) {
+                odabranaBoja = "crvena";
+            }
+        }
+    }
+
+    let sada = new Date().getTime();
+    window.sesijaPodaci = { 
+        timId: window.timIdentifikator, 
+        imePrikaz: window.tempImeTimaZaBazu, 
+        sifra: window.odabranaPotraga.sifra, 
+        partner: window.trenutniAmbasador || "", 
+        bojaStaze: odabranaBoja,
+        trenutniIndeks: 0, 
+        zdravlje: 100, 
+        expiresAt: sada + window.racunajTrajanjeUMs(window.potragaPodaci.trajanje), 
+        kreirano: sada, 
+        zavrsena: false, 
+        pinovi: window.potragaPodaci.pinovi,
+        zavrseneTacke: [],
+        preskoceneTacke: 0,
+        stazaRotirana: jeRotirana
     };
+    
+    try {
+        localStorage.setItem('aktivna_sesija_id', window.timIdentifikator);
+        localStorage.setItem('offline_sesija_' + window.timIdentifikator, JSON.stringify(window.sesijaPodaci));
+        localStorage.setItem('offline_potraga_' + window.timIdentifikator, JSON.stringify(window.potragaPodaci));
+        
+        await window.setDoc(window.doc(window.db, "sesije", window.timIdentifikator), window.sesijaPodaci);
+        window.pokreniPrikaz();
+    } catch(e) {
+        console.error("Greška pri komunikaciji sa serverom:", e);
+        window.pokreniPrikaz(); 
+    }
+};
 
     window.osveziSesijuNaServeru = async function() {
         if(!window.sesijaPodaci) return;
@@ -3579,10 +3608,16 @@ window.uspehZadatka = function() {
 
         let tekstPoruke = originalniPin.zadatak?.usmeravanje || '';
 
-        if (jeKraj && window.odabranaPotraga && window.odabranaPotraga.pinovi) {
-            let apsolutnoZadnjiPin = window.odabranaPotraga.pinovi[window.odabranaPotraga.pinovi.length - 1];
-            if (apsolutnoZadnjiPin.zadatak && apsolutnoZadnjiPin.zadatak.usmeravanje) {
-                tekstPoruke = apsolutnoZadnjiPin.zadatak.usmeravanje;
+if (jeKraj) {
+            // Ako smo je "ukrali" prilikom okretanja staze, tu je!
+            if (window.GlavnaZavrsnaPoruka) {
+                tekstPoruke = window.GlavnaZavrsnaPoruka;
+            } else if (window.odabranaPotraga && window.odabranaPotraga.pinovi) {
+                // Ako staza nije okrenuta, čitamo klasično sa kraja
+                let apsolutnoZadnjiPin = window.odabranaPotraga.pinovi[window.odabranaPotraga.pinovi.length - 1];
+                if (apsolutnoZadnjiPin.zadatak && apsolutnoZadnjiPin.zadatak.usmeravanje) {
+                    tekstPoruke = apsolutnoZadnjiPin.zadatak.usmeravanje;
+                }
             }
         }
 
