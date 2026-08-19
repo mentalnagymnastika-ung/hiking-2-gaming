@@ -3643,9 +3643,9 @@ window.uspehZadatka = function() {
             }
         }
 
-        // --- KORIGOVANA I BEZBEDNA LOGIKA ZA SMERNICE ---
-        // 🌟 TVOJ PREDLOG: Ako je staza rotirana, potpuno sakrivamo usputne smernice!
-        let sakrijSmernicu = (stazaJeIsmesana || stazaJeRotirana) && !jeKraj; 
+         // --- KORIGOVANA I BEZBEDNA LOGIKA ZA SMERNICE ---
+        //  Uvek sakrij smernicu, osim ako je u pitanju poslednja tačka (jeKraj)
+        let sakrijSmernicu = !jeKraj; 
         let cistTekstPoruke = (tekstPoruke || '').trim();
 
         if (smernicaKontejner) {
