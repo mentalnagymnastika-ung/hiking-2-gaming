@@ -2021,23 +2021,30 @@ window.izaberiPotraguPoSifri = function(sifra) {
         if(podaci) window.izaberiPotragu(podaci);
     }
 // --- PAMETNI IZBOR TEŽINE STAZE deo jedan---
-// --- PAMETNI IZBOR TEŽINE STAZE deo jedan---
-    window.izaberiPotragu = function(podaci) {
-        window.odabranaPotraga = podaci;
+window.izaberiPotragu = function(podaci) {
         
-        // 1. KORAK: Priprema ekrana sa informacijama o stazi (Intro ekran)
-        document.getElementById('txtObjasnjenjeTekst').innerText = podaci.objasnjenje || "";
-        let img = document.getElementById('introSlika');
-        if(podaci.promoSlika && podaci.promoSlika.length > 10) { 
-            img.src = podaci.promoSlika; 
-            img.style.display = "block"; 
-        } else {
-            img.style.display = "none";
+        // 🌟 PAMETNO OKRETANJE LINIJSKE STAZE ZAVISNO OD LOKACIJE IGRAČA
+        if (window.zadnjaGeoPozicija && podaci.pinovi && podaci.pinovi.length > 1) {
+            let userLat = window.zadnjaGeoPozicija.lat;
+            let userLng = window.zadnjaGeoPozicija.lng;
+            
+            let prvaTacka = podaci.pinovi[0];
+            let poslednjaTacka = podaci.pinovi[podaci.pinovi.length - 1];
+            
+            // Merimo vazdušnu liniju od igrača do prvog i do poslednjeg zadatka
+            let udaljenostStart = window.izracunajUdaljenost(userLat, userLng, prvaTacka.lat, prvaTacka.lng);
+            let udaljenostCilj = window.izracunajUdaljenost(userLat, userLng, poslednjaTacka.lat, poslednjaTacka.lng);
+            
+            // Ako je cilj bliži, okrećemo stazu unazad
+            if (udaljenostCilj < udaljenostStart) {
+                console.log("Igrač je bliži kraju staze. Okrećem redosled zadataka!");
+                podaci.pinovi.reverse(); // Magija koja preokreće niz
+                
+                // Ažuriramo startne koordinate kako bi mapa pokazala pravo mesto
+                podaci.startLat = poslednjaTacka.lat;
+                podaci.startLng = poslednjaTacka.lng;
+            }
         }
-        
-        // Odmah prikazujemo info ekran umesto prijave
-        window.prikaziEkran('ekranIntro');
-    };
         // -------------------------------------------------------------
 
         window.odabranaPotraga = podaci;
@@ -3562,14 +3569,14 @@ window.generisiKvizUI = function(kvizData) {
     }
 
 // --- 4. PROVERA USPEHA I DINAMIČKO OSVEŽAVANJE BRAVO EKRANA ---
-    window.uspehZadatka = function() {
+window.uspehZadatka = function() {
         window.azurirajZdravlje(window.NAGRADA_TACNO); 
         window.osveziSesijuNaServeru();
         document.getElementById('konacnoZdravlje').innerText = window.zdravlje;
         
         let pin = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
         
-        // POUZDANI FALLBACK: Nalazimo originalni puni pin iz master staze
+        // POUZDANI FALLBACK: Nalazimo originalni puni pin iz master staze kako bismo pročitali nagrade i usmerenja
         let originalniPin = (window.odabranaPotraga && window.odabranaPotraga.pinovi) ? 
             window.odabranaPotraga.pinovi.find(p => p.id === pin.id) || pin : pin;
         
@@ -3598,11 +3605,15 @@ window.generisiKvizUI = function(kvizData) {
         
         if (jeKraj) {
             document.getElementById('btnSledecaLogika').innerText = window.trenutniJezik === 'sr' ? "ZAVRŠI POTRAGU 🏆" : "FINISH QUEST 🏆";
-            if (obavestenjeZaSledeci) obavestenjeZaSledeci.style.display = 'none'; 
+            if (obavestenjeZaSledeci) obavestenjeZaSledeci.style.display = 'none'; // Na kraju nema sledeće tačke
+            
+            // DODATO: Sakrivamo gornji kontejner "Spremni ste za dalje" na poslednjoj tački
             document.getElementById('txtTacanOdgovor').style.display = 'none'; 
         } else {
             document.getElementById('btnSledecaLogika').innerText = window.recnik[window.trenutniJezik].btnSledeca || "SLEDEĆA LOKACIJA";
             if (obavestenjeZaSledeci) obavestenjeZaSledeci.style.display = 'block';
+            
+            // DODATO: Vraćamo ga za sve redovne lokacije (ako se igra krene ispočetka)
             document.getElementById('txtTacanOdgovor').style.display = 'block'; 
             
             let sledeciPin = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks + 1];
@@ -3620,52 +3631,44 @@ window.generisiKvizUI = function(kvizData) {
             document.getElementById('prikazSledecegTipa').innerText = nazivTipaSledece;
         }
 
-        // ==============================================================
-        // ULTIMATIVNA LOGIKA ZA PUTOKAZE (Poštuje sve modove igre)
-        // ==============================================================
         let stazaJeIsmesana = (window.odabranaPotraga && window.odabranaPotraga.isGrupna) || 
                               (window.potragaPodaci && window.potragaPodaci.mesanjeRute);
-        let stazaJeRotirana = window.sesijaPodaci && window.sesijaPodaci.stazaRotirana === true;
         
         let smernicaKontejner = document.getElementById('smernicaKontejner');
         let txtSmernica = document.getElementById('txtSmernica');
-        let bNaslov = smernicaKontejner ? smernicaKontejner.querySelector('b') : null;
+        let bNaslov = smernicaKontejner.querySelector('b');
+
+        let tekstPoruke = originalniPin.zadatak?.usmeravanje || '';
+        let stazaJeRotirana = window.sesijaPodaci && window.sesijaPodaci.stazaRotirana;
+
+        if (jeKraj) {
+            // Na samom kraju, uvek prikazujemo završnu poruku
+            if (window.GlavnaZavrsnaPoruka) {
+                tekstPoruke = window.GlavnaZavrsnaPoruka;
+            } else if (window.odabranaPotraga && window.odabranaPotraga.pinovi) {
+                let apsolutnoZadnjiPin = window.odabranaPotraga.pinovi[window.odabranaPotraga.pinovi.length - 1];
+                if (apsolutnoZadnjiPin.zadatak && apsolutnoZadnjiPin.zadatak.usmeravanje) {
+                    tekstPoruke = apsolutnoZadnjiPin.zadatak.usmeravanje;
+                }
+            }
+        }
+
+        // --- KORIGOVANA I BEZBEDNA LOGIKA ZA SMERNICE ---
+        // 🌟 TVOJ PREDLOG: Ako je staza rotirana, potpuno sakrivamo usputne smernice!
+        let sakrijSmernicu = (stazaJeIsmesana || stazaJeRotirana) && !jeKraj; 
+        let cistTekstPoruke = (tekstPoruke || '').trim();
 
         if (smernicaKontejner) {
-            // SAKRIVAMO smernice usput ako je staza rotirana, grupna (takmičarska) ili izmešana
-            if (!jeKraj && (stazaJeRotirana || stazaJeIsmesana)) {
-                smernicaKontejner.style.display = "none";
+            if (cistTekstPoruke !== '' && !sakrijSmernicu) {
+                if (txtSmernica) txtSmernica.innerText = cistTekstPoruke; 
+                smernicaKontejner.style.display = "block"; 
+                if (bNaslov) {
+                    bNaslov.innerText = jeKraj ? 
+                        (window.trenutniJezik === 'sr' ? '🏆 Završna poruka:' : '🏆 Final message:') : 
+                        (window.trenutniJezik === 'sr' ? '🔘 Kuda dalje:' : '🔘 Where to next:');
+                }
             } else {
-                let tekstPoruke = "";
-
-                if (jeKraj) {
-                    // NA KRAJU UVEK VADIMO ZAVRŠNU PORUKU (Bez obzira na mod)
-                    if (window.GlavnaZavrsnaPoruka) {
-                        tekstPoruke = window.GlavnaZavrsnaPoruka;
-                    } else if (window.odabranaPotraga && window.odabranaPotraga.pinovi) {
-                        let apsolutnoZadnjiPin = window.odabranaPotraga.pinovi[window.odabranaPotraga.pinovi.length - 1];
-                        if (apsolutnoZadnjiPin.zadatak && apsolutnoZadnjiPin.zadatak.usmeravanje) {
-                            tekstPoruke = apsolutnoZadnjiPin.zadatak.usmeravanje;
-                        }
-                    }
-                } else {
-                    // NORMALNA LINIJSKA/KRUŽNA STAZA KOJA IDE STANDARDNIM REDOM
-                    tekstPoruke = originalniPin.zadatak?.usmeravanje || '';
-                }
-
-                let cistTekst = (tekstPoruke || '').trim();
-
-                if (cistTekst !== '') {
-                    if (txtSmernica) txtSmernica.innerText = cistTekst;
-                    smernicaKontejner.style.display = "block";
-                    if (bNaslov) {
-                        bNaslov.innerText = jeKraj ? 
-                            (window.trenutniJezik === 'sr' ? '🏆 Završna poruka:' : '🏆 Final message:') : 
-                            (window.trenutniJezik === 'sr' ? '🔘 Kuda dalje:' : '🔘 Where to next:');
-                    }
-                } else {
-                    smernicaKontejner.style.display = "none";
-                }
+                smernicaKontejner.style.display = "none";
             }
         }
 
