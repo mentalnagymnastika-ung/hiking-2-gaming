@@ -3631,11 +3631,10 @@ let stazaJeIsmesana = (window.odabranaPotraga && window.odabranaPotraga.isGrupna
         let tekstPoruke = originalniPin.zadatak?.usmeravanje || '';
 
         if (jeKraj) {
-            // Ako smo je "ukrali" prilikom okretanja staze, tu je!
+            // Na samom kraju, uvek prikazujemo završnu poruku
             if (window.GlavnaZavrsnaPoruka) {
                 tekstPoruke = window.GlavnaZavrsnaPoruka;
             } else if (window.odabranaPotraga && window.odabranaPotraga.pinovi) {
-                // Ako staza nije okrenuta, čitamo klasično sa kraja
                 let apsolutnoZadnjiPin = window.odabranaPotraga.pinovi[window.odabranaPotraga.pinovi.length - 1];
                 if (apsolutnoZadnjiPin.zadatak && apsolutnoZadnjiPin.zadatak.usmeravanje) {
                     tekstPoruke = apsolutnoZadnjiPin.zadatak.usmeravanje;
@@ -3643,11 +3642,20 @@ let stazaJeIsmesana = (window.odabranaPotraga && window.odabranaPotraga.isGrupna
             }
         }
 
-        // --- KORIGOVANA LOGIKA ZA SAKRIVANJE SMERNICA sakriva samo kada je okrenuta staza---
-        let stazaJeRotirana = window.sesijaPodaci && window.sesijaPodaci.stazaRotirana;
+        // --- 1. PROVERA: Da li je staza okrenuta? ---
+        let stazaOkrenuta = false;
+        // Upoređujemo prvu tačku na terenu sa originalnom prvom tačkom
+        if (window.potragaPodaci && window.odabranaPotraga && window.potragaPodaci.pinovi.length > 0 && window.odabranaPotraga.pinovi.length > 0) {
+            if (window.potragaPodaci.pinovi[0].id !== window.odabranaPotraga.pinovi[0].id) {
+                stazaOkrenuta = true;
+            }
+        }
         
-        // TVOJ USLOV: Sakrij smernicu isključivo ako je staza rotirana (ili izmešana) i ako NIJE poslednja tačka
-        let sakrijSmernicu = (stazaJeRotirana || stazaJeIsmesana) && !jeKraj; 
+        // --- 2. TVOJA LOGIKA: Ako je okrenuta, važi pravilo "!jeKraj" ---
+        let sakrijSmernicu = false;
+        if (stazaOkrenuta || stazaJeIsmesana) {
+            sakrijSmernicu = !jeKraj;
+        }
         
         let cistTekstPoruke = (tekstPoruke || '').trim();
 
