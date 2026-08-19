@@ -2316,16 +2316,24 @@ window.idiNaPrijavu = function() {
         }
     };
 
-    window.racunajTrajanjeUMs = function(trajanjeString) {
-        if (!trajanjeString) return 3600000;
+window.racunajTrajanjeUMs = function(trajanjeString) {
+        if (!trajanjeString) return 3600000; // Osnova 1 sat ako fali podatak
+
         const trajanje = String(trajanjeString).toLowerCase();
-        if (trajanje.includes('1 sat')) return 3600000;
-        if (trajanje.includes('2 sata')) return 7200000;
-        if (trajanje.includes('12 sati')) return 43200000;
-        if (trajanje.includes('24 sata')) return 86400000;
-        if (trajanje.includes('vikend')) return 172800000;
-        if (trajanje.includes('neograničeno')) return 31536000000;
-        return 3600000;
+
+        // 1. NEOGRANIČENO VREME
+        if (trajanje.includes('neograničeno') || trajanje.includes('neograniceno')) return 31536000000; // ~1 godina
+
+        // 2. ČITANJE BROJA
+        let brojMatch = trajanje.match(/\d+/);
+        let broj = brojMatch ? parseInt(brojMatch[0]) : 60; 
+
+        // 3. LOGIKA PREPOZNAVANJA
+        if (trajanje.includes('dan')) return broj * 86400000; 
+        if (trajanje.includes('sat')) return broj * 3600000;  
+        
+        // Ako nema reč "sat" ni "dan", to su novi, čisti MINUTI iz admina!
+        return broj * 60000; 
     };
 
 window.napraviNovuSesiju = async function() {
