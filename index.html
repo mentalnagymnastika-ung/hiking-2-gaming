@@ -3621,7 +3621,7 @@ window.uspehZadatka = function() {
             document.getElementById('prikazSledecegTipa').innerText = nazivTipaSledece;
         }
 
-        let stazaJeIsmesana = (window.odabranaPotraga && window.odabranaPotraga.isGrupna) || 
+let stazaJeIsmesana = (window.odabranaPotraga && window.odabranaPotraga.isGrupna) || 
                               (window.potragaPodaci && window.potragaPodaci.mesanjeRute);
         
         let smernicaKontejner = document.getElementById('smernicaKontejner');
@@ -3629,13 +3629,13 @@ window.uspehZadatka = function() {
         let bNaslov = smernicaKontejner.querySelector('b');
 
         let tekstPoruke = originalniPin.zadatak?.usmeravanje || '';
-        let stazaJeRotirana = window.sesijaPodaci && window.sesijaPodaci.stazaRotirana;
 
         if (jeKraj) {
-            // Na samom kraju, uvek prikazujemo završnu poruku
+            // Ako smo je "ukrali" prilikom okretanja staze, tu je!
             if (window.GlavnaZavrsnaPoruka) {
                 tekstPoruke = window.GlavnaZavrsnaPoruka;
             } else if (window.odabranaPotraga && window.odabranaPotraga.pinovi) {
+                // Ako staza nije okrenuta, čitamo klasično sa kraja
                 let apsolutnoZadnjiPin = window.odabranaPotraga.pinovi[window.odabranaPotraga.pinovi.length - 1];
                 if (apsolutnoZadnjiPin.zadatak && apsolutnoZadnjiPin.zadatak.usmeravanje) {
                     tekstPoruke = apsolutnoZadnjiPin.zadatak.usmeravanje;
@@ -3643,12 +3643,11 @@ window.uspehZadatka = function() {
             }
         }
 
-// --- KORIGOVANA I BEZBEDNA LOGIKA ZA SMERNICE ---
-        // Promenljive su već definisane iznad, pa ovde samo dodeljujemo vrednosti bez reči "let"
-        stazaJeRotirana = window.sesijaPodaci && window.sesijaPodaci.stazaRotirana;
-
-        // Krijemo smernicu SAMO ako je staza rotirana ili izmešana, a pritom NIJE poslednja tačka
-        sakrijSmernicu = (stazaJeRotirana || stazaJeIsmesana) && !jeKraj; 
+        // --- KORIGOVANA LOGIKA ZA SAKRIVANJE SMERNICA sakriva samo kada je okrenuta staza---
+        let stazaJeRotirana = window.sesijaPodaci && window.sesijaPodaci.stazaRotirana;
+        
+        // TVOJ USLOV: Sakrij smernicu isključivo ako je staza rotirana (ili izmešana) i ako NIJE poslednja tačka
+        let sakrijSmernicu = (stazaJeRotirana || stazaJeIsmesana) && !jeKraj; 
         
         let cistTekstPoruke = (tekstPoruke || '').trim();
 
@@ -3668,7 +3667,8 @@ window.uspehZadatka = function() {
 
         window.prikaziEkran('ekranUspeh');
     };
-
+ // ---------------------------------------------------
+    
 window.resiKrajIgre = function() {
         // 🛑 ZAUSTAVLJANJE AUTO-RADARA NA KRAJU IGRE
         if (typeof window.zaustaviAutoRadar === 'function') {
