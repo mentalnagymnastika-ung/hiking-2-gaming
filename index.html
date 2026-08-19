@@ -2382,39 +2382,97 @@ window.napraviNovuSesiju = async function() {
                 // ako su bliži cilju, inače ih mehanika čeka na proveri lokacije zadatka 1.
                 let okreniStazu = distCilj < distStart;
                 window.zavrsiKreiranjeSesije(okreniStazu);
-
-            } else {
-                // B) AUTO/BICIKL: Nema blokade! Izbacujemo modal da sami odaberu smer putovanja.
-                let imePocetka = prvaTacka.imeLokacije || "Glavni Start";
-                let imeCilja = poslednjaTacka.imeLokacije || "Druga strana staze";
+                
+        } else {
+                // B) AUTO/BICIKL: Super-pametni modal koji prepoznaje gde se igrač nalazi!
+                let imePocetka = prvaTacka.imeLokacije || "Start";
+                let imeCilja = poslednjaTacka.imeLokacije || "Kraj staze";
                 
                 let modal = document.createElement('div');
                 modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:100000; display:flex; justify-content:center; align-items:center; padding:20px; backdrop-filter:blur(5px);";
                 
+                let htmlDugmica = "";
+                let akcijaDugmeta = null; // true za okrenuto, false za normalno
+                
+                // 1. SCENARIO: Igrač je očigledno na STARTU (manje od 2km od prve tačke)
+                if (distStart < 2000 && distCilj > 2000) {
+                    htmlDugmica = `
+                        <p style="color:#10b981; font-weight:900; margin-bottom:10px; font-size:13px; text-transform:uppercase;">📍 Detektovana lokacija: ${imePocetka}</p>
+                        <button id="btnJediniSmer" style="width:100%; padding:16px; background:#10b981; color:white; border:none; border-radius:12px; font-weight:900; font-size:18px; cursor:pointer; box-shadow:0 4px 15px rgba(16,185,129,0.4); text-transform:uppercase;">
+                            ➡️ IDEM KA: ${imeCilja}
+                        </button>
+                    `;
+                    akcijaDugmeta = false; // Normalan smer
+                } 
+                // 2. SCENARIO: Igrač je očigledno na CILJU (manje od 2km od poslednje tačke)
+                else if (distCilj < 2000 && distStart > 2000) {
+                    htmlDugmica = `
+                        <p style="color:#10b981; font-weight:900; margin-bottom:10px; font-size:13px; text-transform:uppercase;">📍 Detektovana lokacija: ${imeCilja}</p>
+                        <button id="btnJediniSmer" style="width:100%; padding:16px; background:#10b981; color:white; border:none; border-radius:12px; font-weight:900; font-size:18px; cursor:pointer; box-shadow:0 4px 15px rgba(16,185,129,0.4); text-transform:uppercase;">
+                            ➡️ IDEM KA: ${imePocetka}
+                        </button>
+                    `;
+                    akcijaDugmeta = true; // Obrnut smer
+                } 
+                // 3. SCENARIO: Igrač je negde između ili daleko (Nudimo oba izbora)
+                else {
+                    let blizeStartu = distStart <= distCilj;
+                    
+                    if (blizeStartu) {
+                        htmlDugmica = `
+                            <p style="color:#10b981; font-weight:bold; margin-bottom:5px; font-size:12px; text-transform:uppercase;">📍 Bliže vama: ${imePocetka}</p>
+                            <button id="btnNormalno" style="width:100%; padding:12px; background:#10b981; color:white; border:none; border-radius:10px; font-weight:900; font-size:14px; cursor:pointer; margin-bottom:15px; box-shadow:0 4px 6px rgba(16,185,129,0.3); line-height:1.4;">
+                                ➡️ IDEM KA: ${imeCilja.toUpperCase()}
+                            </button>
+                            
+                            <p style="color:#64748b; font-weight:bold; margin-bottom:5px; font-size:12px; text-transform:uppercase;">🔄 Alternativni pravac</p>
+                            <button id="btnObrnuto" style="width:100%; padding:12px; background:#f59e0b; color:white; border:none; border-radius:10px; font-weight:900; font-size:14px; cursor:pointer; box-shadow:0 4px 6px rgba(245,158,11,0.3); line-height:1.4;">
+                                ➡️ IDEM KA: ${imePocetka.toUpperCase()}
+                            </button>
+                        `;
+                    } else {
+                        htmlDugmica = `
+                            <p style="color:#10b981; font-weight:bold; margin-bottom:5px; font-size:12px; text-transform:uppercase;">📍 Bliže vama: ${imeCilja}</p>
+                            <button id="btnObrnuto" style="width:100%; padding:12px; background:#10b981; color:white; border:none; border-radius:10px; font-weight:900; font-size:14px; cursor:pointer; margin-bottom:15px; box-shadow:0 4px 6px rgba(16,185,129,0.3); line-height:1.4;">
+                                ➡️ IDEM KA: ${imePocetka.toUpperCase()}
+                            </button>
+                            
+                            <p style="color:#64748b; font-weight:bold; margin-bottom:5px; font-size:12px; text-transform:uppercase;">🔄 Alternativni pravac</p>
+                            <button id="btnNormalno" style="width:100%; padding:12px; background:#f59e0b; color:white; border:none; border-radius:10px; font-weight:900; font-size:14px; cursor:pointer; box-shadow:0 4px 6px rgba(245,158,11,0.3); line-height:1.4;">
+                                ➡️ IDEM KA: ${imeCilja.toUpperCase()}
+                            </button>
+                        `;
+                    }
+                }
+
                 modal.innerHTML = `
                     <div style="background:#fff; padding:25px; border-radius:16px; max-width:400px; width:100%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.3); border:4px solid #3b82f6;">
-                        <h2 style="margin-top:0; color:#0f172a; font-size:22px; font-weight:900; text-transform:uppercase;">U kom pravcu idete?</h2>
-                        <p style="color:#475569; font-size:15px; margin-bottom:20px; font-weight:bold;">Odaberite vaš željeni smer putovanja:</p>
-                        <button id="btnSmerStart" style="width:100%; padding:15px; background:#10b981; color:white; border:none; border-radius:10px; font-weight:900; font-size:16px; cursor:pointer; margin-bottom:12px; box-shadow:0 4px 6px rgba(16,185,129,0.3);">
-                            ➡️ IDEM KA: ${imePocetka.toUpperCase()}
-                        </button>
-                        <button id="btnSmerCilj" style="width:100%; padding:15px; background:#f59e0b; color:white; border:none; border-radius:10px; font-weight:900; font-size:16px; cursor:pointer; box-shadow:0 4px 6px rgba(245,158,11,0.3);">
-                            ➡️ IDEM KA: ${imeCilja.toUpperCase()}
-                        </button>
+                        <h2 style="margin-top:0; color:#0f172a; font-size:20px; font-weight:900; text-transform:uppercase;">Pravac putovanja</h2>
+                        <p style="color:#475569; font-size:14px; margin-bottom:20px; font-weight:bold;">Sistem prati vašu rutu. Potvrdite smer ka kojem idete:</p>
+                        ${htmlDugmica}
                     </div>
                 `;
                 document.body.appendChild(modal);
 
-                document.getElementById('btnSmerStart').onclick = function() {
-                    modal.remove();
-                    window.zavrsiKreiranjeSesije(true); // Ako ide ka startu, znači da okreće stazu unazad
-                };
-                document.getElementById('btnSmerCilj').onclick = function() {
-                    modal.remove();
-                    window.zavrsiKreiranjeSesije(false); // Ako ide ka cilju, ide normalnim redosledom
-                };
+                // Kontrola klika zavisno od toga šta se prikazalo
+                let btnJedini = document.getElementById('btnJediniSmer');
+                if (btnJedini) {
+                    btnJedini.onclick = function() {
+                        modal.remove();
+                        window.zavrsiKreiranjeSesije(akcijaDugmeta);
+                    };
+                } else {
+                    document.getElementById('btnNormalno').onclick = function() {
+                        modal.remove();
+                        window.zavrsiKreiranjeSesije(false); 
+                    };
+                    document.getElementById('btnObrnuto').onclick = function() {
+                        modal.remove();
+                        window.zavrsiKreiranjeSesije(true); 
+                    };
+                }
             }
-        }
+
     } else {
         // Nema GPS-a - kreće po difoltu (bez okretanja)
         window.zavrsiKreiranjeSesije(false);
