@@ -2519,7 +2519,11 @@ window.azurirajRedosledNaServeru = async function(sifra, novaVrednost) {
         document.getElementById('dashboardModal').style.display = 'flex';
         document.getElementById('dashSadrzaj').innerHTML = "<div style='text-align:center; color:#3b82f6; font-weight:bold; margin-top:20px;'>⏳ Povezivanje sa satelitima i igračima...</div>";
 
-        const q = window.query(window.collection(window.db, "sesije"), window.where("sifra", "==", sifra.toLowerCase()));
+        // Pametan upit: traži i tačan unos, i velika i mala slova istovremeno!
+        const q = window.query(
+            window.collection(window.db, "sesije"), 
+            window.where("sifra", "in", [sifra, sifra.toLowerCase(), sifra.toUpperCase()])
+        );
         
         window.dashUnsubscribe = window.onSnapshot(q, (snapshot) => {
             if(snapshot.empty) {
