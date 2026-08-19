@@ -3639,8 +3639,14 @@ window.uspehZadatka = function() {
         let bNaslov = smernicaKontejner.querySelector('b');
 
         let tekstPoruke = originalniPin.zadatak?.usmeravanje || '';
+        let stazaJeRotirana = window.sesijaPodaci && window.sesijaPodaci.stazaRotirana;
 
-if (jeKraj) {
+        // 🌟 TVOJ PREDLOG: Ako je staza rotirana, preuzimamo tekst iz korigovanog pina!
+        if (stazaJeRotirana && !jeKraj) {
+            tekstPoruke = pin.zadatak?.usmeravanje || '';
+        }
+
+        if (jeKraj) {
             // Ako smo je "ukrali" prilikom okretanja staze, tu je!
             if (window.GlavnaZavrsnaPoruka) {
                 tekstPoruke = window.GlavnaZavrsnaPoruka;
@@ -3653,9 +3659,9 @@ if (jeKraj) {
             }
         }
 
-// --- KORIGOVANA I BEZBEDNA LOGIKA ZA SMERNICE ---
-        let stazaJeRotirana = window.sesijaPodaci && window.sesijaPodaci.stazaRotirana;
-        let sakrijSmernicu = (stazaJeIsmesana || stazaJeRotirana) && !jeKraj;
+        // --- KORIGOVANA I BEZBEDNA LOGIKA ZA SMERNICE ---
+        // 🌟 Dozvoljavamo prikaz putokaza za rotirane staze
+        let sakrijSmernicu = stazaJeIsmesana && !jeKraj; 
         let cistTekstPoruke = (tekstPoruke || '').trim();
 
         if (smernicaKontejner) {
