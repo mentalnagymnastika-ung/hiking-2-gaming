@@ -3644,9 +3644,7 @@ window.uspehZadatka = function() {
         }
 
 // --- KORIGOVANA I BEZBEDNA LOGIKA ZA SMERNICE ---
-        // Proveravamo da li je staza pomešana (grupna) ili okrenuta naopako
-        let stazaJeIsmesana = (window.odabranaPotraga && window.odabranaPotraga.isGrupna) || 
-                              (window.potragaPodaci && window.potragaPodaci.mesanjeRute);
+        // Promenljiva stazaJeIsmesana je već definisana iznad, pa je ovde samo koristimo
         let stazaJeRotirana = window.sesijaPodaci && window.sesijaPodaci.stazaRotirana;
 
         // Krijemo smernicu SAMO ako je staza rotirana ili izmešana, a pritom NIJE poslednja tačka
