@@ -3776,10 +3776,30 @@ window.resiKrajIgre = function() {
             else brZagonetki++;
         }
 
-        let preostaleMinute = Math.floor(window.preostaloSekundi / 60);
-        let bonusZlatnici = preostaleMinute > 0 ? preostaleMinute : 0;
-        let m = preostaleMinute;
-        let s = window.preostaloSekundi % 60;
+let preostaleMinute = Math.floor(window.preostaloSekundi / 60);
+        
+        // --- UNIVERZALNI SISTEM BODOVANJA VREMENA ---
+        let bonusZlatnici = 0;
+        let ukupnoTrajanjeMs = window.racunajTrajanjeUMs ? window.racunajTrajanjeUMs(window.potragaPodaci.trajanje) : 3600000;
+        
+        if (ukupnoTrajanjeMs > 30000000000) {
+            // Ako je staza "Neograničena", brzina se NE NAGRAĐUJE (nema pritiska na igrače)
+            bonusZlatnici = 0;
+        } else if (preostaleMinute > 0) {
+            let ukupnoTrajanjeMin = Math.floor(ukupnoTrajanjeMs / 60000);
+            
+            if (ukupnoTrajanjeMin > 150) {
+                // Za auto-rute (> 2.5h): Proporcionalni bonus (maksimalno 50 zlatnika za brzinu)
+                let procenatUstede = preostaleMinute / ukupnoTrajanjeMin;
+                bonusZlatnici = Math.floor(50 * procenatUstede);
+            } else {
+                // Za standardne brze staze: 1 ušteđeni minut = 1 zlatnik
+                bonusZlatnici = preostaleMinute;
+            }
+        }
+
+        let m = Math.max(0, Math.floor(window.preostaloSekundi / 60));
+        let s = Math.max(0, window.preostaloSekundi % 60);
         let formatiranoVreme = (m < 10 ? "0"+m : m) + ":" + (s < 10 ? "0"+s : s);
         let ukupnoZlatnika = brZlatnikaNaRuti + bonusZlatnici;
 
@@ -3876,8 +3896,23 @@ window.resiKrajIgre = function() {
 
 window.pokreniTajmer = function() {
         if(window.tajmerInterval) clearInterval(window.tajmerInterval);
-        let sada = new Date().getTime();
         
+        // --- 1. PROVERA ZA NEOGRANIČENO VREME ---
+        let ukupnoMs = window.racunajTrajanjeUMs(window.potragaPodaci.trajanje);
+        if (ukupnoMs > 30000000000) { 
+            let prikazEl = document.getElementById('prikazVreme');
+            if (prikazEl) prikazEl.innerHTML = "&infin; Neo.";
+            let tajmerInfo = document.querySelector('.tajmer-info');
+            if (tajmerInfo) {
+                tajmerInfo.style.background = "#dcfce7"; 
+                tajmerInfo.style.color = "#16a34a";
+                tajmerInfo.style.border = "1px solid #bbf7d0";
+            }
+            window.preostaloSekundi = 999999; 
+            return; // Prekidamo dalje pokretanje tajmera
+        }
+
+        let sada = new Date().getTime();
         window.preostaloSekundi = Math.floor((window.sesijaPodaci.expiresAt - sada) / 1000);
         window.azurirajPrikazVremena();
 
@@ -3896,24 +3931,25 @@ window.pokreniTajmer = function() {
                     if (window.preostaloSekundi <= 300 && window.preostaloSekundi > 0) {
                         upozorenjeDiv.style.display = 'block';
                         
+                        // OVDJE UBACUJEMO TRGOVINU: VREME ZA ENERGIJU
                         if (faza === 0) {
                             if (tekstIstice) tekstIstice.innerText = "Ulazite u poslednjih 5 minuta!";
-                            if (tekstProduzi) tekstProduzi.innerText = "Kao nagradu za trud, poklanjamo vam dodatnih 30 minuta!";
-                            if (dugmiciDiv) dugmiciDiv.innerHTML = '<button class="btn-produzi" style="width:100%; background:#10b981;" onclick="window.produziVreme(30)">PRIHVATI +30 MINUTA</button>';
+                            if (tekstProduzi) tekstProduzi.innerText = "Da li želite da kupite +30 minuta za 15% energije tima?";
+                            if (dugmiciDiv) dugmiciDiv.innerHTML = '<button class="btn-produzi" style="width:100%; background:#10b981;" onclick="window.kupiVreme(30, 15)">KUPI +30 MINUTA (-15 🍏)</button>';
                         } 
                         else if (faza === 1) {
                             if (tekstIstice) tekstIstice.innerText = "Ponovo ste u poslednjih 5 minuta!";
-                            if (tekstProduzi) tekstProduzi.innerText = "Nema odustajanja! Poklanjamo vam još 15 minuta!";
-                            if (dugmiciDiv) dugmiciDiv.innerHTML = '<button class="btn-produzi" style="width:100%; background:#f59e0b;" onclick="window.produziVreme(15)">PRIHVATI +15 MINUTA</button>';
+                            if (tekstProduzi) tekstProduzi.innerText = "Vreme ponestaje! Kupite +15 minuta za 10% energije.";
+                            if (dugmiciDiv) dugmiciDiv.innerHTML = '<button class="btn-produzi" style="width:100%; background:#f59e0b;" onclick="window.kupiVreme(15, 10)">KUPI +15 MINUTA (-10 🍏)</button>';
                         } 
                         else if (faza === 2) {
                             if (tekstIstice) tekstIstice.innerText = "Ostalo je samo 5 minuta!";
-                            if (tekstProduzi) tekstProduzi.innerText = "Dodajemo vam poslednjih 5 minuta! Posle ovoga nema produžavanja!";
-                            if (dugmiciDiv) dugmiciDiv.innerHTML = '<button class="btn-produzi" style="width:100%; background:#ef4444;" onclick="window.produziVreme(5)">PRIHVATI +5 MINUTA</button>';
+                            if (tekstProduzi) tekstProduzi.innerText = "Poslednja prilika! Kupite +5 minuta za 5% energije.";
+                            if (dugmiciDiv) dugmiciDiv.innerHTML = '<button class="btn-produzi" style="width:100%; background:#ef4444;" onclick="window.kupiVreme(5, 5)">KUPI +5 MINUTA (-5 🍏)</button>';
                         } 
                         else if (faza >= 3) {
                             if (tekstIstice) tekstIstice.innerText = "Poslednjih 5 minuta!";
-                            if (tekstProduzi) tekstProduzi.innerText = "Vreme više ne može da se produži. Morate završiti stazu!";
+                            if (tekstProduzi) tekstProduzi.innerText = "Vreme više ne može da se produži. Ubrzajte!";
                             if (dugmiciDiv) dugmiciDiv.innerHTML = ''; 
                         }
                     } else {
@@ -3931,10 +3967,7 @@ window.pokreniTajmer = function() {
                 window.azurirajPrikazVremena();
 
             } catch (greska) {
-                console.error("Mala greška u UI logici, sat nastavlja:", greska);
-                if (typeof window.azurirajPrikazVremena === 'function') {
-                    window.azurirajPrikazVremena();
-                }
+                console.error("Greška u tajmeru:", greska);
             }
         }, 1000);
     }
@@ -3950,19 +3983,32 @@ window.pokreniTajmer = function() {
         }
     }
 
-    window.produziVreme = async function(minuta) {
+// Nova trgovačka funkcija (menja staru produziVreme)
+    window.kupiVreme = async function(minuta, cenaEnergije) {
+        if (window.zdravlje < cenaEnergije) {
+            alert(window.trenutniJezik === 'sr' ? "Nemate dovoljno energije za ovu kupovinu! Izbegavajte greške da biste sačuvali jabuke." : "Not enough energy to buy time!");
+            return;
+        }
+
+        // 1. Skini energiju 
+        window.azurirajZdravlje(-cenaEnergije);
+        
         let kljuc = 'faza_vremena_' + window.timIdentifikator;
         let faza = parseInt(localStorage.getItem(kljuc) || "0");
         localStorage.setItem(kljuc, (faza + 1).toString());
 
+        // 2. Dodaj vreme
         window.preostaloSekundi += minuta * 60;
         window.sesijaPodaci.expiresAt += minuta * 60 * 1000;
-        await window.setDoc(window.doc(window.db, "sesije", window.timIdentifikator), window.sesijaPodaci);
+        
+        // Snimi sve to na server
+        window.osveziSesijuNaServeru(); 
         
         let upozorenjeDiv = document.getElementById('upozorenjeVreme');
         if (upozorenjeDiv) upozorenjeDiv.style.display = 'none';
         
         window.azurirajPrikazVremena();
+        alert(window.trenutniJezik === 'sr' ? `Kupljeno +${minuta} minuta i potrošeno ${cenaEnergije}% energije!` : `Bought +${minuta} minutes!`);
     }
 
 window.pokreniOtkljucavanje = function() {
