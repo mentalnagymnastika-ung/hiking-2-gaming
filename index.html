@@ -3621,7 +3621,7 @@ window.uspehZadatka = function() {
             document.getElementById('prikazSledecegTipa').innerText = nazivTipaSledece;
         }
  // ---------------------------------------------------
-let stazaJeIsmesana = (window.odabranaPotraga && window.odabranaPotraga.isGrupna) || 
+        let stazaJeIsmesana = (window.odabranaPotraga && window.odabranaPotraga.isGrupna) || 
                               (window.potragaPodaci && window.potragaPodaci.mesanjeRute);
         
         let smernicaKontejner = document.getElementById('smernicaKontejner');
@@ -3642,18 +3642,17 @@ let stazaJeIsmesana = (window.odabranaPotraga && window.odabranaPotraga.isGrupna
             }
         }
 
-        // --- 1. POUZDANA FIZIČKA PROVERA ---
-        let stazaOkrenuta = false;
-        if (window.potragaPodaci && window.odabranaPotraga && window.potragaPodaci.pinovi.length > 0 && window.odabranaPotraga.pinovi.length > 0) {
-            let p1 = window.potragaPodaci.pinovi[0];
-            let o1 = window.odabranaPotraga.pinovi[0];
-            // Pouzdana provera preko GPS koordinata umesto nepostojećeg ID-a
-            if (p1.lat !== o1.lat || p1.lng !== o1.lng) {
-                stazaOkrenuta = true;
+        // --- 1. NEOBORIVA PROVERA DA LI JE STAZA OKRENUTA ---
+        // Pošto je staza fizički okrenuta ranije u kodu, prava završna poruka (isKrajnjaPoruka) 
+        // sada se nalazi na PRVOM mestu u nizu (indeks 0)! Ovo je 100% siguran dokaz.
+        let stazaStvarnoOkrenuta = false;
+        if (window.odabranaPotraga && window.odabranaPotraga.pinovi && window.odabranaPotraga.pinovi.length > 0) {
+            if (window.odabranaPotraga.pinovi[0].zadatak && window.odabranaPotraga.pinovi[0].zadatak.isKrajnjaPoruka) {
+                stazaStvarnoOkrenuta = true;
             }
         }
         
-        let stazaJeRotirana = (window.sesijaPodaci && window.sesijaPodaci.stazaRotirana) || stazaOkrenuta;
+        let stazaJeRotirana = (window.sesijaPodaci && window.sesijaPodaci.stazaRotirana) || stazaStvarnoOkrenuta;
 
         // --- 2. TVOJA LOGIKA ZA SAKRIVANJE ---
         let sakrijSmernicu = false;
