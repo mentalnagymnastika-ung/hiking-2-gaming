@@ -3643,9 +3643,15 @@ window.uspehZadatka = function() {
             }
         }
 
-         // --- KORIGOVANA I BEZBEDNA LOGIKA ZA SMERNICE ---
-        //  Uvek sakrij smernicu, osim ako je u pitanju poslednja tačka (jeKraj)
-        let sakrijSmernicu = !jeKraj; 
+// --- KORIGOVANA I BEZBEDNA LOGIKA ZA SMERNICE ---
+        // Proveravamo da li je staza pomešana (grupna) ili okrenuta naopako
+        let stazaJeIsmesana = (window.odabranaPotraga && window.odabranaPotraga.isGrupna) || 
+                              (window.potragaPodaci && window.potragaPodaci.mesanjeRute);
+        let stazaJeRotirana = window.sesijaPodaci && window.sesijaPodaci.stazaRotirana;
+
+        // Krijemo smernicu SAMO ako je staza rotirana ili izmešana, a pritom NIJE poslednja tačka
+        let sakrijSmernicu = (stazaJeRotirana || stazaJeIsmesana) && !jeKraj; 
+        
         let cistTekstPoruke = (tekstPoruke || '').trim();
 
         if (smernicaKontejner) {
