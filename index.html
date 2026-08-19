@@ -3620,7 +3620,7 @@ window.uspehZadatka = function() {
             else if (sledeciTip === 'multi') nazivTipaSledece = "MULTI ZADATAK KOMBINOVANO";
             document.getElementById('prikazSledecegTipa').innerText = nazivTipaSledece;
         }
-
+ // ---------------------------------------------------
 let stazaJeIsmesana = (window.odabranaPotraga && window.odabranaPotraga.isGrupna) || 
                               (window.potragaPodaci && window.potragaPodaci.mesanjeRute);
         
@@ -3642,18 +3642,22 @@ let stazaJeIsmesana = (window.odabranaPotraga && window.odabranaPotraga.isGrupna
             }
         }
 
-        // --- 1. PROVERA: Da li je staza okrenuta? ---
+        // --- 1. POUZDANA FIZIČKA PROVERA ---
         let stazaOkrenuta = false;
-        // Upoređujemo prvu tačku na terenu sa originalnom prvom tačkom
         if (window.potragaPodaci && window.odabranaPotraga && window.potragaPodaci.pinovi.length > 0 && window.odabranaPotraga.pinovi.length > 0) {
-            if (window.potragaPodaci.pinovi[0].id !== window.odabranaPotraga.pinovi[0].id) {
+            let p1 = window.potragaPodaci.pinovi[0];
+            let o1 = window.odabranaPotraga.pinovi[0];
+            // Pouzdana provera preko GPS koordinata umesto nepostojećeg ID-a
+            if (p1.lat !== o1.lat || p1.lng !== o1.lng) {
                 stazaOkrenuta = true;
             }
         }
         
-        // --- 2. TVOJA LOGIKA: Ako je okrenuta, važi pravilo "!jeKraj" ---
+        let stazaJeRotirana = (window.sesijaPodaci && window.sesijaPodaci.stazaRotirana) || stazaOkrenuta;
+
+        // --- 2. TVOJA LOGIKA ZA SAKRIVANJE ---
         let sakrijSmernicu = false;
-        if (stazaOkrenuta || stazaJeIsmesana) {
+        if (stazaJeRotirana || stazaJeIsmesana) {
             sakrijSmernicu = !jeKraj;
         }
         
