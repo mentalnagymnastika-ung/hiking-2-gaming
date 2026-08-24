@@ -3122,37 +3122,45 @@ window.prikaziZadatak = function() {
                         else if (sifraIgre.startsWith('simon')) { window.G2H_FabrikaIgara.pokreniSimon(sifraIgre, kontejnerIgre); }
                         else if (sifraIgre.startsWith('radna')) { window.G2H_FabrikaIgara.pokreniRadnu(sifraIgre, kontejnerIgre); }
                     }
-                } else {
-                    // --- NOVI PAMETNI MODUL (Nasumične igre bez ponavljanja) ---
+ } else {
+                    // --- NOVI PAMETNI MODUL SA ZAŠTITOM ---
                     document.getElementById('tekstZadatkaUUI').style.display = 'none';
-                    
+
                     if(kontejnerIgre) {
                         kontejnerIgre.style.display = 'block';
-                        kontejnerIgre.innerHTML = ''; 
-                        window.NoveLogickeIgre.pokreniIgru(pin.id, kontejnerIgre);
+                        kontejnerIgre.innerHTML = '';
+                        
+                        try {
+                            window.NoveLogickeIgre.pokreniIgru(pin.id, kontejnerIgre);
+                        } catch(errG2H) {
+                            console.error("Greska u G2H:", errG2H);
+                            kontejnerIgre.innerHTML = `<div style="padding:20px; background:#fef2f2; border:2px solid #ef4444; border-radius:10px; color:#dc2626; font-weight:bold; text-align:center;">GREŠKA U IGRI:<br>${errG2H.message}</div>`;
+                        }
                     }
-                    
+
                     // Pametno prikazivanje polja za unos
                     let aktivnaNova = window.NoveLogickeIgre.aktivnaIgraNaEkranu;
                     if (aktivnaNova === 'mine') {
-                        // Minama ne treba polje za kucanje
                         document.getElementById('unosOdgovor').style.display = 'none';
-                        if(btnProveri) btnProveri.style.display = 'none'; 
+                        if(btnProveri) btnProveri.style.display = 'none';
                     } else {
-                        // Svim ostalim novim igrama TREBA polje za kucanje i dugme
                         document.getElementById('unosOdgovor').value = '';
                         document.getElementById('unosOdgovor').style.display = 'block';
-                        document.getElementById('txtNapomena').innerText = window.recnik[window.trenutniJezik].napomena || "Unesite rešenje:";
-                        document.getElementById('txtNapomena').style.display = 'block';
                         
+                        // Zaštita rečnika u slučaju da sistem ne stigne da ga učita
+                        let r = window.recnik[window.trenutniJezik] || window.recnik['sr'];
+                        
+                        document.getElementById('txtNapomena').innerText = r.napomena || "Unesite rešenje:";
+                        document.getElementById('txtNapomena').style.display = 'block';
+
                         if(btnProveri) {
                             btnProveri.style.display = 'block';
                             btnProveri.style.background = "#2ecc71";
-                            btnProveri.innerText = window.recnik[window.trenutniJezik].btnProveri || "PROVERI ODGOVOR";
+                            btnProveri.innerText = r.btnProveri || "PROVERI ODGOVOR";
                         }
                     }
                 }
-                return; 
+                return;
             }
 
             
@@ -3325,10 +3333,13 @@ window.prikaziZadatak = function() {
                     document.getElementById('txtNapomena').style.display = 'block';
                 }
             }
-        } catch(err) {
+} catch(err) {
             console.error(err);
             if(document.getElementById('btnProveri')) document.getElementById('btnProveri').style.display = 'none'; 
-            document.getElementById('tekstZadatkaUUI').innerHTML = `<b style='color:#dc2626;'>Greška pri učitavanju zadatka!</b>`;
+            
+            let tekstGreskeUUI = document.getElementById('tekstZadatkaUUI');
+            tekstGreskeUUI.style.display = 'block'; // 🌟 OVO SADA POSTAJE VIDLJIVO!
+            tekstGreskeUUI.innerHTML = `<div style="padding:20px; background:#fef2f2; border:2px solid #ef4444; border-radius:10px; color:#dc2626; font-weight:bold; text-align:center;">Sistemska greška: ${err.message}</div>`;
         }
     };
 
