@@ -5936,68 +5936,79 @@ window.NoveLogickeIgre = {
             </div>`;
     },
 
-    crtajKocku: function(kontejner) {
+crtajKocku: function(k) {
         let simboli = "ABCDEFGHJKLMNPRSTUVWXYZ".split("").sort(() => Math.random() - 0.5).slice(0, 6);
+        let pitanja = [{ tekst: "ZADNJOJ", tip: "zadnja" }, { tekst: "DONJOJ", tip: "donja" }, { tekst: "LEVOJ", tip: "leva" }, { tekst: "DESNOJ", tip: "desna" }];
         let pogledSDesna = Math.random() > 0.5;
-        let pitanja = pogledSDesna ? [{tip:"zadnja", i:4}, {tip:"donja", i:5}, {tip:"leva", i:1}] : [{tip:"zadnja", i:4}, {tip:"donja", i:5}, {tip:"desna", i:3}];
-        let pitanje = pitanja[Math.floor(Math.random() * pitanja.length)];
+        let dostupnaPitanja = pogledSDesna ? pitanja.filter(p => ["zadnja", "donja", "leva"].includes(p.tip)) : pitanja.filter(p => ["zadnja", "donja", "desna"].includes(p.tip));
+        let izabranoPitanje = dostupnaPitanja[Math.floor(Math.random() * dostupnaPitanja.length)];
+        let odgovorIndex = 0; if (izabranoPitanje.tip === "zadnja") odgovorIndex = 4; if (izabranoPitanje.tip === "donja") odgovorIndex = 5; if (izabranoPitanje.tip === "leva") odgovorIndex = 1; if (izabranoPitanje.tip === "desna") odgovorIndex = 3;
+        this.stanjeIgre.tacanOdgovor = simboli[odgovorIndex];
         
-        window.TACAN_ODGOVOR = simboli[pitanje.i].toLowerCase();
-
-        let prazno = `<div class="aspect-square"></div>`;
-        let kutijaNet = (idx) => `<div class="bg-blue-50 border-2 border-blue-400 text-blue-900 shadow-sm aspect-square flex justify-center items-center font-black text-xl rounded-md">${simboli[idx]}</div>`;
-        let uglovi = [0, 90, -90, 180];
-        let rotP = uglovi[Math.floor(Math.random() * 4)], rotG = uglovi[Math.floor(Math.random() * 4)], rotL = uglovi[Math.floor(Math.random() * 4)], rotD = uglovi[Math.floor(Math.random() * 4)];
-
-        let baseArrow = `<svg viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" class="w-12 h-12 absolute drop-shadow-md z-0"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+        let prazno = `<div style="aspect-ratio:1/1;"></div>`;
+        let kutijaNet = (idx) => `<div style="background:#eff6ff; border:2px solid #60a5fa; color:#1e3a8a; aspect-ratio:1/1; display:flex; justify-content:center; align-items:center; font-weight:900; font-size:16px; border-radius:4px;">${simboli[idx]}</div>`;
+        let uglovi = [0, 90, -90, 180]; 
+        let rotP = uglovi[Math.floor(Math.random() * 4)]; 
+        let rotG = uglovi[Math.floor(Math.random() * 4)]; 
+        let rotD = uglovi[Math.floor(Math.random() * 4)]; 
+        let rotL = uglovi[Math.floor(Math.random() * 4)];
+        
+        let baseArrow = `<svg viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" style="width:32px; height:32px; position:absolute; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2)); z-index:0;"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
         let strelicaHTML = "";
         if (pogledSDesna) {
-            if (pitanje.tip === "zadnja") strelicaHTML = `<div class="absolute -top-12 -left-16 rotate-[45deg] z-0">${baseArrow}</div>`;
-            else if (pitanje.tip === "leva") strelicaHTML = `<div class="absolute top-10 -left-24 rotate-[0deg] z-0">${baseArrow}</div>`;
-            else if (pitanje.tip === "donja") strelicaHTML = `<div class="absolute -bottom-16 left-6 rotate-[270deg] z-0">${baseArrow}</div>`;
+            if (izabranoPitanje.tip === "zadnja") strelicaHTML = `<div style="position:absolute; top:-35px; left:-35px; transform:rotate(45deg); z-index:0;">${baseArrow}</div>`;
+            else if (izabranoPitanje.tip === "leva") strelicaHTML = `<div style="position:absolute; top:20px; left:-55px; transform:rotate(0deg); z-index:0;">${baseArrow}</div>`;
+            else if (izabranoPitanje.tip === "donja") strelicaHTML = `<div style="position:absolute; bottom:-40px; left:15px; transform:rotate(270deg); z-index:0;">${baseArrow}</div>`;
         } else {
-            if (pitanje.tip === "zadnja") strelicaHTML = `<div class="absolute -top-12 -right-16 rotate-[135deg] z-0">${baseArrow}</div>`;
-            else if (pitanje.tip === "desna") strelicaHTML = `<div class="absolute top-10 -right-24 rotate-[180deg] z-0">${baseArrow}</div>`;
-            else if (pitanje.tip === "donja") strelicaHTML = `<div class="absolute -bottom-16 right-6 rotate-[270deg] z-0">${baseArrow}</div>`;
+            if (izabranoPitanje.tip === "zadnja") strelicaHTML = `<div style="position:absolute; top:-35px; right:-35px; transform:rotate(135deg); z-index:0;">${baseArrow}</div>`;
+            else if (izabranoPitanje.tip === "desna") strelicaHTML = `<div style="position:absolute; top:20px; right:-55px; transform:rotate(180deg); z-index:0;">${baseArrow}</div>`;
+            else if (izabranoPitanje.tip === "donja") strelicaHTML = `<div style="position:absolute; bottom:-40px; right:15px; transform:rotate(270deg); z-index:0;">${baseArrow}</div>`;
         }
-
-        let transformKocke = pogledSDesna ? `transform: translateZ(-50px) rotateX(-20deg) rotateY(-35deg);` : `transform: translateZ(-50px) rotateX(-20deg) rotateY(35deg);`;
-        let vidljivaBocna = pogledSDesna ? `<div class="strana desna"><div style="transform: rotate(${rotD}deg);">${simboli[3]}</div></div>` : `<div class="strana leva"><div style="transform: rotate(${rotL}deg);">${simboli[1]}</div></div>`;
-
-        kontejner.innerHTML = `
+        
+        let transformKocke = pogledSDesna ? `transform: translateZ(-35px) rotateX(-20deg) rotateY(-35deg);` : `transform: translateZ(-35px) rotateX(-20deg) rotateY(35deg);`;
+        let vidljivaBocnaHTML = pogledSDesna ? `<div class="strana-3d desna"><div style="transform: rotate(${rotD}deg);">${simboli[3]}</div></div>` : `<div class="strana-3d leva"><div style="transform: rotate(${rotL}deg);">${simboli[1]}</div></div>`;
+        
+        k.innerHTML = `
             <style>
-                .kocka-container { width: 100px; height: 100px; perspective: 400px; margin: 40px auto 40px auto; position: relative; }
-                .kocka { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; ${transformKocke} z-index: 20; }
-                .strana { position: absolute; width: 100px; height: 100px; background: #ffffff; border: 3px solid #3b82f6; display: flex; justify-content: center; align-items: center; font-size: 32px; font-weight: 900; color: #1e3a8a; backface-visibility: hidden; }
-                .prednja  { transform: rotateY(  0deg) translateZ(50px); background: #fef9c3; border-color: #facc15; color: #854d0e;}
-                .zadnja   { transform: rotateY(180deg) translateZ(50px); }
-                .desna    { transform: rotateY( 90deg) translateZ(50px); }
-                .leva     { transform: rotateY(-90deg) translateZ(50px); }
-                .gornja   { transform: rotateX( 90deg) translateZ(50px); }
-                .donja    { transform: rotateX(-90deg) translateZ(50px); }
+                .kocka-container-3d { width: 70px; height: 70px; perspective: 400px; margin: 25px auto 35px auto; position: relative; }
+                .kocka-3d { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; ${transformKocke} z-index: 20; }
+                .strana-3d { position: absolute; width: 70px; height: 70px; background: #ffffff; border: 2px solid #3b82f6; display: flex; justify-content: center; align-items: center; font-size: 22px; font-weight: 900; color: #1e3a8a; backface-visibility: hidden; }
+                .strana-3d.prednja { transform: rotateY(0deg) translateZ(35px); background: #fef9c3; border-color: #facc15; color: #854d0e;}
+                .strana-3d.zadnja { transform: rotateY(180deg) translateZ(35px); }
+                .strana-3d.desna { transform: rotateY(90deg) translateZ(35px); }
+                .strana-3d.leva { transform: rotateY(-90deg) translateZ(35px); }
+                .strana-3d.gornja { transform: rotateX(90deg) translateZ(35px); }
+                .strana-3d.donja { transform: rotateX(-90deg) translateZ(35px); }
             </style>
-            <div class="bg-white p-5 rounded-3xl shadow-sm border-2 border-slate-100 text-center">
-                <h3 class="text-blue-600 font-black text-xl mb-3 uppercase tracking-wide">3D Kocka</h3>
-                <div class="bg-blue-50 border-l-4 border-blue-500 text-slate-700 text-xs font-bold px-3 py-2 rounded-r-lg mb-4 flex items-center text-left leading-tight">
-                    <span class="mr-2 text-lg">✏️</span> OBAVEZNO: Skiciraj mrežu i kocku na papir, pre nego što rešiš!
+            <div style="background:white; padding:12px; border-radius:16px; border:2px solid #e2e8f0; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.05); margin-bottom:10px;">
+                <h3 style="color:#2563eb; font-weight:900; font-size:18px; margin:0 0 8px 0; text-transform:uppercase;">📦 3D Kocka</h3>
+                <div style="background:#eff6ff; border-left:4px solid #3b82f6; color:#1e40af; font-size:11px; font-weight:bold; padding:6px 10px; border-radius:0 6px 6px 0; margin-bottom:10px; text-align:left; line-height:1.3;">
+                    ✏️ OBAVEZNO: Skiciraj mrežu i kocku na papir, pre nego što rešiš!
                 </div>
-                <p class="text-slate-500 font-bold text-xs mb-4">Šta se nalazi na strani koju gađa strelica?</p>
-                <div class="flex flex-col items-center gap-6">
-                    <div class="grid grid-cols-4 gap-1 w-[130px] bg-slate-50 p-2 rounded-xl border border-slate-200 shadow-inner z-30">
+                <p style="color:#64748b; font-weight:bold; font-size:12px; margin:0 0 10px 0;">Šta se nalazi na strani koju gađa strelica?</p>
+                
+                <div style="display:flex; flex-direction:column; align-items:center;">
+                    <!-- Mreža kocke usmerena u 4 kolone -->
+                    <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:3px; width:110px; background:#f8fafc; padding:6px; border-radius:8px; border:1px solid #cbd5e1; box-shadow:inset 0 1px 3px rgba(0,0,0,0.05); z-index:30;">
                         ${prazno}${kutijaNet(0)}${prazno}${prazno}
-                        ${kutijaNet(1)}<div class="bg-yellow-200 border-2 border-yellow-400 text-yellow-900 shadow-inner aspect-square flex justify-center items-center font-black text-xl rounded-md">${simboli[2]}</div>${kutijaNet(3)}${kutijaNet(4)}
+                        ${kutijaNet(1)}<div style="background:#fef08a; border:2px solid #facc15; color:#713f12; aspect-ratio:1/1; display:flex; justify-content:center; align-items:center; font-weight:900; font-size:16px; border-radius:4px;">${simboli[2]}</div>${kutijaNet(3)}${kutijaNet(4)}
                         ${prazno}${kutijaNet(5)}${prazno}${prazno}
                     </div>
-                    <div class="kocka-container mt-2 mb-6">
+                    
+                    <!-- 3D Kocka -->
+                    <div class="kocka-container-3d">
                         ${strelicaHTML}
-                        <div class="kocka">
-                            <div class="strana prednja"><div style="transform: rotate(${rotP}deg);">${simboli[2]}</div></div>
-                            <div class="strana gornja"><div style="transform: rotate(${rotG}deg);">${simboli[0]}</div></div>
-                            ${vidljivaBocna}
+                        <div class="kocka-3d">
+                            <div class="strana-3d prednja"><div style="transform: rotate(${rotP}deg);">${simboli[2]}</div></div>
+                            <div class="strana-3d gornja"><div style="transform: rotate(${rotG}deg);">${simboli[0]}</div></div>
+                            ${vidljivaBocnaHTML}
                         </div>
                     </div>
                 </div>
-                <div class="mt-2 text-sm font-black text-rose-700 bg-rose-50 py-3 px-2 rounded-xl border-2 border-rose-200">❓ Unesi Oznaku Skrivene Strane!</div>
+                
+                <div style="font-size:12px; font-weight:900; color:#be123c; background:#fff1f2; padding:6px; border-radius:8px; border:1px solid #fecaca; margin-top:5px;">
+                    ❓ Unesi oznaku skrivene strane dole u polje!
+                </div>
             </div>`;
     },
 
@@ -7069,6 +7080,7 @@ function resetujDugmadVIP(dugmad) {
         else btn.innerHTML = "🚀 AKTIVIRAJ VAUČER";
         btn.disabled = false; 
     });
+}
 
 // MODAL SAMO ZA UNOS VIP KODA (SA GLAVNOG EKRANA) - AŽURIRANO ZA PRIKAZ SVIH GRADOVA IZ BAZE
 window.otvoriSamoVIPModal = async function() {
