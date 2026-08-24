@@ -5660,17 +5660,16 @@ window.iscrtajSpisakTacaka = function() {
 window.NoveLogickeIgre = {
     sveIgre: ['koordinate', 'preklapanje', 'pecanje', 'sibice', 'jednacine', 'vaga', 'kocka', 'orman', 'niz', 'bingo', 'lovac', 'mine'],
     aktivnaIgraNaEkranu: null,
-    stanje: {}, // Čuva privremene podatke za kompleksne igre (Lovac, Mine, Orman)
+    stanje: {}, 
     bingoInterval: null,
 
-    // Univerzalna napomena 
     napomenaPapir: `
-        <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; color: #78350f; font-size: 12px; font-weight: bold; padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 20px; display: flex; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); text-align: left; line-height: 1.2;">
-            <span style="margin-right: 8px; font-size: 20px; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));">✏️</span> OBAVEZNO: Uzmi papir i olovku. Prepiši i skiciraj zadatak na papir, pa tek onda upiši rešenje!
+        <div style="background-color: #fffbeb; border-left: 4px solid #f59e0b; color: #92400e; font-size: 12px; font-weight: bold; padding: 10px 15px; border-radius: 0 8px 8px 0; margin-bottom: 15px; text-align: left; line-height: 1.3; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 20px;">✏️</span>
+            <span>OBAVEZNO: Uzmi papir i olovku. Prepiši i skiciraj zadatak na papir, pa tek onda upiši rešenje!</span>
         </div>
     `,
 
-    // 1. PAMETNI BIRAČ
     odrediIgruZaTacku: function(pinId) {
         if (!window.sesijaPodaci.odigranePametneIgre) window.sesijaPodaci.odigranePametneIgre = [];
         if (!window.sesijaPodaci.dodeljeneIgrePoTacki) window.sesijaPodaci.dodeljeneIgrePoTacki = {};
@@ -5696,7 +5695,6 @@ window.NoveLogickeIgre = {
         return izabrana;
     },
 
-    // 2. GLAVNI DISPEČER ZA CRTANJE
     pokreniIgru: function(pinId, kontejnerDOM) {
         if (this.bingoInterval) { clearInterval(this.bingoInterval); this.bingoInterval = null; }
         
@@ -5705,7 +5703,6 @@ window.NoveLogickeIgre = {
         this.stanje = { pinId: pinId, kontejner: kontejnerDOM }; 
         kontejnerDOM.innerHTML = '';
         
-        // Vraćamo podrazumevano ponašanje dugmeta za proveru (neke igre će ga prepisati)
         let btnProveri = document.getElementById('btnProveri');
         if (btnProveri) btnProveri.onclick = window.proveriOdgovor;
 
@@ -5723,26 +5720,24 @@ window.NoveLogickeIgre = {
         else if (igraZaCrtanje === 'mine') this.crtajMine(kontejnerDOM);
     },
 
-    // ===================================================================
-    // METODE ZA ISCRTAVANJE POJEDINAČNIH IGARA
-    // ===================================================================
-
     crtajKoordinate: function(kontejner) {
         let slova = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".split("").sort(() => Math.random() - 0.5).slice(0, 16);
-        let matrica = [];
-        let htmlTabla = `<div class="grid grid-cols-4 gap-2 max-w-[280px] mx-auto bg-slate-800 p-3 rounded-2xl mb-6 shadow-lg border-2 border-slate-700">`;
         let startR = Math.floor(Math.random() * 4); let startC = Math.floor(Math.random() * 4); let idx = 0;
+        let matrica = [];
+        let htmlTabla = `<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; max-width:280px; margin:0 auto 20px auto; background:#1e293b; padding:12px; border-radius:16px; border:2px solid #334155; box-shadow:0 10px 15px rgba(0,0,0,0.1);">`;
+        
         for(let r=0; r<4; r++) {
             let red = [];
             for(let c=0; c<4; c++) {
                 let slovo = slova[idx++]; red.push(slovo);
                 let isStart = (r === startR && c === startC);
-                let bg = isStart ? "bg-amber-400 border-b-4 border-amber-600 text-amber-950 shadow-inner" : "bg-white border-b-4 border-slate-300 text-slate-800";
-                htmlTabla += `<div class="${bg} aspect-square flex items-center justify-center text-2xl font-black rounded-xl">${slovo}</div>`;
+                let stil = isStart ? 'background:#fbbf24; border-bottom:4px solid #d97706; color:#451a03;' : 'background:#fff; border-bottom:4px solid #cbd5e1; color:#1e293b;';
+                htmlTabla += `<div style="${stil} aspect-ratio: 1/1; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:900; border-radius:12px;">${slovo}</div>`;
             }
             matrica.push(red);
         }
         htmlTabla += `</div>`;
+        
         let r = startR, c = startC, potezi = [];
         let brojKoraka = Math.floor(Math.random() * 2) + 3; 
         for(let i=0; i<brojKoraka; i++) {
@@ -5755,39 +5750,26 @@ window.NoveLogickeIgre = {
             let koraci = Math.floor(Math.random() * potez.max) + 1; 
             r += (potez.dr * koraci); c += (potez.dc * koraci);
             let iscrtane = ""; for(let k=0; k<koraci; k++) iscrtane += potez.dir;
-            potezi.push(`<div class="bg-emerald-50 border-2 border-emerald-200 px-3 py-2 rounded-lg text-sm flex items-center gap-1 shadow-sm font-black text-emerald-800 mb-2 whitespace-nowrap"><span class="text-emerald-600">${i+1}.</span> <span class="tracking-widest drop-shadow-sm text-lg">${iscrtane}</span></div>`);
+            potezi.push(`<div style="background:#ecfdf5; border:2px solid #a7f3d0; padding:6px 10px; border-radius:8px; font-size:14px; font-weight:900; color:#065f46; display:inline-flex; align-items:center; gap:4px; margin:4px;"><span style="color:#059669;">${i+1}.</span> <span style="letter-spacing:4px; font-size:18px;">${iscrtane}</span></div>`);
         }
         
-        window.TACAN_ODGOVOR = matrica[r][c].toLowerCase(); // Postavlja tačan odgovor!
+        window.TACAN_ODGOVOR = matrica[r][c].toLowerCase();
 
         kontejner.innerHTML = `
-            <div class="bg-white p-6 rounded-3xl shadow-sm border-2 border-slate-100 text-center">
-                <div class="flex justify-center mb-3 text-4xl">🗺️</div>
-                <h3 class="text-emerald-600 font-black text-2xl mb-2 uppercase tracking-wide">Tajna Mapa</h3>
+            <div class="g2h-igra-omotac" style="width: 100%; max-width: 340px; box-sizing: border-box; margin: 0 auto; padding: 15px; background: #fff; border-radius: 16px; border: 2px solid #e2e8f0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <h3 style="text-align:center; color:#059669; margin:0 0 10px 0; font-size:20px; font-weight:900; text-transform:uppercase;">🗺️ TAJNA MAPA</h3>
                 ${this.napomenaPapir}
-                <p class="text-slate-500 font-bold text-sm mb-5 leading-relaxed">Kreni od žutog polja i isprati strelice. Gde se završava put?</p>
+                <p style="font-size:13px; color:#64748b; font-weight:bold; margin-bottom:15px; line-height:1.4;">Kreni od žutog polja i isprati strelice. Gde se završava put?</p>
                 ${htmlTabla}
-                <div class="flex flex-wrap justify-center items-center gap-2 mt-4">${potezi.join('')}</div>
+                <div style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center;">${potezi.join('')}</div>
             </div>`;
     },
 
     crtajPreklapanje: function(kontejner) {
-        let maskeSlova = {
-            'A': [0,0,1,0,0, 0,1,0,1,0, 1,1,1,1,1, 1,0,0,0,1, 1,0,0,0,1],
-            'B': [1,1,1,1,0, 1,0,0,0,1, 1,1,1,1,0, 1,0,0,0,1, 1,1,1,1,0],
-            'C': [0,1,1,1,1, 1,0,0,0,0, 1,0,0,0,0, 1,0,0,0,0, 0,1,1,1,1],
-            'D': [1,1,1,1,0, 1,0,0,0,1, 1,0,0,0,1, 1,0,0,0,1, 1,1,1,1,0],
-            'E': [1,1,1,1,1, 1,0,0,0,0, 1,1,1,1,0, 1,0,0,0,0, 1,1,1,1,1],
-            'F': [1,1,1,1,1, 1,0,0,0,0, 1,1,1,1,0, 1,0,0,0,0, 1,0,0,0,0],
-            'H': [1,0,0,0,1, 1,0,0,0,1, 1,1,1,1,1, 1,0,0,0,1, 1,0,0,0,1],
-            'L': [1,0,0,0,0, 1,0,0,0,0, 1,0,0,0,0, 1,0,0,0,0, 1,1,1,1,1],
-            'O': [0,1,1,1,0, 1,0,0,0,1, 1,0,0,0,1, 1,0,0,0,1, 0,1,1,1,0],
-            'T': [1,1,1,1,1, 0,0,1,0,0, 0,0,1,0,0, 0,0,1,0,0, 0,0,1,0,0],
-            'U': [1,0,0,0,1, 1,0,0,0,1, 1,0,0,0,1, 1,0,0,0,1, 0,1,1,1,0]
-        };
+        let maskeSlova = { 'A': [0,0,1,0,0, 0,1,0,1,0, 1,1,1,1,1, 1,0,0,0,1, 1,0,0,0,1], 'B': [1,1,1,1,0, 1,0,0,0,1, 1,1,1,1,0, 1,0,0,0,1, 1,1,1,1,0], 'C': [0,1,1,1,1, 1,0,0,0,0, 1,0,0,0,0, 1,0,0,0,0, 0,1,1,1,1], 'D': [1,1,1,1,0, 1,0,0,0,1, 1,0,0,0,1, 1,0,0,0,1, 1,1,1,1,0], 'E': [1,1,1,1,1, 1,0,0,0,0, 1,1,1,1,0, 1,0,0,0,0, 1,1,1,1,1], 'F': [1,1,1,1,1, 1,0,0,0,0, 1,1,1,1,0, 1,0,0,0,0, 1,0,0,0,0], 'H': [1,0,0,0,1, 1,0,0,0,1, 1,1,1,1,1, 1,0,0,0,1, 1,0,0,0,1], 'L': [1,0,0,0,0, 1,0,0,0,0, 1,0,0,0,0, 1,0,0,0,0, 1,1,1,1,1], 'O': [0,1,1,1,0, 1,0,0,0,1, 1,0,0,0,1, 1,0,0,0,1, 0,1,1,1,0], 'T': [1,1,1,1,1, 0,0,1,0,0, 0,0,1,0,0, 0,0,1,0,0, 0,0,1,0,0], 'U': [1,0,0,0,1, 1,0,0,0,1, 1,0,0,0,1, 1,0,0,0,1, 0,1,1,1,0] };
         let slovaKeys = Object.keys(maskeSlova);
         let metaSlovo = slovaKeys[Math.floor(Math.random() * slovaKeys.length)];
-        window.TACAN_ODGOVOR = metaSlovo.toLowerCase(); // Sistem pamti tačan odgovor
+        window.TACAN_ODGOVOR = metaSlovo.toLowerCase();
 
         let maska = maskeSlova[metaSlovo]; let m1 = Array(25).fill(0); let m2 = Array(25).fill(0);
         maska.forEach((val, i) => { if(val === 1) { if(Math.random() > 0.5) m1[i] = 1; else m2[i] = 1; } });
@@ -5795,20 +5777,19 @@ window.NoveLogickeIgre = {
         if(m2.every(v=>v===0)) { m2[maska.lastIndexOf(1)] = 1; m1[maska.lastIndexOf(1)] = 0; }
 
         function iscrtaj5x5(arr) {
-            let divs = arr.map(v => `<div class="${v ? 'bg-[#1e3a8a] shadow-inner rounded-sm' : 'bg-white/80'} border border-[#60a5fa]/50 aspect-square"></div>`).join('');
-            return `<div class="grid grid-cols-5 w-32 h-32 bg-[#fdf2f8] border-2 border-[#fbcfe8] rounded-xl overflow-hidden shadow-md p-1 gap-[2px]">${divs}</div>`;
+            let divs = arr.map(v => `<div style="${v ? 'background:#1e3a8a; box-shadow:inset 0 2px 4px rgba(0,0,0,0.3); border-radius:2px;' : 'background:rgba(255,255,255,0.8);'} border:1px solid rgba(96,165,250,0.5); aspect-ratio:1/1;"></div>`).join('');
+            return `<div style="display:grid; grid-template-columns:repeat(5,1fr); width:120px; height:120px; background:#fdf2f8; border:2px solid #fbcfe8; border-radius:12px; overflow:hidden; padding:4px; gap:2px;">${divs}</div>`;
         }
 
         kontejner.innerHTML = `
-            <div class="bg-white p-6 rounded-3xl shadow-sm border-2 border-slate-100 text-center">
-                <div class="flex justify-center mb-3 text-4xl">🔳</div>
-                <h3 class="text-blue-600 font-black text-2xl mb-2 uppercase tracking-wide">Preklapanje</h3>
+            <div class="g2h-igra-omotac" style="width: 100%; max-width: 340px; box-sizing: border-box; margin: 0 auto; padding: 15px; background: #fff; border-radius: 16px; border: 2px solid #e2e8f0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <h3 style="text-align:center; color:#2563eb; margin:0 0 10px 0; font-size:20px; font-weight:900; text-transform:uppercase;">🔳 PREKLAPANJE</h3>
                 ${this.napomenaPapir}
-                <p class="text-slate-500 font-bold text-sm mb-6 leading-relaxed">Kada bi se ove dve staklene ploče tačno preklope jedna preko druge, <b>koje slovo bi se formiralo?</b></p>
-                <div class="flex flex-col items-center gap-4 bg-[#fce7f3] p-5 rounded-2xl border border-[#fbcfe8] shadow-sm">
-                    <div class="flex justify-center items-center gap-4">${iscrtaj5x5(m1)}</div>
-                    <div class="text-4xl font-black text-[#db2777] drop-shadow-sm">+</div>
-                    <div class="flex justify-center items-center gap-4">${iscrtaj5x5(m2)}</div>
+                <p style="font-size:13px; color:#64748b; font-weight:bold; margin-bottom:15px; line-height:1.4;">Kada bi se ove dve staklene ploče tačno preklope jedna preko druge, <b>koje slovo bi se formiralo?</b></p>
+                <div style="display:flex; flex-direction:column; align-items:center; gap:15px; background:#fce7f3; padding:20px; border-radius:16px; border:1px solid #fbcfe8;">
+                    ${iscrtaj5x5(m1)}
+                    <div style="font-size:36px; font-weight:900; color:#db2777;">+</div>
+                    ${iscrtaj5x5(m2)}
                 </div>
             </div>`;
     },
@@ -5817,7 +5798,7 @@ window.NoveLogickeIgre = {
         let sveIkone = ['🥾', '🥫', '🐟', '⚓', '🍎', '🏀', '💎', '🔔', '🚀', '🧸', '🍔', '🍉', '⚽', '🚗', '🎈'];
         let izabraneIkone = sveIkone.sort(() => Math.random() - 0.5).slice(0, 4);
         let vrednosti = [1, 2, 3, 4];
-        let legendaHtml = izabraneIkone.map((ik, i) => `<span class="font-black text-lg bg-white px-2 py-1 rounded shadow-sm border border-slate-200">${ik}=${vrednosti[i]}</span>`).join(' ');
+        let legendaHtml = izabraneIkone.map((ik, i) => `<span style="font-weight:900; font-size:16px; background:white; padding:4px 8px; border-radius:6px; box-shadow:0 2px 4px rgba(0,0,0,0.05); border:1px solid #e2e8f0; margin:4px; display:inline-block;">${ik}=${vrednosti[i]}</span>`).join('');
         let dnoIkone = [...izabraneIkone].sort(() => Math.random() - 0.5); 
         let mete = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
 
@@ -5828,26 +5809,26 @@ window.NoveLogickeIgre = {
             cp1X = Math.max(20, Math.min(380, cp1X)); cp2X = Math.max(20, Math.min(380, cp2X));
             let pathD = `M ${startX} 20 C ${cp1X} 100, ${cp2X} 150, ${endX} 230`;
             finalniSVG += `<path d="${pathD}" stroke="${boje[i]}" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.85"/>`;
-            let predmetNaDnu = dnoIkone[mete[i]];
-            rezultat += vrednosti[izabraneIkone.indexOf(predmetNaDnu)];
+            rezultat += vrednosti[izabraneIkone.indexOf(dnoIkone[mete[i]])];
         }
 
         window.TACAN_ODGOVOR = rezultat;
 
         kontejner.innerHTML = `
-            <div class="bg-white p-5 rounded-3xl shadow-sm border-2 border-slate-100 text-center">
-                <div class="flex justify-center mb-2 text-4xl">🎣</div>
-                <h3 class="text-blue-600 font-black text-2xl mb-2 uppercase tracking-wide">Zapetljane Udice</h3>
+            <div class="g2h-igra-omotac" style="width: 100%; max-width: 340px; box-sizing: border-box; margin: 0 auto; padding: 15px; background: #fff; border-radius: 16px; border: 2px solid #e2e8f0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <h3 style="text-align:center; color:#2563eb; margin:0 0 10px 0; font-size:20px; font-weight:900; text-transform:uppercase;">🎣 ZAPETLJANE UDICE</h3>
                 ${this.napomenaPapir}
-                <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 mb-4 text-sm text-slate-700">
-                    <div class="mb-2 font-bold text-slate-500 uppercase tracking-wide text-xs">Vrednosti predmeta:</div>
-                    <div class="flex justify-center items-center gap-2 flex-wrap">${legendaHtml}</div>
-                    <div class="mt-3 font-bold text-slate-800">Prati linije redom od 1 do 4. Koji četvorocifreni broj dobijaš spajanjem udica?</div>
+                <div style="background:#eff6ff; padding:12px; border-radius:12px; border:1px solid #bfdbfe; margin-bottom:15px;">
+                    <div style="font-weight:900; color:#64748b; font-size:11px; text-transform:uppercase; margin-bottom:8px;">Vrednosti predmeta:</div>
+                    <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:4px;">${legendaHtml}</div>
+                    <div style="margin-top:10px; font-weight:bold; color:#1e293b; font-size:13px;">Prati linije redom od 1 do 4. Koji četvorocifreni broj dobijaš spajanjem udica?</div>
                 </div>
-                <div class="relative w-full h-[250px] bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden shadow-inner">
-                    <div class="absolute top-2 left-0 w-full flex justify-around font-black text-2xl z-10 text-slate-800 drop-shadow-md px-4"><div>1</div><div>2</div><div>3</div><div>4</div></div>
-                    <svg viewBox="0 0 400 250" class="w-full h-full absolute top-0 left-0">${finalniSVG}</svg>
-                    <div class="absolute bottom-2 left-0 w-full flex justify-around font-black text-3xl z-10 drop-shadow-lg px-4 bg-white/40 py-1 rounded-full backdrop-blur-sm">
+                <div style="position:relative; width:100%; height:250px; background:#f8fafc; border-radius:16px; border:2px solid #e2e8f0; overflow:hidden;">
+                    <div style="position:absolute; top:10px; left:0; width:100%; display:flex; justify-content:space-around; font-weight:900; font-size:20px; color:#1e293b; z-index:10;">
+                        <div>1</div><div>2</div><div>3</div><div>4</div>
+                    </div>
+                    <svg viewBox="0 0 400 250" style="width:100%; height:100%; position:absolute; top:0; left:0;">${finalniSVG}</svg>
+                    <div style="position:absolute; bottom:10px; left:0; width:100%; display:flex; justify-content:space-around; font-size:28px; z-index:10; background:rgba(255,255,255,0.6); padding:4px 0;">
                         <div>${dnoIkone[0]}</div><div>${dnoIkone[1]}</div><div>${dnoIkone[2]}</div><div>${dnoIkone[3]}</div>
                     </div>
                 </div>
@@ -5856,32 +5837,32 @@ window.NoveLogickeIgre = {
 
     crtajSibice: function(kontejner) {
         let brojSibicaPoCifri = { '0': 6, '1': 2, '2': 5, '3': 5, '4': 4, '5': 5, '6': 6, '7': 3, '8': 7, '9': 6 };
-        let cifra1 = Math.floor(Math.random() * 9) + 1; let cifra2 = Math.floor(Math.random() * 10); let cifra3 = Math.floor(Math.random() * 10);
-        let ciljniBroj = `${cifra1}${cifra2}${cifra3}`;
+        let ciljniBroj = `${Math.floor(Math.random()*9)+1}${Math.floor(Math.random()*10)}${Math.floor(Math.random()*10)}`;
         let ukupanBrojSibica = 0, vizuelniPrikaz = "";
-        
-        let path = (d) => `<path d="${d}" stroke="#f59e0b" stroke-width="8" stroke-linecap="round" class="drop-shadow-md" />`;
+        let path = (d) => `<path d="${d}" stroke="#f59e0b" stroke-width="8" stroke-linecap="round" style="filter:drop-shadow(0 2px 2px rgba(0,0,0,0.3));" />`;
         let segs = { A: "M 15 10 L 45 10", B: "M 50 15 L 50 45", C: "M 50 55 L 50 85", D: "M 15 90 L 45 90", E: "M 10 55 L 10 85", F: "M 10 15 L 10 45", G: "M 15 50 L 45 50" };
         let map = { '0': ['A','B','C','D','E','F'], '1': ['B','C'], '2': ['A','B','G','E','D'], '3': ['A','B','G','C','D'], '4': ['F','G','B','C'], '5': ['A','F','G','C','D'], '6': ['A','F','G','E','C','D'], '7': ['A','B','C'], '8': ['A','B','C','D','E','F','G'], '9': ['A','B','C','D','F','G'] };
 
         for (let char of ciljniBroj) {
             ukupanBrojSibica += brojSibicaPoCifri[char];
-            vizuelniPrikaz += `<svg viewBox="0 0 60 100" class="w-[45px] h-[80px] inline-block mx-1">`;
+            vizuelniPrikaz += `<svg viewBox="0 0 60 100" style="width:45px; height:80px; display:inline-block; margin:0 4px;">`;
             map[char].forEach(s => { vizuelniPrikaz += path(segs[s]); });
             vizuelniPrikaz += `</svg>`;
         }
-
         window.TACAN_ODGOVOR = ukupanBrojSibica.toString();
 
         kontejner.innerHTML = `
-            <div class="bg-slate-900 p-6 rounded-3xl shadow-xl border-4 border-slate-800 text-center relative overflow-hidden">
-                <div class="flex justify-center mb-3 text-4xl">🔥</div>
-                <h3 class="text-amber-400 font-black text-2xl mb-2 uppercase tracking-wide">Zagonetka Šibica</h3>
+            <div class="g2h-igra-omotac" style="width: 100%; max-width: 340px; box-sizing: border-box; margin: 0 auto; padding: 15px; background: #0f172a; border-radius: 16px; border: 4px solid #1e293b; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                <h3 style="text-align:center; color:#fbbf24; margin:0 0 10px 0; font-size:20px; font-weight:900; text-transform:uppercase;">🔥 ZAGONETKA ŠIBICA</h3>
                 ${this.napomenaPapir}
-                <div class="bg-slate-800/50 p-4 rounded-xl mb-6 border border-slate-700">
-                    <p class="text-slate-300 font-bold text-lg leading-relaxed"><span class="text-amber-400 font-black text-xl">KOLIKO</span> šibica (crtica) je ukupno upotrebljeno da se ispiše ovaj broj?</p>
+                <div style="background:rgba(30,41,59,0.5); padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid #334155;">
+                    <p style="color:#cbd5e1; font-weight:bold; font-size:16px; margin:0; line-height:1.4;">
+                        <span style="color:#fbbf24; font-weight:900; font-size:20px;">KOLIKO</span> šibica (crtica) je ukupno upotrebljeno da se ispiše ovaj broj?
+                    </p>
                 </div>
-                <div class="flex justify-center items-center bg-black/40 p-6 rounded-2xl border-2 border-slate-700 shadow-inner flex-nowrap overflow-x-auto gap-2">${vizuelniPrikaz}</div>
+                <div style="display:flex; justify-content:center; align-items:center; background:rgba(0,0,0,0.4); padding:20px; border-radius:16px; border:2px solid #334155;">
+                    ${vizuelniPrikaz}
+                </div>
             </div>`;
     },
 
@@ -5893,17 +5874,22 @@ window.NoveLogickeIgre = {
         window.TACAN_ODGOVOR = String(val3 + val3);
 
         kontejner.innerHTML = `
-            <div class="bg-white p-6 rounded-3xl shadow-sm border-2 border-slate-100 text-center">
-                <div class="flex justify-center mb-3 text-4xl">🧮</div>
-                <h3 class="text-blue-600 font-black text-2xl mb-2 uppercase tracking-wide">Mentalna Matematika</h3>
+            <div class="g2h-igra-omotac" style="width: 100%; max-width: 340px; box-sizing: border-box; margin: 0 auto; padding: 15px; background: #fff; border-radius: 16px; border: 2px solid #e2e8f0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <h3 style="text-align:center; color:#2563eb; margin:0 0 10px 0; font-size:20px; font-weight:900; text-transform:uppercase;">🧮 MENTALNA MATEMATIKA</h3>
                 ${this.napomenaPapir}
-                <p class="text-slate-500 font-bold text-sm mb-5">Izračunaj vrednost svakog simbola. Kolika je vrednost donjeg zbira?</p>
-                <div class="bg-blue-50 border-2 border-blue-100 rounded-2xl p-5 text-2xl font-black text-slate-800 leading-loose shadow-inner">
-                    <div class="flex justify-center gap-2 items-center mb-2"><span>${s1}</span><span class="text-slate-400">+</span><span>${s1}</span><span class="text-blue-500">=</span><span class="text-3xl">${val1+val1}</span></div>
-                    <div class="flex justify-center gap-2 items-center mb-2"><span>${s1}</span><span class="text-slate-400">+</span><span>${s2}</span><span class="text-blue-500">=</span><span class="text-3xl">${val1+val2}</span></div>
-                    <div class="flex justify-center gap-2 items-center mb-2"><span>${s2}</span><span class="text-slate-400">+</span><span>${s3}</span><span class="text-blue-500">=</span><span class="text-3xl">${val2+val3}</span></div>
-                    <div class="border-t-4 border-dashed border-blue-200 mt-4 pt-4 flex justify-center gap-2 items-center text-red-500">
-                        <span>${s3}</span><span>+</span><span>${s3}</span><span>=</span><span class="text-4xl text-red-600">?</span>
+                <p style="font-size:13px; color:#64748b; font-weight:bold; margin-bottom:15px; line-height:1.4;">Izračunaj vrednost svakog simbola. Kolika je vrednost donjeg zbira?</p>
+                <div style="background:#eff6ff; border:2px solid #bfdbfe; border-radius:16px; padding:20px; font-size:24px; font-weight:900; color:#1e293b;">
+                    <div style="display:flex; justify-content:center; gap:8px; align-items:center; margin-bottom:10px;">
+                        <span>${s1}</span><span style="color:#94a3b8;">+</span><span>${s1}</span><span style="color:#3b82f6;">=</span><span style="font-size:28px;">${val1+val1}</span>
+                    </div>
+                    <div style="display:flex; justify-content:center; gap:8px; align-items:center; margin-bottom:10px;">
+                        <span>${s1}</span><span style="color:#94a3b8;">+</span><span>${s2}</span><span style="color:#3b82f6;">=</span><span style="font-size:28px;">${val1+val2}</span>
+                    </div>
+                    <div style="display:flex; justify-content:center; gap:8px; align-items:center; margin-bottom:10px;">
+                        <span>${s2}</span><span style="color:#94a3b8;">+</span><span>${s3}</span><span style="color:#3b82f6;">=</span><span style="font-size:28px;">${val2+val3}</span>
+                    </div>
+                    <div style="border-top:4px dashed #bfdbfe; padding-top:15px; margin-top:15px; display:flex; justify-content:center; gap:8px; align-items:center; color:#ef4444;">
+                        <span>${s3}</span><span>+</span><span>${s3}</span><span>=</span><span style="font-size:36px; color:#dc2626;">?</span>
                     </div>
                 </div>
             </div>`;
@@ -5917,42 +5903,36 @@ window.NoveLogickeIgre = {
         window.TACAN_ODGOVOR = (m1 * m2).toString();
 
         kontejner.innerHTML = `
-            <div class="bg-white p-6 rounded-3xl shadow-sm border-2 border-slate-100 text-center">
-                <div class="flex justify-center mb-3 text-4xl">⚖️</div>
-                <h3 class="text-orange-600 font-black text-2xl mb-2 uppercase tracking-wide">Balansiranje</h3>
+            <div class="g2h-igra-omotac" style="width: 100%; max-width: 340px; box-sizing: border-box; margin: 0 auto; padding: 15px; background: #fff; border-radius: 16px; border: 2px solid #e2e8f0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <h3 style="text-align:center; color:#ea580c; margin:0 0 10px 0; font-size:20px; font-weight:900; text-transform:uppercase;">⚖️ BALANSIRANJE</h3>
                 ${this.napomenaPapir}
-                <p class="text-slate-500 font-bold text-sm mb-5">Koliko predmeta ${e3} drži vagu u ravnoteži sa JEDNIM ${e1}?</p>
-                <div class="flex flex-col gap-4">
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-center items-center gap-4 text-2xl flex-wrap">
-                        <div>${e1}</div><div class="text-slate-400 font-black">=</div><div>${Array(m1).fill(e2).join('')}</div>
+                <p style="font-size:13px; color:#64748b; font-weight:bold; margin-bottom:15px; line-height:1.4;">Koliko predmeta ${e3} drži vagu u ravnoteži sa JEDNIM ${e1}?</p>
+                <div style="display:flex; flex-direction:column; gap:15px;">
+                    <div style="background:white; padding:15px; border-radius:12px; border:1px solid #e2e8f0; display:flex; justify-content:center; align-items:center; gap:15px; font-size:24px; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+                        <div>${e1}</div><div style="color:#94a3b8; font-weight:900;">=</div><div>${Array(m1).fill(e2).join('')}</div>
                     </div>
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-center items-center gap-4 text-2xl flex-wrap">
-                        <div>${e2}</div><div class="text-slate-400 font-black">=</div><div>${Array(m2).fill(e3).join('')}</div>
+                    <div style="background:white; padding:15px; border-radius:12px; border:1px solid #e2e8f0; display:flex; justify-content:center; align-items:center; gap:15px; font-size:24px; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+                        <div>${e2}</div><div style="color:#94a3b8; font-weight:900;">=</div><div>${Array(m2).fill(e3).join('')}</div>
                     </div>
-                    <div class="mt-2 text-xl font-black text-slate-800 flex justify-center items-center gap-3 bg-blue-50 p-3 rounded-lg border border-blue-200 shadow-sm">
-                        <div>1 ${e1}</div><div class="text-blue-500">=</div><div class="text-blue-600 font-black">❓ ${e3}</div>
+                    <div style="margin-top:5px; font-size:20px; font-weight:900; color:#1e293b; display:flex; justify-content:center; align-items:center; gap:10px; background:#eff6ff; padding:15px; border-radius:12px; border:1px solid #bfdbfe;">
+                        <div>1 ${e1}</div><div style="color:#3b82f6;">=</div><div style="color:#2563eb;">❓ ${e3}</div>
                     </div>
                 </div>
             </div>`;
     },
 
-crtajKocku: function(k) {
+    crtajKocku: function(kontejner) {
         let simboli = "ABCDEFGHJKLMNPRSTUVWXYZ".split("").sort(() => Math.random() - 0.5).slice(0, 6);
         let pitanja = [{ tekst: "ZADNJOJ", tip: "zadnja" }, { tekst: "DONJOJ", tip: "donja" }, { tekst: "LEVOJ", tip: "leva" }, { tekst: "DESNOJ", tip: "desna" }];
         let pogledSDesna = Math.random() > 0.5;
         let dostupnaPitanja = pogledSDesna ? pitanja.filter(p => ["zadnja", "donja", "leva"].includes(p.tip)) : pitanja.filter(p => ["zadnja", "donja", "desna"].includes(p.tip));
         let izabranoPitanje = dostupnaPitanja[Math.floor(Math.random() * dostupnaPitanja.length)];
         let odgovorIndex = 0; if (izabranoPitanje.tip === "zadnja") odgovorIndex = 4; if (izabranoPitanje.tip === "donja") odgovorIndex = 5; if (izabranoPitanje.tip === "leva") odgovorIndex = 1; if (izabranoPitanje.tip === "desna") odgovorIndex = 3;
-        this.stanjeIgre.tacanOdgovor = simboli[odgovorIndex];
+        window.TACAN_ODGOVOR = simboli[odgovorIndex].toLowerCase();
         
         let prazno = `<div style="aspect-ratio:1/1;"></div>`;
         let kutijaNet = (idx) => `<div style="background:#eff6ff; border:2px solid #60a5fa; color:#1e3a8a; aspect-ratio:1/1; display:flex; justify-content:center; align-items:center; font-weight:900; font-size:16px; border-radius:4px;">${simboli[idx]}</div>`;
-        let uglovi = [0, 90, -90, 180]; 
-        let rotP = uglovi[Math.floor(Math.random() * 4)]; 
-        let rotG = uglovi[Math.floor(Math.random() * 4)]; 
-        let rotD = uglovi[Math.floor(Math.random() * 4)]; 
-        let rotL = uglovi[Math.floor(Math.random() * 4)];
-        
+        let uglovi = [0, 90, -90, 180]; let rotP = uglovi[Math.floor(Math.random() * 4)]; let rotG = uglovi[Math.floor(Math.random() * 4)]; let rotD = uglovi[Math.floor(Math.random() * 4)]; let rotL = uglovi[Math.floor(Math.random() * 4)];
         let baseArrow = `<svg viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" style="width:32px; height:32px; position:absolute; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2)); z-index:0;"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
         let strelicaHTML = "";
         if (pogledSDesna) {
@@ -5968,11 +5948,11 @@ crtajKocku: function(k) {
         let transformKocke = pogledSDesna ? `transform: translateZ(-35px) rotateX(-20deg) rotateY(-35deg);` : `transform: translateZ(-35px) rotateX(-20deg) rotateY(35deg);`;
         let vidljivaBocnaHTML = pogledSDesna ? `<div class="strana-3d desna"><div style="transform: rotate(${rotD}deg);">${simboli[3]}</div></div>` : `<div class="strana-3d leva"><div style="transform: rotate(${rotL}deg);">${simboli[1]}</div></div>`;
         
-        k.innerHTML = `
+        kontejner.innerHTML = `
             <style>
                 .kocka-container-3d { width: 70px; height: 70px; perspective: 400px; margin: 25px auto 35px auto; position: relative; }
                 .kocka-3d { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; ${transformKocke} z-index: 20; }
-                .strana-3d { position: absolute; width: 70px; height: 70px; background: #ffffff; border: 2px solid #3b82f6; display: flex; justify-content: center; align-items: center; font-size: 22px; font-weight: 900; color: #1e3a8a; backface-visibility: hidden; }
+                .strana-3d { position: absolute; width: 70px; height: 70px; background: #ffffff; border: 2px solid #3b82f6; display: flex; justify-content: center; align-items: center; font-size: 22px; font-weight: 900; color: #1e3a8a; backface-visibility: hidden; box-sizing: border-box; }
                 .strana-3d.prednja { transform: rotateY(0deg) translateZ(35px); background: #fef9c3; border-color: #facc15; color: #854d0e;}
                 .strana-3d.zadnja { transform: rotateY(180deg) translateZ(35px); }
                 .strana-3d.desna { transform: rotateY(90deg) translateZ(35px); }
@@ -5980,22 +5960,16 @@ crtajKocku: function(k) {
                 .strana-3d.gornja { transform: rotateX(90deg) translateZ(35px); }
                 .strana-3d.donja { transform: rotateX(-90deg) translateZ(35px); }
             </style>
-            <div style="background:white; padding:12px; border-radius:16px; border:2px solid #e2e8f0; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.05); margin-bottom:10px;">
-                <h3 style="color:#2563eb; font-weight:900; font-size:18px; margin:0 0 8px 0; text-transform:uppercase;">📦 3D Kocka</h3>
-                <div style="background:#eff6ff; border-left:4px solid #3b82f6; color:#1e40af; font-size:11px; font-weight:bold; padding:6px 10px; border-radius:0 6px 6px 0; margin-bottom:10px; text-align:left; line-height:1.3;">
-                    ✏️ OBAVEZNO: Skiciraj mrežu i kocku na papir, pre nego što rešiš!
-                </div>
-                <p style="color:#64748b; font-weight:bold; font-size:12px; margin:0 0 10px 0;">Šta se nalazi na strani koju gađa strelica?</p>
-                
+            <div class="g2h-igra-omotac" style="width: 100%; max-width: 340px; box-sizing: border-box; margin: 0 auto; padding: 15px; background: #fff; border-radius: 16px; border: 2px solid #e2e8f0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <h3 style="text-align:center; color:#2563eb; margin:0 0 10px 0; font-size:20px; font-weight:900; text-transform:uppercase;">📦 3D KOCKA</h3>
+                ${this.napomenaPapir}
+                <p style="font-size:13px; color:#64748b; font-weight:bold; margin-bottom:15px; line-height:1.4;">Šta se nalazi na strani koju gađa strelica?</p>
                 <div style="display:flex; flex-direction:column; align-items:center;">
-                    <!-- Mreža kocke usmerena u 4 kolone -->
                     <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:3px; width:110px; background:#f8fafc; padding:6px; border-radius:8px; border:1px solid #cbd5e1; box-shadow:inset 0 1px 3px rgba(0,0,0,0.05); z-index:30;">
                         ${prazno}${kutijaNet(0)}${prazno}${prazno}
                         ${kutijaNet(1)}<div style="background:#fef08a; border:2px solid #facc15; color:#713f12; aspect-ratio:1/1; display:flex; justify-content:center; align-items:center; font-weight:900; font-size:16px; border-radius:4px;">${simboli[2]}</div>${kutijaNet(3)}${kutijaNet(4)}
                         ${prazno}${kutijaNet(5)}${prazno}${prazno}
                     </div>
-                    
-                    <!-- 3D Kocka -->
                     <div class="kocka-container-3d">
                         ${strelicaHTML}
                         <div class="kocka-3d">
@@ -6005,17 +5979,11 @@ crtajKocku: function(k) {
                         </div>
                     </div>
                 </div>
-                
-                <div style="font-size:12px; font-weight:900; color:#be123c; background:#fff1f2; padding:6px; border-radius:8px; border:1px solid #fecaca; margin-top:5px;">
-                    ❓ Unesi oznaku skrivene strane dole u polje!
-                </div>
             </div>`;
     },
 
     crtajOrman: function(kontejner) {
         let ORMAN_UKUSI = [ { naziv: 'Kajsija', boja: '#f97316' }, { naziv: 'Šljiva', boja: '#7c3aed' }, { naziv: 'Višnja', boja: '#b91c1c' }, { naziv: 'Malina', boja: '#16a34a' } ];
-        this.stanje.ORMAN_UKUSI = ORMAN_UKUSI;
-
         let minPoteza = 0; let policeJars = [];
         while (minPoteza === 0) {
             let brojacUkusa = ORMAN_UKUSI.map(() => Math.floor(Math.random() * 4) + 1);
@@ -6043,24 +6011,22 @@ crtajKocku: function(k) {
 
         window.TACAN_ODGOVOR = minPoteza.toString();
         this.stanje.ormanPolice = policeJars; 
-
-        let nacrtajTeglu = (ukusIdx) => `<svg viewBox="0 0 32 40" class="w-9 h-11 shrink-0 drop-shadow-sm"><rect x="10" y="0" width="12" height="6" rx="2" fill="#94a3b8"/><rect x="4" y="6" width="24" height="30" rx="6" fill="white" stroke="#cbd5e1" stroke-width="1.5"/><rect x="6.5" y="16" width="19" height="17" rx="4" fill="${ORMAN_UKUSI[ukusIdx].boja}"/></svg>`;
+        
+        let nacrtajTeglu = (ukusIdx) => `<svg viewBox="0 0 32 40" style="width:36px; height:44px; flex-shrink:0; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.2)); margin-right:4px;"><rect x="10" y="0" width="12" height="6" rx="2" fill="#94a3b8"/><rect x="4" y="6" width="24" height="30" rx="6" fill="white" stroke="#cbd5e1" stroke-width="1.5"/><rect x="6.5" y="16" width="19" height="17" rx="4" fill="${ORMAN_UKUSI[ukusIdx].boja}"/></svg>`;
         this.stanje.nacrtajTeglu = nacrtajTeglu;
 
-        let policeHtml = policeJars.map((police, i) => `<div class="bg-gradient-to-b from-slate-50 to-slate-100 rounded-lg p-3 mb-3 border-b-[6px] border-[#78350f] shadow-md"><div class="text-xs font-black text-amber-800 uppercase tracking-wide mb-2">Polica ${i + 1}</div><div class="flex gap-2 flex-wrap items-end">${police.map(nacrtajTeglu).join('')}</div></div>`).join('');
-        let legenda = ORMAN_UKUSI.map(u => `<div class="flex items-center gap-1 text-xs font-bold text-slate-600"><div class="w-3 h-3 rounded-sm" style="background:${u.boja}"></div>${u.naziv}</div>`).join('');
+        let policeHtml = policeJars.map((police, i) => `<div style="background:linear-gradient(to bottom, #f8fafc, #f1f5f9); border-radius:8px; padding:12px; margin-bottom:12px; border-bottom:6px solid #78350f; box-shadow:0 4px 6px rgba(0,0,0,0.05);"><div style="font-size:12px; font-weight:900; color:#92400e; text-transform:uppercase; margin-bottom:8px;">Polica ${i + 1}</div><div style="display:flex; flex-wrap:wrap; align-items:flex-end;">${police.map(nacrtajTeglu).join('')}</div></div>`).join('');
+        let legenda = ORMAN_UKUSI.map(u => `<div style="display:flex; align-items:center; gap:4px; font-size:12px; font-weight:bold; color:#475569;"><div style="width:12px; height:12px; border-radius:3px; background:${u.boja}"></div>${u.naziv}</div>`).join('');
 
         kontejner.innerHTML = `
-            <div class="bg-white p-5 rounded-3xl shadow-sm border-2 border-slate-100 text-center">
-                <div class="flex justify-center mb-2 text-4xl">🧺</div>
-                <h3 class="text-amber-700 font-black text-2xl mb-2 uppercase tracking-wide">Orman (Spajz)</h3>
+            <div class="g2h-igra-omotac" style="width: 100%; max-width: 340px; box-sizing: border-box; margin: 0 auto; padding: 15px; background: #fff; border-radius: 16px; border: 2px solid #e2e8f0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <h3 style="text-align:center; color:#b45309; margin:0 0 10px 0; font-size:20px; font-weight:900; text-transform:uppercase;">🧺 ORMAN (ŠPAJZ)</h3>
                 ${this.napomenaPapir}
-                <p class="text-slate-500 font-bold text-sm mb-4 leading-relaxed">Tegle su izmešane po policama. Koji je MINIMALAN broj poteza da svaki ukus bude skupljen na jednoj polici?</p>
-                <div class="flex justify-center flex-wrap gap-3 mb-4">${legenda}</div>
-                <div class="text-left bg-gradient-to-b from-[#3b2a1a] to-[#1f150c] rounded-2xl p-3 border-4 border-[#1a120a] shadow-xl">${policeHtml}</div>
+                <p style="font-size:13px; color:#64748b; font-weight:bold; margin-bottom:15px; line-height:1.4;">Tegle su izmešane po policama. Koji je MINIMALAN broj poteza da svaki ukus bude skupljen na jednoj polici?</p>
+                <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:12px; margin-bottom:15px;">${legenda}</div>
+                <div style="text-align:left; background:linear-gradient(to bottom, #3b2a1a, #1f150c); border-radius:16px; padding:12px; border:4px solid #1a120a;">${policeHtml}</div>
             </div>`;
 
-        // CUSTOM PROVERA ZA ORMAN (Da bi prikazao sliku rešenja u slučaju greške)
         let btnProveri = document.getElementById('btnProveri');
         if (btnProveri) {
             btnProveri.onclick = () => {
@@ -6071,9 +6037,7 @@ crtajKocku: function(k) {
                 } else {
                     window.azurirajZdravlje(-window.KAZNA_GRESKA);
                     window.osveziSesijuNaServeru();
-                    
                     let st = window.NoveLogickeIgre.stanje;
-                    // Generiši rešenje
                     let resenaPolica = [[], [], [], []];
                     let najboljiPerm = [0,1,2,3]; let maxP = -1;
                     const ormanPerm = (arr) => { if(arr.length<=1)return [arr]; let rez=[]; arr.forEach((el,i)=>{let ost=arr.slice(0,i).concat(arr.slice(i+1)); ormanPerm(ost).forEach(p=>rez.push([el,...p]));}); return rez; };
@@ -6083,7 +6047,7 @@ crtajKocku: function(k) {
                     });
                     for (let u=0; u<4; u++) { let cp=najboljiPerm[u]; let tot=st.ormanPolice.flat().filter(x=>x===u).length; for(let k=0; k<tot; k++) resenaPolica[cp].push(u); }
                     
-                    let rHtml = resenaPolica.map((police, i) => `<div style="background:#ecfdf5; border-radius:8px; padding:12px; margin-bottom:12px; border-bottom:6px solid #047857; box-shadow:0 4px 6px rgba(0,0,0,0.1);"><div style="font-size:12px; font-weight:900; color:#065f46; text-transform:uppercase; margin-bottom:8px;">Polica ${i+1}</div><div style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">${police.map(st.nacrtajTeglu).join('')}</div></div>`).join('');
+                    let rHtml = resenaPolica.map((police, i) => `<div style="background:linear-gradient(to bottom, #f8fafc, #f1f5f9); border-radius:8px; padding:12px; margin-bottom:12px; border-bottom:6px solid #78350f; box-shadow:0 4px 6px rgba(0,0,0,0.05);"><div style="font-size:12px; font-weight:900; color:#92400e; text-transform:uppercase; margin-bottom:8px;">Polica ${i+1}</div><div style="display:flex; flex-wrap:wrap; align-items:flex-end;">${police.map(st.nacrtajTeglu).join('')}</div></div>`).join('');
                     
                     kontejner.innerHTML = `
                         <div style="background:white; padding:20px; border-radius:24px; box-shadow:0 4px 6px rgba(0,0,0,0.05); border:2px solid #a7f3d0; text-align:center;">
@@ -6103,12 +6067,12 @@ crtajKocku: function(k) {
     crtajNiz: function(kontejner) {
         const oblici = [ { kod: 'KR', n: 'krug', b: '#ef4444' }, { kod: 'KV', n: 'kvadrat', b: '#22c55e' }, { kod: 'TR', n: 'trougao', b: '#a855f7' }, { kod: 'RO', n: 'romb', b: '#3b82f6' }, { kod: 'ZV', n: 'zvezda', b: '#eab308' }, { kod: 'SR', n: 'srce', b: '#ec4899' } ];
         let nacrtajO = (o, mala) => {
-            if (o.n === 'krug') return `<div class="${mala?'w-4 h-4':'w-8 h-8'} rounded-full shrink-0" style="background:${o.b}"></div>`;
-            if (o.n === 'kvadrat') return `<div class="${mala?'w-4 h-4':'w-8 h-8'} rounded-sm shrink-0" style="background:${o.b}"></div>`;
-            if (o.n === 'trougao') return `<div class="shrink-0" style="width:0;height:0;border-left:${mala?8:15}px solid transparent;border-right:${mala?8:15}px solid transparent;border-bottom:${mala?14:27}px solid ${o.b};"></div>`;
-            if (o.n === 'romb') return `<div class="${mala?'w-3 h-3':'w-6 h-6'} shrink-0" style="background:${o.b}; transform:rotate(45deg);"></div>`;
-            if (o.n === 'zvezda') return `<div class="${mala?'w-4 h-4':'w-8 h-8'} shrink-0" style="background:${o.b}; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);"></div>`;
-            if (o.n === 'srce') return `<svg viewBox="0 0 32 29" class="${mala?'w-4 h-4':'w-8 h-7'} shrink-0"><path fill="${o.b}" d="M23.6 0c-3.4 0-6.3 2-7.6 4.9C14.7 2 11.8 0 8.4 0 3.8 0 0 3.8 0 8.4c0 9.4 9.5 12.9 16 20.6 6.5-7.7 16-11.2 16-20.6C32 3.8 28.2 0 23.6 0z"/></svg>`;
+            if (o.n === 'krug') return `<div style="width:${mala?'16px':'32px'}; height:${mala?'16px':'32px'}; border-radius:50%; background:${o.b}; flex-shrink:0;"></div>`;
+            if (o.n === 'kvadrat') return `<div style="width:${mala?'16px':'32px'}; height:${mala?'16px':'32px'}; border-radius:4px; background:${o.b}; flex-shrink:0;"></div>`;
+            if (o.n === 'trougao') return `<div style="width:0; height:0; border-left:${mala?8:15}px solid transparent; border-right:${mala?8:15}px solid transparent; border-bottom:${mala?14:27}px solid ${o.b}; flex-shrink:0;"></div>`;
+            if (o.n === 'romb') return `<div style="width:${mala?'12px':'24px'}; height:${mala?'12px':'24px'}; background:${o.b}; transform:rotate(45deg); flex-shrink:0;"></div>`;
+            if (o.n === 'zvezda') return `<div style="width:${mala?'16px':'32px'}; height:${mala?'16px':'32px'}; background:${o.b}; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); flex-shrink:0;"></div>`;
+            if (o.n === 'srce') return `<svg viewBox="0 0 32 29" style="width:${mala?'16px':'32px'}; height:${mala?'16px':'28px'}; flex-shrink:0;"><path fill="${o.b}" d="M23.6 0c-3.4 0-6.3 2-7.6 4.9C14.7 2 11.8 0 8.4 0 3.8 0 0 3.8 0 8.4c0 9.4 9.5 12.9 16 20.6 6.5-7.7 16-11.2 16-20.6C32 3.8 28.2 0 23.6 0z"/></svg>`;
         };
 
         let modBrojevi = Math.random() < 0.5; let niz = [];
@@ -6119,110 +6083,106 @@ crtajKocku: function(k) {
                 let start = korak < 0 ? Math.floor(Math.random() * 20) + 30 : Math.floor(Math.random() * 10) + 1;
                 for(let i=0; i<9; i++) niz.push(start + i * korak);
             } else if (tip === 'naizmenicno') {
-                let k1 = Math.floor(Math.random() * 4) + 2; let k2 = -(Math.floor(Math.random() * 2) + 1); 
-                let start = Math.floor(Math.random() * 10) + 5; niz.push(start);
-                for(let i=1; i<9; i++) { start += (i % 2 !== 0) ? k1 : k2; niz.push(start); }
+                let k1 = Math.floor(Math.random() * 4) + 2; let k2 = -(Math.floor(Math.random() * 2) + 1); let start = Math.floor(Math.random() * 10) + 5;
+                niz.push(start); for(let i=1; i<9; i++) { start += (i % 2 !== 0) ? k1 : k2; niz.push(start); }
             } else {
-                let start = Math.floor(Math.random() * 5) + 2; let step = Math.floor(Math.random() * 2) + 1; niz.push(start);
-                for (let i=1; i<9; i++) { start += step; niz.push(start); step++; }
+                let start = Math.floor(Math.random() * 5) + 2; let step = Math.floor(Math.random() * 2) + 1; 
+                niz.push(start); for (let i=1; i<9; i++) { start += step; niz.push(start); step++; }
             }
         } else {
             let tip = ['ciklus_4', 'ciklus_2', 'po_legendi'][Math.floor(Math.random() * 3)];
             if (tip === 'ciklus_4') {
-                let dostupni = [0,1,2,3,4,5].sort(()=>Math.random()-0.5);
-                for(let i=0; i<9; i++) niz.push(dostupni[i % 4]);
+                let d = [0,1,2,3,4,5].sort(()=>Math.random()-0.5); let blok = [d[0], d[1], d[2], d[3]];
+                for(let i=0; i<9; i++) niz.push(blok[i % 4]);
             } else if (tip === 'ciklus_2') {
-                let a = Math.floor(Math.random() * 6); let b = Math.floor(Math.random() * 6); while(a===b) b=Math.floor(Math.random() * 6);
+                let a = Math.floor(Math.random() * 6); let b = Math.floor(Math.random() * 6); while(a === b) b = Math.floor(Math.random() * 6);
                 for(let i=0; i<9; i++) niz.push(i % 2 === 0 ? a : b);
             } else {
-                let start = Math.floor(Math.random() * 6);
-                for(let i=0; i<9; i++) niz.push((start + i) % 6);
+                let start = Math.floor(Math.random() * 6); for(let i=0; i<9; i++) niz.push((start + i) % 6);
             }
         }
 
-        let nedostajeIdx = Math.floor(Math.random() * 7) + 2; // Nikad prva dva
-        window.TACAN_ODGOVOR = modBrojevi ? niz[nedostajeIdx].toString().toLowerCase() : oblici[niz[nedostajeIdx]].kod.toLowerCase();
+        let nedostajeIdx = Math.floor(Math.random() * 7) + 2;
+        window.TACAN_ODGOVOR = modBrojevi ? niz[nedostajeIdx].toString() : oblici[niz[nedostajeIdx]].kod.toLowerCase();
 
-        let redKarata = niz.map((v, i) => {
-            if (i === nedostajeIdx) return `<div class="w-14 h-20 rounded-xl bg-slate-800 border-2 border-amber-400 shadow-lg flex items-center justify-center text-3xl font-black text-amber-400 shrink-0 transform hover:scale-105 cursor-default">?</div>`;
-            return `<div class="w-14 h-20 rounded-xl bg-white border-b-4 border-slate-300 shadow-sm flex items-center justify-center shrink-0">${modBrojevi ? `<span class="text-2xl font-black text-slate-800">${v}</span>` : nacrtajO(oblici[v])}</div>`;
-        }).join('');
+        let karticaHtml = (vrednost, jeNedostajuca) => {
+            if (jeNedostajuca) return `<div style="width:56px; height:80px; border-radius:12px; background:#1e293b; border:2px solid #fbbf24; display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:900; color:#fbbf24; flex-shrink:0; box-shadow:0 10px 15px rgba(0,0,0,0.3);">?</div>`;
+            let sadrzaj = modBrojevi ? `<span style="font-size:24px; font-weight:900; color:#1e293b;">${vrednost}</span>` : nacrtajO(oblici[vrednost], false);
+            return `<div style="width:56px; height:80px; border-radius:12px; background:white; border-bottom:4px solid #cbd5e1; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 4px rgba(0,0,0,0.05);">${sadrzaj}</div>`;
+        };
 
-        let legenda = modBrojevi ? '' : `<div class="flex justify-center flex-wrap gap-3 mb-5">${oblici.map(o => `<div class="flex items-center gap-1.5 text-xs font-black text-slate-500">${nacrtajO(o, true)}<span class="bg-white px-1.5 py-0.5 rounded shadow-sm">${o.kod}</span></div>`).join('')}</div>`;
+        let redKarata = niz.map((vrednost, i) => karticaHtml(vrednost, i === nedostajeIdx)).join('');
+        let legenda = modBrojevi ? '' : `<div style="display:flex; justify-content:center; flex-wrap:wrap; gap:12px; margin-bottom:20px;">${oblici.map(o => `<div style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:900; color:#64748b;">${nacrtajO(o, true)}<span style="background:white; padding:2px 6px; border-radius:4px; border:1px solid #e2e8f0;">${o.kod}</span></div>`).join('')}</div>`;
 
         kontejner.innerHTML = `
-            <div class="bg-white p-5 rounded-3xl shadow-sm border-2 border-slate-100 text-center">
-                <div class="flex justify-center mb-2 text-4xl drop-shadow-sm">🃏</div>
-                <h3 class="text-slate-800 font-black text-2xl mb-2 uppercase tracking-wide">Niz na Kartama</h3>
+            <div class="g2h-igra-omotac" style="width: 100%; max-width: 340px; box-sizing: border-box; margin: 0 auto; padding: 15px; background: #fff; border-radius: 16px; border: 2px solid #e2e8f0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <h3 style="text-align:center; color:#1e293b; margin:0 0 10px 0; font-size:20px; font-weight:900; text-transform:uppercase;">🃏 NIZ NA KARTAMA</h3>
                 ${this.napomenaPapir}
-                <p class="text-slate-500 font-bold text-sm mb-4 leading-relaxed">Prouči obrazac sa leva na desno. Šta ide na mesto upitnika?</p>
+                <p style="font-size:13px; color:#64748b; font-weight:bold; margin-bottom:15px; line-height:1.4;">Prouči obrazac sa leva na desno. Šta ide na mesto upitnika?</p>
                 ${legenda}
-                <div class="grid grid-cols-3 gap-3 justify-items-center bg-gradient-to-b from-emerald-50 to-emerald-100 p-5 rounded-2xl border-2 border-emerald-200 w-max mx-auto shadow-inner">${redKarata}</div>
-                ${modBrojevi ? '' : '<p class="text-slate-400 font-bold text-xs mt-4">Otkucaj šifru oblika sa legende (npr. KR, ZV...)</p>'}
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; justify-items:center; background:linear-gradient(to bottom, #ecfdf5, #d1fae5); padding:20px; border-radius:16px; border:2px solid #a7f3d0; width:max-content; margin:0 auto;">${redKarata}</div>
+                ${modBrojevi ? '' : '<p style="font-size:12px; font-weight:bold; color:#94a3b8; margin-top:15px;">Otkucaj šifru oblika sa legende (npr. KR, ZV...)</p>'}
             </div>`;
     },
 
     crtajBingo: function(kontejner) {
-        let sveIkone = ['🍎','🍔','🍩','⚽','🧸','💎','🚗','🚀','🔔','🍉','🍓','🍌','🍒','✈️','🥾','🥫','🐟','⚓','🔥','🧊','🧩','🎸','📱','⌚','💡','🎈','🎩','🎁','🔑','🔒'].sort(() => Math.random() - 0.5);
-        let sekvenca = sveIkone.slice(0, 25);
+        let sveIkone = ['🍎','🍔','🍩','⚽','🧸','💎','🚗','🚀','🔔','🍉','🍓','🍌','🍒','✈️','🥾','🥫','🐟','⚓','🔥','🧊','🧩','🎸','📱','⌚','💡','🎈','🎩','🎁','🔑','🔒'];
+        let sekvenca = sveIkone.sort(() => Math.random() - 0.5).slice(0, 25);
         let targets = [...sekvenca].sort(() => Math.random() - 0.5).slice(0, 3);
+        let ans = ""; sekvenca.forEach((item, index) => { if(targets.includes(item)) ans += (index + 1); });
         
-        let ans = "";
-        sekvenca.forEach((item, index) => { if(targets.includes(item)) ans += (index + 1); });
-        window.TACAN_ODGOVOR = ans.toLowerCase();
-
-        // Bingo funkcija koja se poziva na dugme
-        window.zapocniBingo = function() {
-            document.getElementById('bingo-setup').style.display = 'none';
-            document.getElementById('bingo-run').style.display = 'block';
-            let counter = 0; let kartaEl = document.getElementById('bingo-karta'); let brojEl = document.getElementById('bingo-broj');
-            
-            window.NoveLogickeIgre.bingoInterval = setInterval(() => {
-                if(counter >= 25) {
-                    clearInterval(window.NoveLogickeIgre.bingoInterval);
-                    brojEl.innerText = "KRAJ"; brojEl.classList.replace('text-3xl', 'text-xl'); 
-                    kartaEl.innerText = "🏁"; kartaEl.classList.remove('bg-white'); kartaEl.classList.add('bg-slate-200');
-                    return;
-                }
-                brojEl.innerText = (counter + 1); kartaEl.innerText = sekvenca[counter];
-                kartaEl.classList.remove('flip-anim'); void kartaEl.offsetWidth; kartaEl.classList.add('flip-anim');
-                counter++;
-            }, 1200); 
-        };
+        window.TACAN_ODGOVOR = ans;
+        this.stanje.bingoSekvenca = sekvenca;
 
         kontejner.innerHTML = `
-            <div class="bg-white p-5 rounded-3xl shadow-sm border-2 border-slate-100 text-center relative overflow-hidden">
-                <div class="flex justify-center mb-2 text-4xl drop-shadow-sm">🎯</div>
-                <h3 class="text-rose-600 font-black text-2xl mb-2 uppercase tracking-wide">Bingo Memorija</h3>
+            <div class="g2h-igra-omotac" style="width: 100%; max-width: 340px; box-sizing: border-box; margin: 0 auto; padding: 15px; background: #fff; border-radius: 16px; border: 2px solid #e2e8f0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <h3 style="text-align:center; color:#e11d48; margin:0 0 10px 0; font-size:20px; font-weight:900; text-transform:uppercase;">🎯 BINGO MEMORIJA</h3>
                 ${this.napomenaPapir}
                 <div id="bingo-setup">
-                    <p class="text-slate-500 font-bold text-sm mb-4 leading-relaxed">Dobro zapamti ova 3 predmeta i skiciraj ih na papir:</p>
-                    <div class="flex justify-center items-center gap-4 bg-rose-50 py-8 px-4 rounded-2xl border border-rose-200 mb-6 shadow-inner">
-                        <div class="text-5xl drop-shadow-md transform hover:scale-110 transition-transform">${targets[0]}</div>
-                        <div class="text-5xl drop-shadow-md transform hover:scale-110 transition-transform">${targets[1]}</div>
-                        <div class="text-5xl drop-shadow-md transform hover:scale-110 transition-transform">${targets[2]}</div>
+                    <p style="font-size:14px; font-weight:bold; color:#64748b; margin-bottom:16px;">Dobro zapamti ova 3 predmeta i skiciraj ih na papir:</p>
+                    <div style="display:flex; justify-content:center; align-items:center; gap:16px; background:#fff1f2; padding:30px 16px; border-radius:16px; border:1px solid #fecaca; margin-bottom:24px;">
+                        <div style="font-size:48px; filter:drop-shadow(0 4px 4px rgba(0,0,0,0.1));">${targets[0]}</div>
+                        <div style="font-size:48px; filter:drop-shadow(0 4px 4px rgba(0,0,0,0.1));">${targets[1]}</div>
+                        <div style="font-size:48px; filter:drop-shadow(0 4px 4px rgba(0,0,0,0.1));">${targets[2]}</div>
                     </div>
-                    <button onclick="window.zapocniBingo()" style="background:#f43f5e; color:white; font-weight:900; padding:16px; border-radius:12px; width:100%; border:none; font-size:16px;">SPREMAN SAM! PUSTI KARTE ▶️</button>
+                    <button onclick="window.NoveLogickeIgre.zapocniBingo()" style="background:#e11d48; color:white; font-weight:900; padding:16px 24px; border-radius:12px; border:none; width:100%; font-size:16px; cursor:pointer; box-shadow:0 4px 6px rgba(225,29,72,0.3);">SPREMAN SAM! PUSTI KARTE ▶️</button>
                 </div>
                 <div id="bingo-run" style="display:none;">
-                    <div class="bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold p-3 rounded-xl mb-4 text-left">
+                    <div style="background:#f1f5f9; border:1px solid #e2e8f0; color:#334155; font-size:12px; font-weight:bold; padding:12px; border-radius:12px; margin-bottom:16px; text-align:left;">
                         Zapiši broj čim vidiš svoj predmet. Na kraju spoji ta tri broja po redu (npr. <b>21122</b>) i ukucaj u polje dole.
                     </div>
-                    <div class="flex flex-col items-center justify-center bg-slate-900 p-6 rounded-[2rem] border-[6px] border-slate-800 shadow-xl mx-auto w-56 aspect-square relative mt-8 mb-4">
-                        <div id="bingo-broj" class="absolute -top-6 bg-rose-600 text-white font-black text-3xl w-14 h-14 flex items-center justify-center rounded-full shadow-lg border-4 border-slate-900 z-20">0</div>
-                        <div id="bingo-karta" class="text-[5rem] bg-white w-32 h-36 rounded-2xl flex items-center justify-center shadow-lg border-b-4 border-slate-300 z-10">❓</div>
+                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; background:#0f172a; padding:24px; border-radius:32px; border:6px solid #1e293b; width:220px; height:220px; box-sizing:border-box; margin:30px auto 16px auto; position:relative; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+                        <div id="bingo-broj" style="position:absolute; top:-24px; background:#e11d48; color:white; font-weight:900; font-size:24px; width:56px; height:56px; display:flex; align-items:center; justify-content:center; border-radius:50%; border:4px solid #0f172a; box-shadow:0 4px 6px rgba(0,0,0,0.3);">0</div>
+                        <div id="bingo-karta" style="font-size:80px; background:white; width:120px; height:140px; border-radius:16px; display:flex; align-items:center; justify-content:center; border-bottom:4px solid #cbd5e1; box-shadow:0 4px 10px rgba(0,0,0,0.2);">❓</div>
                     </div>
                 </div>
             </div>`;
     },
 
+    zapocniBingo: function() {
+        let st = window.NoveLogickeIgre.stanje;
+        document.getElementById('bingo-setup').style.display = 'none';
+        document.getElementById('bingo-run').style.display = 'block';
+        let counter = 0; let kartaEl = document.getElementById('bingo-karta'); let brojEl = document.getElementById('bingo-broj');
+        window.NoveLogickeIgre.bingoInterval = setInterval(() => {
+            if(counter >= 25) {
+                clearInterval(window.NoveLogickeIgre.bingoInterval);
+                window.NoveLogickeIgre.bingoInterval = null;
+                brojEl.innerText = "KRAJ"; brojEl.style.fontSize = "16px";
+                kartaEl.innerText = "🏁"; kartaEl.style.background = "#e2e8f0";
+                return;
+            }
+            brojEl.innerText = (counter + 1); kartaEl.innerText = st.bingoSekvenca[counter];
+            counter++;
+        }, 1200);
+    },
+
     crtajLovca: function(kontejner) {
         let obliciT = [ [[0,0],[0,1],[0,2],[1,1]], [[0,0],[1,0],[2,0],[2,1]], [[0,0],[0,1],[1,1],[1,2]], [[0,0],[1,0],[2,0],[3,0]], [[0,0],[0,1],[1,0],[1,1]] ];
+        let rotiraj = (oblik) => oblik.map(([r, c]) => [c, -r]);
         let izabraniOblik = obliciT[Math.floor(Math.random() * obliciT.length)];
-        let rot = Math.floor(Math.random() * 4);
-        for(let i=0; i<rot; i++) izabraniOblik = izabraniOblik.map(([r, c]) => [c, -r]);
-
-        let validno = false; let finalCoords = []; let cols = ['A', 'M', 'O', 'P', 'E'];
+        let rotacije = Math.floor(Math.random() * 4); for(let i=0; i<rotacije; i++) izabraniOblik = rotiraj(izabraniOblik);
+        let validno = false, finalCoords = [], cols = ['A', 'M', 'O', 'P', 'E'];
         while(!validno) {
             let offR = Math.floor(Math.random() * 5); let offC = Math.floor(Math.random() * 5);
             let temp = izabraniOblik.map(([r, c]) => [r + offR, c + offC]);
@@ -6233,67 +6193,66 @@ crtajKocku: function(k) {
         this.stanje.lovacMete = finalCoords;
         this.stanje.lovacPogodjeno = [];
         this.stanje.lovacPromaseno = [];
-        window.TACAN_ODGOVOR = "lovac_skriven"; // Sistem ne proverava automatski
-
-        window.NoveLogickeIgre.iscrtajLovac = function() {
-            let k = document.getElementById('lovacGridKontejner'); if(!k) return;
-            let h = '<div></div>'; cols.forEach(c => h += `<div class="font-black text-slate-500 flex items-center justify-center">${c}</div>`);
-            for(let r=1; r<=5; r++) {
-                h += `<div class="font-black text-slate-500 flex items-center justify-center">${r}</div>`;
-                for(let c=0; c<5; c++) {
-                    let koord = cols[c] + r;
-                    if(window.NoveLogickeIgre.stanje.lovacPogodjeno.includes(koord)) h += `<div class="bg-emerald-100 border-2 border-emerald-500 rounded-lg flex items-center justify-center text-2xl shadow-inner">💎</div>`;
-                    else if (window.NoveLogickeIgre.stanje.lovacPromaseno.includes(koord)) h += `<div class="bg-slate-200 border-2 border-slate-300 rounded-lg flex items-center justify-center text-xl font-black text-slate-400 shadow-inner">X</div>`;
-                    else h += `<div class="bg-blue-50 border-2 border-blue-200 rounded-lg shadow-sm"></div>`;
-                }
-            }
-            k.innerHTML = h;
-        };
 
         kontejner.innerHTML = `
-            <div class="bg-white p-5 rounded-3xl shadow-sm border-2 border-slate-100 text-center relative">
-                <div class="flex justify-center mb-2 text-4xl drop-shadow-sm">🗺️</div>
-                <h3 class="text-emerald-700 font-black text-2xl mb-2 uppercase tracking-wide">Lovac na Blago</h3>
+            <div class="g2h-igra-omotac" style="width: 100%; max-width: 340px; box-sizing: border-box; margin: 0 auto; padding: 15px; background: #fff; border-radius: 16px; border: 2px solid #e2e8f0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <h3 style="text-align:center; color:#047857; margin:0 0 10px 0; font-size:20px; font-weight:900; text-transform:uppercase;">🗺️ LOVAC NA BLAGO</h3>
                 ${this.napomenaPapir}
-                <p class="text-slate-500 font-bold text-sm mb-4 leading-tight">Računar je sakrio JEDAN deo blaga oblika Tetrisa (4 polja). Kucaj koordinate (npr. A1) da otkriješ celo blago!</p>
-                <div id="lovacGridKontejner" class="grid grid-cols-6 gap-1.5 justify-items-stretch bg-slate-100 p-4 rounded-2xl border-2 border-slate-300 w-full max-w-[300px] mx-auto shadow-inner h-[280px]"></div>
+                <p style="font-size:13px; color:#64748b; font-weight:bold; margin-bottom:15px; line-height:1.4;">Računar je sakrio JEDAN deo blaga oblika Tetrisa (4 polja). Kucaj koordinate (npr. A1) da otkriješ celo blago!</p>
+                <div id="lovacGridKontejner" style="display:grid; grid-template-columns:repeat(6,1fr); gap:6px; background:#f1f5f9; padding:16px; border-radius:16px; border:2px solid #cbd5e1; width:100%; max-width:300px; box-sizing:border-box; margin:0 auto; height:280px; box-shadow:inset 0 4px 6px rgba(0,0,0,0.05);"></div>
             </div>`;
-        
-        setTimeout(window.NoveLogickeIgre.iscrtajLovac, 50);
 
-        // CUSTOM PROVERA ZA LOVCA
+        setTimeout(() => window.NoveLogickeIgre.iscrtajLovac(), 10);
+
         let btnProveri = document.getElementById('btnProveri');
         if (btnProveri) {
             btnProveri.onclick = () => {
                 let val = document.getElementById('unosOdgovor').value.trim().toUpperCase();
-                if(!val) { window.prikaziGresku("Upiši koordinatu npr. A1"); return; }
-                let rows = ['1', '2', '3', '4', '5'];
-                if(val.length !== 2 || !cols.includes(val[0]) || !rows.includes(val[1])) {
-                    window.prikaziGresku("Nevažeća koordinata! Unesi slovo pa broj."); return;
+                if(!val) { alert("Unesi koordinatu npr. A1"); return; }
+                if(val.length !== 2 || !cols.includes(val[0]) || !['1','2','3','4','5'].includes(val[1])) {
+                    alert("Nevažeća koordinata! Unesi slovo (A,M,O,P,E) i broj (1-5)."); return;
                 }
                 let st = window.NoveLogickeIgre.stanje;
                 if(st.lovacPogodjeno.includes(val) || st.lovacPromaseno.includes(val)) { document.getElementById('unosOdgovor').value = ''; return; }
-
                 if(st.lovacMete.includes(val)) {
                     st.lovacPogodjeno.push(val);
                     if(st.lovacPogodjeno.length === 4) {
                         window.NoveLogickeIgre.iscrtajLovac();
-                        if (typeof window.prikaziObavestenjeSredina === 'function') window.prikaziObavestenjeSredina("BRAVO!", "Otkrio si celo blago!", "🎉", "#10b981");
-                        setTimeout(() => window.uspehZadatka(), 2500);
-                    } else {
-                        if (typeof window.prikaziObavestenjeSredina === 'function') window.prikaziObavestenjeSredina("POGODAK!", "Našao si deo blaga, traži dalje!", "💎", "#10b981");
-                        setTimeout(() => { let m = document.getElementById('mojCustomModal'); if(m) m.remove(); }, 900);
-                    }
+                        setTimeout(() => { alert("🎉 Otkrio si celo blago!"); window.uspehZadatka(); }, 300);
+                    } else { alert("💎 POGODAK! Našao si deo blaga, traži dalje!"); }
                 } else {
                     st.lovacPromaseno.push(val);
-                    window.azurirajZdravlje(-window.KAZNA_GRESKA); window.osveziSesijuNaServeru();
-                    if (typeof window.prikaziObavestenjeSredina === 'function') window.prikaziObavestenjeSredina("PROMAŠAJ!", "Ovde je samo prašina. Gubiš energiju.", "💨", "#ef4444");
-                    setTimeout(() => { let m = document.getElementById('mojCustomModal'); if(m) m.remove(); }, 1200);
+                    alert("💨 PROMAŠAJ! Ovde je samo prašina.");
+                    window.azurirajZdravlje(-window.KAZNA_GRESKA);
+                    window.osveziSesijuNaServeru();
                 }
                 document.getElementById('unosOdgovor').value = '';
                 window.NoveLogickeIgre.iscrtajLovac();
             };
         }
+    },
+
+    iscrtajLovac: function() {
+        let kontejner = document.getElementById('lovacGridKontejner');
+        if(!kontejner) return;
+        let st = window.NoveLogickeIgre.stanje;
+        let cols = ['A', 'M', 'O', 'P', 'E'];
+        let html = `<div></div>`;
+        cols.forEach(c => html += `<div style="font-weight:900; color:#64748b; display:flex; align-items:center; justify-content:center;">${c}</div>`);
+        for(let r=1; r<=5; r++) {
+            html += `<div style="font-weight:900; color:#64748b; display:flex; align-items:center; justify-content:center;">${r}</div>`;
+            for(let c=0; c<5; c++) {
+                let koord = cols[c] + r;
+                if(st.lovacPogodjeno.includes(koord)) {
+                    html += `<div style="background:#dcfce7; border:2px solid #22c55e; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:24px; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);">💎</div>`;
+                } else if (st.lovacPromaseno.includes(koord)) {
+                    html += `<div style="background:#e2e8f0; border:2px solid #cbd5e1; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:900; color:#94a3b8; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);">X</div>`;
+                } else {
+                    html += `<div style="background:#eff6ff; border:2px solid #bfdbfe; border-radius:8px;"></div>`;
+                }
+            }
+        }
+        kontejner.innerHTML = html;
     },
 
     crtajMine: function(kontejner) {
@@ -6306,67 +6265,83 @@ crtajKocku: function(k) {
         this.stanje.mineOtkriveno = Array(5).fill().map(() => Array(5).fill(false));
         this.stanje.mineKraj = false;
 
-        window.NoveLogickeIgre.prebrojMine = function(r, c) {
-            let st = window.NoveLogickeIgre.stanje, count = 0;
-            for(let dr=-1; dr<=1; dr++) for(let dc=-1; dc<=1; dc++) { let nr=r+dr, nc=c+dc; if(nr>=0 && nr<5 && nc>=0 && nc<5 && st.mineGrid[nr][nc]) count++; }
-            return count;
-        };
-
-        window.otkrijMinu = function(r, c) {
-            let st = window.NoveLogickeIgre.stanje;
-            if(st.mineKraj || st.mineOtkriveno[r][c]) return;
-            if(st.mineGrid[r][c]) {
-                st.mineKraj = true;
-                st.mineOtkriveno = st.mineOtkriveno.map((row, i) => row.map((val, j) => val || st.mineGrid[i][j]));
-                window.NoveLogickeIgre.iscrtajMine();
-                window.azurirajZdravlje(-window.KAZNA_GRESKA); window.osveziSesijuNaServeru();
-                if (typeof window.prikaziObavestenjeSredina === 'function') window.prikaziObavestenjeSredina("BUM!", "Stao si na minu! Tabla se resetuje.", "💥", "#ef4444");
-                setTimeout(() => { let m = document.getElementById('mojCustomModal'); if(m) m.remove(); window.NoveLogickeIgre.pokreniIgru(st.pinId, document.getElementById('g2hIgreUI')); }, 2500);
-                return;
-            }
-            let stack = [[r, c]];
-            while(stack.length > 0) {
-                let [cr, cc] = stack.pop();
-                if(cr<0 || cr>4 || cc<0 || cc>4 || st.mineOtkriveno[cr][cc]) continue;
-                st.mineOtkriveno[cr][cc] = true;
-                if(window.NoveLogickeIgre.prebrojMine(cr, cc) === 0) {
-                    for(let dr=-1; dr<=1; dr++) for(let dc=-1; dc<=1; dc++) stack.push([cr+dr, cc+dc]);
-                }
-            }
-            window.NoveLogickeIgre.iscrtajMine();
-            if(st.mineOtkriveno.flat().filter(v => v).length === 25 - 4) { 
-                st.mineKraj = true;
-                if (typeof window.prikaziObavestenjeSredina === 'function') window.prikaziObavestenjeSredina("BRAVO!", "Očistio si minsko polje!", "🎉", "#10b981");
-                setTimeout(() => { let m = document.getElementById('mojCustomModal'); if(m) m.remove(); window.uspehZadatka(); }, 2500);
-            }
-        };
-
-        window.NoveLogickeIgre.iscrtajMine = function() {
-            let k = document.getElementById('mineGridKontejner'); if(!k) return;
-            let st = window.NoveLogickeIgre.stanje; let h = '';
-            for(let r=0; r<5; r++) {
-                for(let c=0; c<5; c++) {
-                    if(st.mineOtkriveno[r][c]) {
-                        if(st.mineGrid[r][c]) h += `<div class="bg-red-500 rounded-md shadow-inner flex items-center justify-center text-3xl aspect-square border-2 border-red-700">💣</div>`;
-                        else {
-                            let cnt = window.NoveLogickeIgre.prebrojMine(r, c);
-                            let bo = cnt===1 ? 'text-blue-600' : cnt===2 ? 'text-green-600' : cnt>2 ? 'text-red-600' : '';
-                            h += `<div class="bg-slate-100 rounded-md shadow-inner flex items-center justify-center text-xl font-black ${bo} aspect-square border-2 border-slate-200">${cnt>0?cnt:''}</div>`;
-                        }
-                    } else h += `<button onclick="window.otkrijMinu(${r}, ${c})" class="bg-slate-400 hover:bg-slate-300 rounded-md shadow-[inset_0_-4px_0_rgba(0,0,0,0.2)] active:translate-y-1 transition-all aspect-square border-2 border-slate-500 flex items-center justify-center"></button>`;
-                }
-            }
-            k.innerHTML = h;
-        };
-
         kontejner.innerHTML = `
-            <div class="bg-white p-5 rounded-3xl shadow-sm border-2 border-slate-100 text-center relative">
-                <div class="flex justify-center mb-2 text-4xl drop-shadow-sm">💣</div>
-                <h3 class="text-slate-800 font-black text-2xl mb-2 uppercase tracking-wide">Minolovac</h3>
-                <p class="text-slate-500 font-bold text-sm mb-4 leading-tight">Na tabli su 4 mine. Klikći pažljivo da otkriješ sva sigurna polja!</p>
-                <div id="mineGridKontejner" class="grid grid-cols-5 gap-1 bg-slate-700 p-3 rounded-2xl border-[6px] border-slate-800 w-full max-w-[300px] mx-auto shadow-xl h-[280px]"></div>
+            <div class="g2h-igra-omotac" style="width: 100%; max-width: 340px; box-sizing: border-box; margin: 0 auto; padding: 15px; background: #fff; border-radius: 16px; border: 2px solid #e2e8f0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <h3 style="text-align:center; color:#1e293b; margin:0 0 10px 0; font-size:20px; font-weight:900; text-transform:uppercase;">💣 MINOLOVAC</h3>
+                <p style="font-size:13px; color:#64748b; font-weight:bold; margin-bottom:15px; line-height:1.4;">Na tabli su 4 mine. Klikći pažljivo da otkriješ sva sigurna polja!</p>
+                <div id="mineGridKontejner" style="display:grid; grid-template-columns:repeat(5,1fr); gap:4px; background:#334155; padding:12px; border-radius:16px; border:6px solid #1e293b; width:100%; max-width:300px; box-sizing:border-box; margin:0 auto; height:280px; box-shadow:0 10px 15px rgba(0,0,0,0.3);"></div>
             </div>`;
-        setTimeout(window.NoveLogickeIgre.iscrtajMine, 50);
+
+        setTimeout(() => window.NoveLogickeIgre.iscrtajMine(), 10);
+    },
+
+    prebrojMine: function(r, c) {
+        let count = 0; let st = window.NoveLogickeIgre.stanje;
+        for(let dr=-1; dr<=1; dr++) {
+            for(let dc=-1; dc<=1; dc++) {
+                let nr=r+dr, nc=c+dc;
+                if(nr>=0 && nr<5 && nc>=0 && nc<5 && st.mineGrid[nr][nc]) count++;
+            }
+        }
+        return count;
+    },
+
+    otkrijMinu: function(r, c) {
+        let st = window.NoveLogickeIgre.stanje;
+        if(st.mineKraj || st.mineOtkriveno[r][c]) return;
+        
+        if(st.mineGrid[r][c]) {
+            st.mineKraj = true;
+            st.mineOtkriveno = st.mineOtkriveno.map((row, i) => row.map((val, j) => val || st.mineGrid[i][j]));
+            window.NoveLogickeIgre.iscrtajMine();
+            alert("💥 BUM! Stao si na minu!");
+            window.azurirajZdravlje(-window.KAZNA_GRESKA);
+            window.osveziSesijuNaServeru();
+            setTimeout(() => { window.NoveLogickeIgre.pokreniIgru(st.pinId, st.kontejner); }, 1500);
+            return;
+        }
+
+        let stack = [[r, c]];
+        while(stack.length > 0) {
+            let [cr, cc] = stack.pop();
+            if(cr<0 || cr>4 || cc<0 || cc>4 || st.mineOtkriveno[cr][cc]) continue;
+            st.mineOtkriveno[cr][cc] = true;
+            if(window.NoveLogickeIgre.prebrojMine(cr, cc) === 0) {
+                for(let dr=-1; dr<=1; dr++) { for(let dc=-1; dc<=1; dc++) { stack.push([cr+dr, cc+dc]); } }
+            }
+        }
+        
+        window.NoveLogickeIgre.iscrtajMine();
+        let otkrivenoCount = st.mineOtkriveno.flat().filter(v => v).length;
+        if(otkrivenoCount === 21) {
+            st.mineKraj = true;
+            setTimeout(() => { alert("🎉 Uspešno si očistio minsko polje!"); window.uspehZadatka(); }, 300);
+        }
+    },
+
+    iscrtajMine: function() {
+        let kontejner = document.getElementById('mineGridKontejner');
+        if(!kontejner) return;
+        let st = window.NoveLogickeIgre.stanje;
+        let html = '';
+        for(let r=0; r<5; r++) {
+            for(let c=0; c<5; c++) {
+                let otkriveno = st.mineOtkriveno[r][c];
+                let jeMina = st.mineGrid[r][c];
+                if(otkriveno) {
+                    if(jeMina) {
+                        html += `<div style="background:#ef4444; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:28px; border:2px solid #b91c1c; box-shadow:inset 0 2px 4px rgba(0,0,0,0.3);">💣</div>`;
+                    } else {
+                        let count = window.NoveLogickeIgre.prebrojMine(r, c);
+                        let boja = count === 1 ? '#2563eb' : count === 2 ? '#16a34a' : count > 2 ? '#dc2626' : '';
+                        html += `<div style="background:#f8fafc; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:900; color:${boja}; border:2px solid #e2e8f0; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);">${count > 0 ? count : ''}</div>`;
+                    }
+                } else {
+                    html += `<button onclick="window.NoveLogickeIgre.otkrijMinu(${r}, ${c})" style="background:#94a3b8; border-radius:6px; border:2px solid #64748b; box-shadow:inset 0 -4px 0 rgba(0,0,0,0.2); cursor:pointer; padding:0; margin:0; outline:none; transition:transform 0.1s;"></button>`;
+                }
+            }
+        }
+        kontejner.innerHTML = html;
     }
 };
 
