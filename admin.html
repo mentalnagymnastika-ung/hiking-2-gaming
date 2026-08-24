@@ -1755,14 +1755,15 @@
                 let mTezina = document.getElementById('g2h_izbor_tezine');
                 let sacuvanaSifra = p.zadatak.tekst_zadatka || 'memorija1';
                 
-                let nadjenaIgra = sacuvanaSifra.startsWith('memorija') ? 'memorija' : 
+                let nadjenaIgra = sacuvanaSifra.startsWith('pametne_igre') ? 'pametne_igre' :
+                                  sacuvanaSifra.startsWith('memorija') ? 'memorija' : 
                                   sacuvanaSifra.startsWith('skocko') ? 'skocko' : 
                                   sacuvanaSifra.startsWith('prekidaci') ? 'prekidaci' : 
                                   sacuvanaSifra.startsWith('slagalica') ? 'slagalica' : 
                                   sacuvanaSifra.startsWith('simon') ? 'simon' :
                                   sacuvanaSifra.startsWith('matricaboja') ? 'matricaboja' :
                                   sacuvanaSifra.startsWith('staza') ? 'staza' :
-                                  sacuvanaSifra.startsWith('radna') ? 'radna' : 'memorija';
+                                  sacuvanaSifra.startsWith('radna') ? 'radna' : 'pametne_igre';
                 
                 if (mIgra) {
                     mIgra.value = nadjenaIgra;
@@ -1856,13 +1857,15 @@
                     let mTezina = document.getElementById('g2h_izbor_tezine');
                     let mSifra = p.zadatak.igrica_kod || 'memorija1';
                     
-                    let nadjenaIgra = mSifra.startsWith('memorija') ? 'memorija' : 
-                                      mSifra.startsWith('skocko') ? 'skocko' : 
-                                      mSifra.startsWith('prekidaci') ? 'prekidaci' : 
-                                      mSifra.startsWith('slagalica') ? 'slagalica' : 
-                                      mSifra.startsWith('simon') ? 'simon' :
-                                      mSifra.startsWith('matricaboja') ? 'matricaboja' :
-                                      mSifra.startsWith('radna') ? 'radna' : 'memorija';
+                    let nadjenaIgra = sacuvanaSifra.startsWith('pametne_igre') ? 'pametne_igre' :
+                                  sacuvanaSifra.startsWith('memorija') ? 'memorija' : 
+                                  sacuvanaSifra.startsWith('skocko') ? 'skocko' : 
+                                  sacuvanaSifra.startsWith('prekidaci') ? 'prekidaci' : 
+                                  sacuvanaSifra.startsWith('slagalica') ? 'slagalica' : 
+                                  sacuvanaSifra.startsWith('simon') ? 'simon' :
+                                  sacuvanaSifra.startsWith('matricaboja') ? 'matricaboja' :
+                                  sacuvanaSifra.startsWith('staza') ? 'staza' :
+                                  sacuvanaSifra.startsWith('radna') ? 'radna' : 'pametne_igre';
                     
                     if (mIgra) {
                         mIgra.value = nadjenaIgra;
@@ -1980,7 +1983,8 @@
             mIgra.style.fontWeight = 'bold';
             mIgra.style.width = '100%';
             mIgra.style.marginBottom = '10px';
-            mIgra.innerHTML = `
+mIgra.innerHTML = `
+                <option value="pametne_igre" style="background: #fef3c7; font-weight: 900; color: #d97706;">🧠 PAMETNE IGRE (Nasumično 12 različitih)</option>
                 <option value="memorija">🍓 Igra Memorije (G2H)</option>
                 <option value="skocko">🤠 Voćni Skočko (G2H)</option>
                 <option value="prekidaci">🔌 Sajber Prekidači (G2H)</option>
@@ -2000,7 +2004,9 @@
 
             let osveziTezine = function() {
                 let izabranaIgra = mIgra.value;
-                if (izabranaIgra === 'memorija') {
+                if (izabranaIgra === 'pametne_igre') {
+                    mTezina.innerHTML = `<option value="">✨ Dinamičko generisanje igre i težine za svakog igrača</option>`;
+                } else if (izabranaIgra === 'memorija') {
                     mTezina.innerHTML = `<option value="1">⚪ Bela staza (Najlakše - mreža 3x4)</option><option value="2">🔵 Plava staza (Srednje - mreža 4x4)</option><option value="3">🔴 Crvena staza (Najteže - mreža 4x5)</option>`;
                 } else if (izabranaIgra === 'skocko') {
                     mTezina.innerHTML = `<option value="1">⚪ Bela staza (Lakši nivo pogađanja)</option><option value="2">🔵 Plava staza (Srednji nivo pogađanja)</option><option value="3">🔴 Crvena staza (Klasičan najteži nivo)</option>`;
