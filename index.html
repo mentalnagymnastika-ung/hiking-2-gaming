@@ -6321,7 +6321,7 @@ crtajLovca: function(kontejner) {
         kontejner.innerHTML = html;
     },
 
-    crtajMine: function(kontejner) {
+crtajMine: function(kontejner) {
         let mineIndices = [];
         while(mineIndices.length < 4) { let rnd = Math.floor(Math.random() * 25); if(!mineIndices.includes(rnd)) mineIndices.push(rnd); }
         let grid = Array(5).fill().map(() => Array(5).fill(false));
@@ -6329,16 +6329,78 @@ crtajLovca: function(kontejner) {
         
         this.stanje.mineGrid = grid;
         this.stanje.mineOtkriveno = Array(5).fill().map(() => Array(5).fill(false));
+        this.stanje.mineZastavice = Array(5).fill().map(() => Array(5).fill(false)); // Novo za zastavice
+        this.stanje.modZastavice = false; // Počinje u modu za kopanje
         this.stanje.mineKraj = false;
+
+        let cenaPomoci = window.KAZNA_GRESKA || 10;
 
         kontejner.innerHTML = `
             <div class="g2h-igra-omotac" style="width: 100%; max-width: 340px; box-sizing: border-box; margin: 0 auto; padding: 15px; background: #fff; border-radius: 16px; border: 2px solid #e2e8f0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                 <h3 style="text-align:center; color:#1e293b; margin:0 0 10px 0; font-size:20px; font-weight:900; text-transform:uppercase;">💣 MINOLOVAC</h3>
-                <p style="font-size:13px; color:#64748b; font-weight:bold; margin-bottom:15px; line-height:1.4;">Na tabli su 4 mine. Klikći pažljivo da otkriješ sva sigurna polja!</p>
-                <div id="mineGridKontejner" style="display:grid; grid-template-columns:repeat(5,1fr); gap:4px; background:#334155; padding:12px; border-radius:16px; border:6px solid #1e293b; width:100%; max-width:300px; box-sizing:border-box; margin:0 auto; height:280px; box-shadow:0 10px 15px rgba(0,0,0,0.3);"></div>
+                <p style="font-size:13px; color:#64748b; font-weight:bold; margin-bottom:10px; line-height:1.4;">Označi mine zastavicama ili koristi pomoć ako zapneš!</p>
+                
+                <div style="display:flex; gap:8px; justify-content:center; margin-bottom:12px;">
+                    <button id="btnMineMod" onclick="window.NoveLogickeIgre.toggleMineMod()" style="background:#3b82f6; color:white; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:14px; border:none; box-shadow:0 2px 4px rgba(0,0,0,0.2); cursor:pointer; flex:1;">⛏️ KOPANJE</button>
+                    <button onclick="window.NoveLogickeIgre.minePomoc()" style="background:#10b981; color:white; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:14px; border:none; box-shadow:0 2px 4px rgba(0,0,0,0.2); cursor:pointer; flex:1;">💡 POMOĆ (-${cenaPomoci}🍏)</button>
+                </div>
+
+                <div id="mineGridKontejner" style="display:grid; grid-template-columns:repeat(5,1fr); grid-template-rows:repeat(5,1fr); gap:4px; background:#334155; padding:12px; border-radius:16px; border:6px solid #1e293b; width:100%; max-width:300px; box-sizing:border-box; margin:0 auto; height:280px; box-shadow:0 10px 15px rgba(0,0,0,0.3);"></div>
             </div>`;
 
         setTimeout(() => window.NoveLogickeIgre.iscrtajMine(), 10);
+    },
+
+    toggleMineMod: function() {
+        let st = window.NoveLogickeIgre.stanje;
+        st.modZastavice = !st.modZastavice;
+        let btn = document.getElementById('btnMineMod');
+        if (btn) {
+            if (st.modZastavice) {
+                btn.innerHTML = "🚩 ZASTAVICE";
+                btn.style.background = "#f59e0b"; // Narandžasta boja za zastavice
+            } else {
+                btn.innerHTML = "⛏️ KOPANJE";
+                btn.style.background = "#3b82f6"; // Plava za kopanje
+            }
+        }
+    },
+
+    minePomoc: function() {
+        let st = window.NoveLogickeIgre.stanje;
+        if(st.mineKraj) return;
+
+        let cena = window.KAZNA_GRESKA || 10;
+        if (window.zdravlje <= cena) {
+            alert("Nemate dovoljno energije za pomoć!");
+            return;
+        }
+
+        let pronadjeno = 0;
+        // Tražimo do 2 mine koje još nemaju zastavicu
+        for(let r=0; r<5; r++) {
+            for(let c=0; c<5; c++) {
+                if (st.mineGrid[r][c] && !st.mineZastavice[r][c]) {
+                    st.mineZastavice[r][c] = true;
+                    pronadjeno++;
+                    if (pronadjeno >= 2) break;
+                }
+            }
+            if (pronadjeno >= 2) break;
+        }
+
+        if (pronadjeno > 0) {
+            window.azurirajZdravlje(-cena);
+            window.osveziSesijuNaServeru();
+            window.NoveLogickeIgre.iscrtajMine();
+            if (typeof window.prikaziObavestenjeSredina === 'function') {
+                window.prikaziObavestenjeSredina("POMOĆ!", `Sistem je otkrio ${pronadjeno} mine i postavio zastavice!`, "💡", "#3b82f6");
+            } else {
+                alert(`Pomoć iskorišćena! Otkriveno ${pronadjeno} mina.`);
+            }
+        } else {
+            alert("Sve mine su već obeležene zastavicama!");
+        }
     },
 
     prebrojMine: function(r, c) {
@@ -6355,15 +6417,35 @@ crtajLovca: function(kontejner) {
     otkrijMinu: function(r, c) {
         let st = window.NoveLogickeIgre.stanje;
         if(st.mineKraj || st.mineOtkriveno[r][c]) return;
+
+        // Ako je mod zastavice uključen, samo postavi/skini zastavicu
+        if (st.modZastavice) {
+            st.mineZastavice[r][c] = !st.mineZastavice[r][c];
+            window.NoveLogickeIgre.iscrtajMine();
+            return;
+        }
+
+        // Zabranjeno kopanje polja na kojem je zastavica
+        if (st.mineZastavice[r][c]) return;
         
         if(st.mineGrid[r][c]) {
             st.mineKraj = true;
             st.mineOtkriveno = st.mineOtkriveno.map((row, i) => row.map((val, j) => val || st.mineGrid[i][j]));
             window.NoveLogickeIgre.iscrtajMine();
-            alert("💥 BUM! Stao si na minu!");
+            
             window.azurirajZdravlje(-window.KAZNA_GRESKA);
             window.osveziSesijuNaServeru();
-            setTimeout(() => { window.NoveLogickeIgre.pokreniIgru(st.pinId, st.kontejner); }, 1500);
+            
+            if (typeof window.prikaziObavestenjeSredina === 'function') {
+                window.prikaziObavestenjeSredina("BUM!", "Stao si na minu! Tabla se resetuje.", "💥", "#ef4444");
+            } else {
+                alert("💥 BUM! Stao si na minu!");
+            }
+            
+            setTimeout(() => { 
+                let m = document.getElementById('mojCustomModal'); if(m) m.remove(); 
+                window.NoveLogickeIgre.pokreniIgru(st.pinId, st.kontejner); 
+            }, 2500);
             return;
         }
 
@@ -6371,17 +6453,28 @@ crtajLovca: function(kontejner) {
         while(stack.length > 0) {
             let [cr, cc] = stack.pop();
             if(cr<0 || cr>4 || cc<0 || cc>4 || st.mineOtkriveno[cr][cc]) continue;
+            
             st.mineOtkriveno[cr][cc] = true;
+            
             if(window.NoveLogickeIgre.prebrojMine(cr, cc) === 0) {
                 for(let dr=-1; dr<=1; dr++) { for(let dc=-1; dc<=1; dc++) { stack.push([cr+dr, cc+dc]); } }
             }
         }
         
         window.NoveLogickeIgre.iscrtajMine();
+        
         let otkrivenoCount = st.mineOtkriveno.flat().filter(v => v).length;
         if(otkrivenoCount === 21) {
             st.mineKraj = true;
-            setTimeout(() => { alert("🎉 Uspešno si očistio minsko polje!"); window.uspehZadatka(); }, 300);
+            if (typeof window.prikaziObavestenjeSredina === 'function') {
+                window.prikaziObavestenjeSredina("BRAVO!", "Uspešno si očistio minsko polje!", "🎉", "#10b981");
+            } else {
+                alert("🎉 Uspešno si očistio minsko polje!");
+            }
+            setTimeout(() => { 
+                let m = document.getElementById('mojCustomModal'); if(m) m.remove(); 
+                window.uspehZadatka(); 
+            }, 2500);
         }
     },
 
@@ -6403,14 +6496,17 @@ crtajLovca: function(kontejner) {
                         html += `<div style="background:#f8fafc; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:900; color:${boja}; border:2px solid #e2e8f0; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);">${count > 0 ? count : ''}</div>`;
                     }
                 } else {
-                    html += `<button onclick="window.NoveLogickeIgre.otkrijMinu(${r}, ${c})" style="background:#94a3b8; border-radius:6px; border:2px solid #64748b; box-shadow:inset 0 -4px 0 rgba(0,0,0,0.2); cursor:pointer; padding:0; margin:0; outline:none; transition:transform 0.1s;"></button>`;
+                    if (st.mineZastavice[r][c]) {
+                        html += `<button onclick="window.NoveLogickeIgre.otkrijMinu(${r}, ${c})" style="background:#fef3c7; border-radius:6px; border:2px solid #d97706; box-shadow:inset 0 -4px 0 rgba(0,0,0,0.2); cursor:pointer; padding:0; margin:0; outline:none; transition:transform 0.1s; display:flex; align-items:center; justify-content:center; font-size:22px;">🚩</button>`;
+                    } else {
+                        html += `<button onclick="window.NoveLogickeIgre.otkrijMinu(${r}, ${c})" style="background:#94a3b8; border-radius:6px; border:2px solid #64748b; box-shadow:inset 0 -4px 0 rgba(0,0,0,0.2); cursor:pointer; padding:0; margin:0; outline:none; transition:transform 0.1s;"></button>`;
+                    }
                 }
             }
         }
         kontejner.innerHTML = html;
     }
 };
-
 // ==========================================
     // 🌙 WAKE LOCK & PAMETNI SCREENSAVER LOGIKA
     // ==========================================
