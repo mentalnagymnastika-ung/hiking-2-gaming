@@ -5981,12 +5981,30 @@ crtajJednacine: function(kontejner) {
                 </div>
             </div>`;
     },
-    crtajVagu: function(kontejner) {
+crtajVagu: function(kontejner) {
         let pool = ['🍎','🍔','🍩','⚽','🧸','💎','🚗','🚀', '🔔', '🍉'].sort(()=>Math.random()-0.5);
         let e1 = pool[0], e2 = pool[1], e3 = pool[2];
-        let m1 = Math.floor(Math.random() * 3) + 2; let m2 = Math.floor(Math.random() * 3) + 2; 
+        let m1 = Math.floor(Math.random() * 3) + 2; // 2, 3 ili 4
+        let m2 = Math.floor(Math.random() * 3) + 2; // 2, 3 ili 4
 
         window.TACAN_ODGOVOR = (m1 * m2).toString();
+
+        // NOVO: Nasumično "okretanje" strana vage (50% šanse za svaku vagu)
+        let flip1 = Math.random() > 0.5;
+        let flip2 = Math.random() > 0.5;
+        let flipPitanje = Math.random() > 0.5;
+
+        // Raspored za prvu vagu
+        let s1_levo = flip1 ? Array(m1).fill(e2).join('') : e1;
+        let s1_desno = flip1 ? e1 : Array(m1).fill(e2).join('');
+
+        // Raspored za drugu vagu
+        let s2_levo = flip2 ? Array(m2).fill(e3).join('') : e2;
+        let s2_desno = flip2 ? e2 : Array(m2).fill(e3).join('');
+
+        // Raspored za glavno pitanje na dnu
+        let q_levo = flipPitanje ? `<div style="color:#2563eb;">❓ ${e3}</div>` : `<div>1 ${e1}</div>`;
+        let q_desno = flipPitanje ? `<div>1 ${e1}</div>` : `<div style="color:#2563eb;">❓ ${e3}</div>`;
 
         kontejner.innerHTML = `
             <div class="g2h-igra-omotac" style="width: 100%; max-width: 340px; box-sizing: border-box; margin: 0 auto; padding: 15px; background: #fff; border-radius: 16px; border: 2px solid #e2e8f0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
@@ -5995,13 +6013,13 @@ crtajJednacine: function(kontejner) {
                 <p style="font-size:13px; color:#64748b; font-weight:bold; margin-bottom:15px; line-height:1.4;">Koliko predmeta ${e3} drži vagu u ravnoteži sa JEDNIM ${e1}?</p>
                 <div style="display:flex; flex-direction:column; gap:15px;">
                     <div style="background:white; padding:15px; border-radius:12px; border:1px solid #e2e8f0; display:flex; justify-content:center; align-items:center; gap:15px; font-size:24px; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
-                        <div>${e1}</div><div style="color:#94a3b8; font-weight:900;">=</div><div>${Array(m1).fill(e2).join('')}</div>
+                        <div>${s1_levo}</div><div style="color:#94a3b8; font-weight:900;">=</div><div>${s1_desno}</div>
                     </div>
                     <div style="background:white; padding:15px; border-radius:12px; border:1px solid #e2e8f0; display:flex; justify-content:center; align-items:center; gap:15px; font-size:24px; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
-                        <div>${e2}</div><div style="color:#94a3b8; font-weight:900;">=</div><div>${Array(m2).fill(e3).join('')}</div>
+                        <div>${s2_levo}</div><div style="color:#94a3b8; font-weight:900;">=</div><div>${s2_desno}</div>
                     </div>
                     <div style="margin-top:5px; font-size:20px; font-weight:900; color:#1e293b; display:flex; justify-content:center; align-items:center; gap:10px; background:#eff6ff; padding:15px; border-radius:12px; border:1px solid #bfdbfe;">
-                        <div>1 ${e1}</div><div style="color:#3b82f6;">=</div><div style="color:#2563eb;">❓ ${e3}</div>
+                        ${q_levo}<div style="color:#3b82f6;">=</div>${q_desno}
                     </div>
                 </div>
             </div>`;
