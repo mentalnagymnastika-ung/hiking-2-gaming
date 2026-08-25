@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -5861,32 +5861,78 @@ pokreniIgru: function(pinId, kontejnerDOM) {
             </div>`;
     },
 
-    crtajSibice: function(kontejner) {
-        let brojSibicaPoCifri = { '0': 6, '1': 2, '2': 5, '3': 5, '4': 4, '5': 5, '6': 6, '7': 3, '8': 7, '9': 6 };
-        let ciljniBroj = `${Math.floor(Math.random()*9)+1}${Math.floor(Math.random()*10)}${Math.floor(Math.random()*10)}`;
-        let ukupanBrojSibica = 0, vizuelniPrikaz = "";
-        let path = (d) => `<path d="${d}" stroke="#f59e0b" stroke-width="8" stroke-linecap="round" style="filter:drop-shadow(0 2px 2px rgba(0,0,0,0.3));" />`;
-        let segs = { A: "M 15 10 L 45 10", B: "M 50 15 L 50 45", C: "M 50 55 L 50 85", D: "M 15 90 L 45 90", E: "M 10 55 L 10 85", F: "M 10 15 L 10 45", G: "M 15 50 L 45 50" };
-        let map = { '0': ['A','B','C','D','E','F'], '1': ['B','C'], '2': ['A','B','G','E','D'], '3': ['A','B','G','C','D'], '4': ['F','G','B','C'], '5': ['A','F','G','C','D'], '6': ['A','F','G','E','C','D'], '7': ['A','B','C'], '8': ['A','B','C','D','E','F','G'], '9': ['A','B','C','D','F','G'] };
+crtajSibice: function(kontejner) {
+        // Mape svih segmenata za svaku cifru
+        let segments = {
+            '0': ['A','B','C','D','E','F'], '1': ['B','C'], '2': ['A','B','D','E','G'],
+            '3': ['A','B','C','D','G'], '4': ['B','C','F','G'], '5': ['A','C','D','F','G'],
+            '6': ['A','C','D','E','F','G'], '7': ['A','B','C'], '8': ['A','B','C','D','E','F','G'],
+            '9': ['A','B','C','D','F','G']
+        };
 
-        for (let char of ciljniBroj) {
-            ukupanBrojSibica += brojSibicaPoCifri[char];
-            vizuelniPrikaz += `<svg viewBox="0 0 60 100" style="width:45px; height:80px; display:inline-block; margin:0 4px;">`;
-            map[char].forEach(s => { vizuelniPrikaz += path(segs[s]); });
+        // Funkcija koja broji ukupno šibica u broju
+        let countM = (str) => str.split('').reduce((sum, ch) => sum + segments[ch].length, 0);
+
+        // Funkcija koja računa koliko šibica je sklonjeno (a samim tim premešteno)
+        let calcMoves = (s1, s2) => {
+            let removed = 0;
+            for(let i=0; i<3; i++) {
+                let seg1 = segments[s1[i]];
+                let seg2 = segments[s2[i]];
+                for(let s of seg1) { if(!seg2.includes(s)) removed++; }
+            }
+            return removed;
+        };
+
+        // Tražimo dva broja sa istim brojem šibica, gde je potrebno 1, 2 ili 3 premeštanja
+        let startNum, targetNum, moves;
+        while(true) {
+            startNum = String(Math.floor(Math.random() * 900) + 100); // Trocifren broj (100-999)
+            let c = countM(startNum);
+            let candidates = [];
+            for(let i=100; i<=999; i++) {
+                let ts = String(i);
+                if (ts !== startNum && countM(ts) === c) {
+                    let m = calcMoves(startNum, ts);
+                    if (m >= 1 && m <= 3) { // Kontrola težine (od 1 do 3 premeštanja)
+                        candidates.push({ts, m});
+                    }
+                }
+            }
+            if (candidates.length > 0) {
+                let pick = candidates[Math.floor(Math.random() * candidates.length)];
+                targetNum = pick.ts;
+                moves = pick.m;
+                break;
+            }
+        }
+
+        window.TACAN_ODGOVOR = moves.toString();
+
+        // Crtanje šibice (upaljena sija, ugašena je samo bleda silueta)
+        let path = (d, isLit) => `<path d="${d}" stroke="${isLit ? '#f59e0b' : '#334155'}" stroke-width="8" stroke-linecap="round" style="${isLit ? 'filter:drop-shadow(0 2px 4px rgba(245,158,11,0.5));' : 'opacity: 0.3;'}" />`;
+        let segs = { A: "M 15 10 L 45 10", B: "M 50 15 L 50 45", C: "M 50 55 L 50 85", D: "M 15 90 L 45 90", E: "M 10 55 L 10 85", F: "M 10 15 L 10 45", G: "M 15 50 L 45 50" };
+
+        let vizuelniPrikaz = "";
+        for (let char of startNum) {
+            vizuelniPrikaz += `<svg viewBox="0 0 60 100" style="width:50px; height:90px; display:inline-block; margin:0 4px;">`;
+            let litSegs = segments[char];
+            ['A','B','C','D','E','F','G'].forEach(s => {
+                vizuelniPrikaz += path(segs[s], litSegs.includes(s));
+            });
             vizuelniPrikaz += `</svg>`;
         }
-        window.TACAN_ODGOVOR = ukupanBrojSibica.toString();
 
         kontejner.innerHTML = `
             <div class="g2h-igra-omotac" style="width: 100%; max-width: 340px; box-sizing: border-box; margin: 0 auto; padding: 15px; background: #0f172a; border-radius: 16px; border: 4px solid #1e293b; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
                 <h3 style="text-align:center; color:#fbbf24; margin:0 0 10px 0; font-size:20px; font-weight:900; text-transform:uppercase;">🔥 ZAGONETKA ŠIBICA</h3>
                 ${this.napomenaPapir}
                 <div style="background:rgba(30,41,59,0.5); padding:15px; border-radius:12px; margin-bottom:20px; border:1px solid #334155;">
-                    <p style="color:#cbd5e1; font-weight:bold; font-size:16px; margin:0; line-height:1.4;">
-                        <span style="color:#fbbf24; font-weight:900; font-size:20px;">KOLIKO</span> šibica (crtica) je ukupno upotrebljeno da se ispiše ovaj broj?
+                    <p style="color:#cbd5e1; font-weight:bold; font-size:14px; margin:0; line-height:1.4;">
+                        Koliko <b style="color:#fbbf24;">MINIMALNO</b> šibica treba da <b style="color:#fbbf24;">PREMESTIŠ</b> (pomeriš sa jednog mesta na drugo) da bi se na ekranu ispisao broj <span style="font-size:22px; color:white; background:#1e293b; padding:2px 8px; border-radius:6px; border:1px solid #475569;">${targetNum}</span>?
                     </p>
                 </div>
-                <div style="display:flex; justify-content:center; align-items:center; background:rgba(0,0,0,0.4); padding:20px; border-radius:16px; border:2px solid #334155;">
+                <div style="display:flex; justify-content:center; align-items:center; background:rgba(0,0,0,0.6); padding:20px; border-radius:16px; border:2px solid #334155; box-shadow: inset 0 4px 10px rgba(0,0,0,0.5);">
                     ${vizuelniPrikaz}
                 </div>
             </div>`;
