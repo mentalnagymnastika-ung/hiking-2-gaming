@@ -5706,14 +5706,15 @@ pokreniIgru: function(pinId, kontejnerDOM) {
         // 🌟 NOVO: Custom provera specijalno za nove igre umesto stare G2H provere
         let btnProveri = document.getElementById('btnProveri');
         if (btnProveri) {
-            btnProveri.onclick = () => {
+            
+btnProveri.onclick = () => {
                 let unos = document.getElementById('unosOdgovor');
                 if(!unos || unos.style.display === 'none') return;
                 
                 let val = unos.value.trim().toLowerCase();
                 if(!val) { 
-                    if(typeof window.prikaziGresku === 'function') window.prikaziGresku("Upišite odgovor!");
-                    else alert("Upišite odgovor!");
+                    if(typeof window.prikaziGresku === 'function') window.prikaziGresku("Upiši odgovor pre provere!");
+                    else alert("Upiši odgovor!");
                     return; 
                 }
                 
@@ -5722,15 +5723,20 @@ pokreniIgru: function(pinId, kontejnerDOM) {
                 } else {
                     window.azurirajZdravlje(-window.KAZNA_GRESKA);
                     window.osveziSesijuNaServeru();
-                    if(typeof window.prikaziGresku === 'function') window.prikaziGresku("Netačan odgovor! Gubite energiju.");
                     
-                    // Pametan reset table nakon 2 sekunde kako bi se sprečilo "nagađanje"
+                    // NOVO: Ublažena, ohrabrujuća poruka u narandžastoj boji umesto crvene
+                    if(typeof window.prikaziObavestenjeSredina === 'function') {
+                        window.prikaziObavestenjeSredina("Nije tačno", "Ne brini, dešava se! Sistem će pomešati brojeve, koncentriši se i pokušaj ponovo.", "🤔", "#f59e0b");
+                    } else if(typeof window.prikaziGresku === 'function') {
+                        window.prikaziGresku("Nije tačno, ali ne odustaj! Pokušaj ponovo.");
+                    }
+                    
                     setTimeout(() => {
+                        let m = document.getElementById('mojCustomModal'); if(m) m.remove();
                         window.NoveLogickeIgre.pokreniIgru(pinId, kontejnerDOM);
-                    }, 2500);
+                    }, 3000);
                 }
             };
-        }
 
         if (igraZaCrtanje === 'koordinate') this.crtajKoordinate(kontejnerDOM);
         else if (igraZaCrtanje === 'preklapanje') this.crtajPreklapanje(kontejnerDOM);
