@@ -5703,11 +5703,10 @@ pokreniIgru: function(pinId, kontejnerDOM) {
         this.stanje = { pinId: pinId, kontejner: kontejnerDOM }; 
         kontejnerDOM.innerHTML = '';
         
-        // 🌟 NOVO: Custom provera specijalno za nove igre umesto stare G2H provere
+        // 🌟 NOVO: Custom provera sa ublaženom porukom za grešku
         let btnProveri = document.getElementById('btnProveri');
         if (btnProveri) {
-            
-btnProveri.onclick = () => {
+            btnProveri.onclick = () => {
                 let unos = document.getElementById('unosOdgovor');
                 if(!unos || unos.style.display === 'none') return;
                 
@@ -5724,9 +5723,9 @@ btnProveri.onclick = () => {
                     window.azurirajZdravlje(-window.KAZNA_GRESKA);
                     window.osveziSesijuNaServeru();
                     
-                    // NOVO: Ublažena, ohrabrujuća poruka u narandžastoj boji umesto crvene
+                    // Ublažena, ohrabrujuća poruka u narandžastoj boji umesto crvene
                     if(typeof window.prikaziObavestenjeSredina === 'function') {
-                        window.prikaziObavestenjeSredina("Nije tačno", "Ne brini, dešava se! Sistem će pomešati brojeve, koncentriši se i pokušaj ponovo.", "🤔", "#f59e0b");
+                        window.prikaziObavestenjeSredina("Nije tačno", "Ne brini, dešava se! Sistem će promešati zadatak, koncentriši se i pokušaj ponovo.", "🤔", "#f59e0b");
                     } else if(typeof window.prikaziGresku === 'function') {
                         window.prikaziGresku("Nije tačno, ali ne odustaj! Pokušaj ponovo.");
                     }
@@ -5737,6 +5736,7 @@ btnProveri.onclick = () => {
                     }, 3000);
                 }
             };
+        }
 
         if (igraZaCrtanje === 'koordinate') this.crtajKoordinate(kontejnerDOM);
         else if (igraZaCrtanje === 'preklapanje') this.crtajPreklapanje(kontejnerDOM);
