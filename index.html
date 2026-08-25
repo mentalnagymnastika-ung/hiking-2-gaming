@@ -5866,35 +5866,49 @@ window.NoveLogickeIgre = {
             </div>`;
     },
 
-    crtajJednacine: function(kontejner) {
-        let simboli = ["🍏", "🍓", "🍌", "🍒", "🍉", "🚗", "✈️"].sort(() => Math.random() - 0.5); 
+crtajJednacine: function(kontejner) {
+        let simboli = ["🍏", "🍓", "🍌", "🍒", "🍉", "🚗", "✈️", "🚀", "💎"].sort(() => Math.random() - 0.5); 
         let s1 = simboli[0], s2 = simboli[1], s3 = simboli[2];
-        let val1 = Math.floor(Math.random() * 5) + 2; let val2 = Math.floor(Math.random() * 5) + 1; let val3 = Math.floor(Math.random() * 5) + 1; 
+        
+        // Biramo 3 različita broja (od 2 do 6) i SORTIRAMO ih od najvećeg ka najmanjem.
+        // Npr. v1 = 6, v2 = 4, v3 = 2. 
+        // Ovo garantuje da oduzimanje nikada neće dati negativan broj!
+        let dostupneVrednosti = [2, 3, 4, 5, 6].sort(() => Math.random() - 0.5);
+        let odabrane = dostupneVrednosti.slice(0, 3).sort((a, b) => b - a);
+        let v1 = odabrane[0]; // Najveći
+        let v2 = odabrane[1]; // Srednji
+        let v3 = odabrane[2]; // Najmanji
 
-        window.TACAN_ODGOVOR = String(val3 + val3);
+        let eq1 = v1 + v1;         // Npr. 6 + 6 = 12
+        let eq2 = v1 - v2;         // Npr. 6 - 4 = 2 (Ubačen minus!)
+        let eq3 = v2 + v3;         // Npr. 4 + 2 = 6
+        
+        // ZAVRŠNO PITANJE: Sabiranje i oduzimanje
+        let rezultat = v1 + v2 - v3; // Npr. 6 + 4 - 2 = 8
+
+        window.TACAN_ODGOVOR = String(rezultat);
 
         kontejner.innerHTML = `
             <div class="g2h-igra-omotac" style="width: 100%; max-width: 340px; box-sizing: border-box; margin: 0 auto; padding: 15px; background: #fff; border-radius: 16px; border: 2px solid #e2e8f0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                 <h3 style="text-align:center; color:#2563eb; margin:0 0 10px 0; font-size:20px; font-weight:900; text-transform:uppercase;">🧮 MENTALNA MATEMATIKA</h3>
                 ${this.napomenaPapir}
-                <p style="font-size:13px; color:#64748b; font-weight:bold; margin-bottom:15px; line-height:1.4;">Izračunaj vrednost svakog simbola. Kolika je vrednost donjeg zbira?</p>
-                <div style="background:#eff6ff; border:2px solid #bfdbfe; border-radius:16px; padding:20px; font-size:24px; font-weight:900; color:#1e293b;">
-                    <div style="display:flex; justify-content:center; gap:8px; align-items:center; margin-bottom:10px;">
-                        <span>${s1}</span><span style="color:#94a3b8;">+</span><span>${s1}</span><span style="color:#3b82f6;">=</span><span style="font-size:28px;">${val1+val1}</span>
+                <p style="font-size:13px; color:#64748b; font-weight:bold; margin-bottom:15px; line-height:1.4;">Izračunaj vrednost svakog simbola i obrati pažnju na znakove (+ i -). Koliki je rezultat na kraju?</p>
+                <div style="background:#eff6ff; border:2px solid #bfdbfe; border-radius:16px; padding:15px 10px; font-size:24px; font-weight:900; color:#1e293b;">
+                    <div style="display:flex; justify-content:center; gap:6px; align-items:center; margin-bottom:12px;">
+                        <span>${s1}</span><span style="color:#94a3b8;">+</span><span>${s1}</span><span style="color:#3b82f6;">=</span><span style="font-size:26px;">${eq1}</span>
                     </div>
-                    <div style="display:flex; justify-content:center; gap:8px; align-items:center; margin-bottom:10px;">
-                        <span>${s1}</span><span style="color:#94a3b8;">+</span><span>${s2}</span><span style="color:#3b82f6;">=</span><span style="font-size:28px;">${val1+val2}</span>
+                    <div style="display:flex; justify-content:center; gap:6px; align-items:center; margin-bottom:12px;">
+                        <span>${s1}</span><span style="color:#ef4444;">-</span><span>${s2}</span><span style="color:#3b82f6;">=</span><span style="font-size:26px;">${eq2}</span>
                     </div>
-                    <div style="display:flex; justify-content:center; gap:8px; align-items:center; margin-bottom:10px;">
-                        <span>${s2}</span><span style="color:#94a3b8;">+</span><span>${s3}</span><span style="color:#3b82f6;">=</span><span style="font-size:28px;">${val2+val3}</span>
+                    <div style="display:flex; justify-content:center; gap:6px; align-items:center; margin-bottom:12px;">
+                        <span>${s2}</span><span style="color:#94a3b8;">+</span><span>${s3}</span><span style="color:#3b82f6;">=</span><span style="font-size:26px;">${eq3}</span>
                     </div>
-                    <div style="border-top:4px dashed #bfdbfe; padding-top:15px; margin-top:15px; display:flex; justify-content:center; gap:8px; align-items:center; color:#ef4444;">
-                        <span>${s3}</span><span>+</span><span>${s3}</span><span>=</span><span style="font-size:36px; color:#dc2626;">?</span>
+                    <div style="border-top:4px dashed #bfdbfe; padding-top:15px; margin-top:15px; display:flex; justify-content:center; gap:6px; align-items:center; color:#1e293b;">
+                        <span>${s1}</span><span style="color:#94a3b8;">+</span><span>${s2}</span><span style="color:#ef4444;">-</span><span>${s3}</span><span>=</span><span style="font-size:32px; color:#dc2626;">?</span>
                     </div>
                 </div>
             </div>`;
-    },
-
+    }
     crtajVagu: function(kontejner) {
         let pool = ['🍎','🍔','🍩','⚽','🧸','💎','🚗','🚀', '🔔', '🍉'].sort(()=>Math.random()-0.5);
         let e1 = pool[0], e2 = pool[1], e3 = pool[2];
