@@ -6310,9 +6310,9 @@ crtajLovca: function(kontejner) {
 
         window.NoveLogickeIgre.iscrtajLovac = function() {
             let k = document.getElementById('lovacGridKontejner'); if(!k) return;
-            let h = '<div></div>'; cols.forEach(c => h += `<div class="font-black text-slate-500 flex items-center justify-center">${c}</div>`);
+            let h = '<div></div>'; cols.forEach(c => h += `<div style="font-weight:900; color:#64748b; display:flex; align-items:center; justify-content:center;">${c}</div>`);
             for(let r=1; r<=5; r++) {
-                h += `<div class="font-black text-slate-500 flex items-center justify-center">${r}</div>`;
+                h += `<div style="font-weight:900; color:#64748b; display:flex; align-items:center; justify-content:center;">${r}</div>`;
                 for(let c=0; c<5; c++) {
                     let koord = cols[c] + r;
                     if(window.NoveLogickeIgre.stanje.lovacPogodjeno.includes(koord)) h += `<div style="background:#dcfce7; border:2px solid #22c55e; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:24px; box-shadow:inset 0 2px 4px rgba(0,0,0,0.1);">💎</div>`;
@@ -6324,12 +6324,10 @@ crtajLovca: function(kontejner) {
         };
 
         kontejner.innerHTML = `
-            <div class="bg-white p-5 rounded-3xl shadow-sm border-2 border-slate-100 text-center relative">
-                <div class="flex justify-center mb-2 text-4xl drop-shadow-sm">🗺️</div>
-                <h3 class="text-emerald-700 font-black text-2xl mb-2 uppercase tracking-wide">Lovac na Blago</h3>
+            <div class="g2h-igra-omotac" style="width: 100%; max-width: 340px; box-sizing: border-box; margin: 0 auto; padding: 15px; background: #fff; border-radius: 16px; border: 2px solid #e2e8f0; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <h3 style="text-align:center; color:#047857; margin:0 0 10px 0; font-size:20px; font-weight:900; text-transform:uppercase;">🗺️ LOVAC NA BLAGO</h3>
                 ${this.napomenaPapir}
-                <p class="text-slate-500 font-bold text-sm mb-4 leading-tight">Računar je sakrio JEDAN deo blaga oblika Tetrisa (4 polja). Kucaj koordinate (npr. A1) da otkriješ celo blago!</p>
-                <!-- DODATO grid-template-rows:repeat(6,1fr) kako bi se polja razvukla do dna! -->
+                <p style="font-size:13px; color:#64748b; font-weight:bold; margin-bottom:15px; line-height:1.4;">Računar je sakrio JEDAN deo blaga oblika Tetrisa (4 polja). Kucaj koordinate (npr. A1) da otkriješ celo blago!</p>
                 <div id="lovacGridKontejner" style="display:grid; grid-template-columns:repeat(6,1fr); grid-template-rows:repeat(6,1fr); gap:6px; background:#f1f5f9; padding:16px; border-radius:16px; border:2px solid #cbd5e1; width:100%; max-width:300px; box-sizing:border-box; margin:0 auto; height:280px; box-shadow:inset 0 4px 6px rgba(0,0,0,0.05);"></div>
             </div>`;
         
@@ -6340,10 +6338,17 @@ crtajLovca: function(kontejner) {
         if (btnProveri) {
             btnProveri.onclick = () => {
                 let val = document.getElementById('unosOdgovor').value.trim().toUpperCase();
-                if(!val) { window.prikaziGresku("Upiši koordinatu npr. A1"); return; }
+                if(!val) { 
+                    if (typeof window.prikaziGresku === 'function') window.prikaziGresku("Upiši koordinatu npr. A1"); 
+                    else alert("Upiši koordinatu npr. A1");
+                    return; 
+                }
+                let cols = ['A', 'M', 'O', 'P', 'E'];
                 let rows = ['1', '2', '3', '4', '5'];
                 if(val.length !== 2 || !cols.includes(val[0]) || !rows.includes(val[1])) {
-                    window.prikaziGresku("Nevažeća koordinata! Unesi slovo pa broj."); return;
+                    if (typeof window.prikaziGresku === 'function') window.prikaziGresku("Nevažeća koordinata! Unesi slovo pa broj."); 
+                    else alert("Nevažeća koordinata! Unesi slovo pa broj.");
+                    return;
                 }
                 let st = window.NoveLogickeIgre.stanje;
                 if(st.lovacPogodjeno.includes(val) || st.lovacPromaseno.includes(val)) { document.getElementById('unosOdgovor').value = ''; return; }
@@ -6356,13 +6361,18 @@ crtajLovca: function(kontejner) {
                         setTimeout(() => window.uspehZadatka(), 2500);
                     } else {
                         if (typeof window.prikaziObavestenjeSredina === 'function') window.prikaziObavestenjeSredina("POGODAK!", "Našao si deo blaga, traži dalje!", "💎", "#10b981");
-                        setTimeout(() => { let m = document.getElementById('mojCustomModal'); if(m) m.remove(); }, 900);
+                        setTimeout(() => { let m = document.getElementById('mojCustomModal'); if(m) m.remove(); }, 1200);
                     }
                 } else {
                     st.lovacPromaseno.push(val);
                     window.azurirajZdravlje(-window.KAZNA_GRESKA); window.osveziSesijuNaServeru();
-                    if (typeof window.prikaziObavestenjeSredina === 'function') window.prikaziObavestenjeSredina("PROMAŠAJ!", "Ovde je samo prašina. Gubiš energiju.", "💨", "#ef4444");
-                    setTimeout(() => { let m = document.getElementById('mojCustomModal'); if(m) m.remove(); }, 1200);
+                    // NOVO: Ublažena ohrabrujuća poruka narandžaste boje umesto crvene
+                    if (typeof window.prikaziObavestenjeSredina === 'function') {
+                        window.prikaziObavestenjeSredina("Prazno polje", "Ovde nema blaga. Ne odustaj, traži dalje!", "🕵️", "#f59e0b");
+                    } else {
+                        alert("Ovde nema blaga. Ne odustaj, traži dalje!");
+                    }
+                    setTimeout(() => { let m = document.getElementById('mojCustomModal'); if(m) m.remove(); }, 1500);
                 }
                 document.getElementById('unosOdgovor').value = '';
                 window.NoveLogickeIgre.iscrtajLovac();
