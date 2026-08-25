@@ -5695,7 +5695,7 @@ window.NoveLogickeIgre = {
         return izabrana;
     },
 
-    pokreniIgru: function(pinId, kontejnerDOM) {
+pokreniIgru: function(pinId, kontejnerDOM) {
         if (this.bingoInterval) { clearInterval(this.bingoInterval); this.bingoInterval = null; }
         
         let igraZaCrtanje = this.odrediIgruZaTacku(pinId);
@@ -5703,8 +5703,34 @@ window.NoveLogickeIgre = {
         this.stanje = { pinId: pinId, kontejner: kontejnerDOM }; 
         kontejnerDOM.innerHTML = '';
         
+        // 🌟 NOVO: Custom provera specijalno za nove igre umesto stare G2H provere
         let btnProveri = document.getElementById('btnProveri');
-        if (btnProveri) btnProveri.onclick = window.proveriOdgovor;
+        if (btnProveri) {
+            btnProveri.onclick = () => {
+                let unos = document.getElementById('unosOdgovor');
+                if(!unos || unos.style.display === 'none') return;
+                
+                let val = unos.value.trim().toLowerCase();
+                if(!val) { 
+                    if(typeof window.prikaziGresku === 'function') window.prikaziGresku("Upišite odgovor!");
+                    else alert("Upišite odgovor!");
+                    return; 
+                }
+                
+                if(val === String(window.TACAN_ODGOVOR).toLowerCase()) {
+                    window.uspehZadatka();
+                } else {
+                    window.azurirajZdravlje(-window.KAZNA_GRESKA);
+                    window.osveziSesijuNaServeru();
+                    if(typeof window.prikaziGresku === 'function') window.prikaziGresku("Netačan odgovor! Gubite energiju.");
+                    
+                    // Pametan reset table nakon 2 sekunde kako bi se sprečilo "nagađanje"
+                    setTimeout(() => {
+                        window.NoveLogickeIgre.pokreniIgru(pinId, kontejnerDOM);
+                    }, 2500);
+                }
+            };
+        }
 
         if (igraZaCrtanje === 'koordinate') this.crtajKoordinate(kontejnerDOM);
         else if (igraZaCrtanje === 'preklapanje') this.crtajPreklapanje(kontejnerDOM);
