@@ -381,7 +381,7 @@
         
         <div id="greskaPoruka">⚠️ Molimo popunite sva obavezna polja (Ime, Lokacija, Objašnjenje i Šifra).</div>
 
-        <div class="kreator-karta">
+<div class="kreator-karta">
             <label id="lblIme">Ime potrage <span style="color:#ef4444;">*</span></label>
             <input type="text" id="imePotrage" placeholder="Npr. Prolećna avantura..." oninput="window.ukloniGresku(this)">
 
@@ -412,14 +412,27 @@
             <textarea id="promoTekst" rows="3" placeholder="Gde igrači treba da odu da bi našli prvu tačku" oninput="window.ukloniGresku(this)"></textarea>
             
             <label id="lblAutor">Igru osmislio Saradnik</label>
-            <input type="text" id="autorPotrage" placeholder="Tvoje ime..." oninput="promeneNisuSnimljene=true">
-            
+            <input type="text" id="autorPotrage" placeholder="Tvoje ime i prezime..." oninput="promeneNisuSnimljene=true">
+            <textarea id="autorOpis" rows="2" placeholder="Kratka biografija (npr. Vaspitač sa dugogodišnjim iskustvom u radu sa decom)..." oninput="promeneNisuSnimljene=true" style="margin-top: 10px;"></textarea>
+
+            <label style="font-size:13px; color:#1d4ed8; font-weight:bold; margin-top:10px;">📷 Profilna slika saradnika (Opciono)</label>
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+                <input type="file" id="autorSlikaUpload" accept="image/*" onchange="window.pripremiSlikuAutora(event)" style="padding: 8px; background:white; flex-grow: 1;">
+                <div id="kontejnerSlikeAutora" style="display:none; position:relative; width: 50px; height: 50px; flex-shrink: 0;">
+                    <img id="autorSlikaPreview" src="" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 2px solid #3b82f6;">
+                    <button onclick="window.obrisiSlikuAutora()" title="Obriši sliku" style="position:absolute; top:-5px; right:-5px; background:#ef4444; color:white; border:none; border-radius:50%; width:20px; height:20px; font-size:10px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">X</button>
+                </div>
+            </div>
+
+
+            <!-- VRAĆENA ŠIFRA I ZATVOREN DIV KARTICE -->
             <label id="lblSifra">Glavna šifra PASS <span style="color:#ef4444;">*</span></label>
             <div style="display:flex; gap:10px;">
                 <input type="text" id="sifraPotrage" style="font-weight:bold; letter-spacing:1px; text-transform:uppercase; background:white;" placeholder="Npr PLAZA" oninput="window.ukloniGresku(this)">
                 <button id="btnGenerisi" class="btn-kreator-akcija" onclick="window.generisiSifru()">Generiši</button>
             </div>
         </div>
+
 
         <!-- RPG MONETIZACIJA: BESPLATNO ILI ZAKLJUČANO -->
 <label style="margin-top: 20px;">🔓 Vrsta pristupa stazi</label>
@@ -740,6 +753,7 @@
     window.slikeZadatakaMap = {};
     window.slikeLokacijaMap = {};
     window.slikeZagonetkiMap = {}; // Dodata nezavisna mapa za slike zagonetki
+    window.autorSlikaBase64 = "";
 
     window.mojMarkerLokacije = null;
     window.mojKrugPreciznosti = null;
@@ -1368,6 +1382,46 @@
         document.getElementById('promoSlikaUpload').value = ''; 
         window.promoSlikaBase64 = ""; 
         window.promeneNisuSnimljene = true; 
+    }
+
+window.pripremiSlikuAutora = function(event) {
+        let file = event.target.files[0]; 
+        if(!file) return;
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            let img = new Image();
+            img.onload = function() {
+                let canvas = document.createElement('canvas');
+                let max_size = 200; 
+                let width = img.width; let height = img.height;
+                if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } } 
+                else { if (height > max_size) { width *= max_size / height; height = max_size; } }
+                canvas.width = width; canvas.height = height;
+                let ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+                
+                window.autorSlikaBase64 = canvas.toDataURL('image/jpeg', 0.5); 
+                
+                let preview = document.getElementById('autorSlikaPreview');
+                let kontejner = document.getElementById('kontejnerSlikeAutora');
+                if(preview && kontejner) {
+                    preview.src = window.autorSlikaBase64;
+                    kontejner.style.display = 'block';
+                }
+                window.promeneNisuSnimljene = true; 
+            }
+            img.src = e.target.result;
+        }; 
+        reader.readAsDataURL(file);
+    }
+
+    window.obrisiSlikuAutora = function() {
+        window.autorSlikaBase64 = "";
+        document.getElementById('autorSlikaUpload').value = '';
+        let preview = document.getElementById('autorSlikaPreview');
+        if(preview) preview.src = '';
+        let kontejner = document.getElementById('kontejnerSlikeAutora');
+        if(kontejner) kontejner.style.display = 'none';
+        window.promeneNisuSnimljene = true;
     }
 
     window.pripremiSlikuPitanja = function(event) {
@@ -2276,7 +2330,7 @@ window.zapocniKloniranje = function() {
     // ===================================================================
     // 🕒 SNIMANJE JSON FAJLA SA AUTOMATSKIM DATUMOM I VREMENOM
     // ===================================================================
-    window.snimiJSON = function() {
+window.snimiJSON = function() {
         document.getElementById('zavrsiModal').style.display='none'; 
         document.getElementById('izlazModal').style.display='none';
         if(window.pinovi.length === 0) { alert(window.trenutniJezik==='sr'?"Mapa je prazna.":"Map is empty."); return; }
@@ -2286,6 +2340,8 @@ window.zapocniKloniranje = function() {
         let brojTimova = parseInt(document.getElementById('brojTimovaGrupna').value); 
         let grupnaLogika = document.getElementById('logikaGrupna').value;
         let autor = document.getElementById('autorPotrage').value.trim();
+        let autorOpis = document.getElementById('autorOpis') ? document.getElementById('autorOpis').value.trim() : "";
+        let autorSlika = window.autorSlikaBase64 || "";
         
         let startLat = 0; let startLng = 0;
         if(window.pinovi.length > 0) { let prvaTacka = window.pinovi[0].marker.getLatLng(); startLat = prvaTacka.lat; startLng = prvaTacka.lng; }
@@ -2330,10 +2386,19 @@ window.zapocniKloniranje = function() {
         }
 
         let data = { 
-            grad: document.getElementById('gradPotrage').value || "Nepoznata lokacija", ime: document.getElementById('imePotrage').value || "Nova Potraga", sifra: sifra, autor: autor,
+            grad: document.getElementById('gradPotrage').value || "Nepoznata lokacija", 
+            ime: document.getElementById('imePotrage').value || "Nova Potraga", 
+            sifra: sifra, 
+            autor: autor,
+            autorOpis: autorOpis,
+            autorSlika: autorSlika,
             besplatna: document.getElementById('unosPristupTip').value === 'da',
             cena: parseInt(document.getElementById('cenaStazeZlatnici').value) || 50,
-            aktivna: false, trajanje: document.getElementById('trajanjePotrage').value, tip: document.getElementById('izabranTipKretanja').value, objasnjenje: document.getElementById('promoTekst').value, promoSlika: window.promoSlikaBase64,
+            aktivna: false, 
+            trajanje: document.getElementById('trajanjePotrage').value, 
+            tip: document.getElementById('izabranTipKretanja').value, 
+            objasnjenje: document.getElementById('promoTekst').value, 
+            promoSlika: window.promoSlikaBase64,
             mesanjeRute: isGrupna ? false : document.getElementById('mesanjeRute').checked, 
             isGrupna: isGrupna, brojTimova: isGrupna ? brojTimova : 0, grupnaLogika: isGrupna ? grupnaLogika : "",
             takmicarskiMod: takmicarskiChecked,
@@ -2373,7 +2438,7 @@ window.zapocniKloniranje = function() {
         }; reader.readAsText(file);
     }
 
-    window.snimiUBazu = async function() {
+window.snimiUBazu = async function() {
         if(window.pinovi.length === 0) { alert("Mapa je prazna."); return; }
         
         let sifra = document.getElementById('sifraPotrage').value.trim();
@@ -2384,6 +2449,8 @@ window.zapocniKloniranje = function() {
         let grupnaLogika = document.getElementById('logikaGrupna').value;
         let isAktivna = document.getElementById('modalAktivnaCheck').checked;
         let autor = document.getElementById('autorPotrage').value.trim();
+        let autorOpis = document.getElementById('autorOpis') ? document.getElementById('autorOpis').value.trim() : "";
+        let autorSlika = window.autorSlikaBase64 || "";
         let takmicarskiChecked = document.getElementById('checkTakmicarski') ? document.getElementById('checkTakmicarski').checked : false;
 
         let startLat = 0; let startLng = 0;
@@ -2420,6 +2487,8 @@ window.zapocniKloniranje = function() {
             ime: document.getElementById('imePotrage').value || "Nova Potraga", 
             sifra: sifra, 
             autor: autor,
+            autorOpis: autorOpis,
+            autorSlika: autorSlika,
             besplatna: document.getElementById('unosPristupTip').value === 'da',
             cena: parseInt(document.getElementById('cenaStazeZlatnici').value) || 50,
             aktivna: isAktivna, 
@@ -2616,7 +2685,7 @@ window.azurirajRedosledNaServeru = async function(sifra, novaVrednost) {
         } catch(e) { alert("❌ Greška pri brisanju: " + e.message); }
     }
 
-    window.autoSaveLocal = function() {
+window.autoSaveLocal = function() {
         let standardniPinovi = window.pinovi.map(p=> { let latlng = p.marker.getLatLng(); return { id: p.id, broj: p.broj, lat: latlng.lat, lng: latlng.lng, rad: p.rad, dozvoliPomoc: p.dozvoliPomoc, isPocetna: p.isPocetna, imeLokacije: p.imeLokacije, opisLokacije: p.opisLokacije, opisLokacijeSlika: window.slikeLokacijaMap[p.id] || "", zadatak: p.zadatak }; });
         let takmMod = document.getElementById('checkTakmicarski') ? document.getElementById('checkTakmicarski').checked : false;
 
@@ -2625,6 +2694,8 @@ window.azurirajRedosledNaServeru = async function(sifra, novaVrednost) {
             ime: document.getElementById('imePotrage').value || "", 
             sifra: document.getElementById('sifraPotrage').value || "", 
             autor: document.getElementById('autorPotrage').value || "",
+            autorOpis: document.getElementById('autorOpis') ? document.getElementById('autorOpis').value.trim() : "",
+            autorSlika: window.autorSlikaBase64 || "",
             besplatna: document.getElementById('unosPristupTip').value === 'da',
             cena: parseInt(document.getElementById('cenaStazeZlatnici').value) || 50,
             trajanje: document.getElementById('trajanjePotrage').value, 
@@ -2907,7 +2978,7 @@ window.pripremiZaStampu = function() {
     let ukupnaDistanca = document.getElementById('pDist').innerText || '0.00';
     let isGrupna = document.getElementById('checkGrupna').checked;
     
-    let prikaziOpis = confirm(window.trenutniJezik === 'sr' ? "Da li želite da se na papirima za igrače štampa i 'Detaljan opis lokacije'?" : "Do you want to print the 'Detailed location description'?");
+    let prikaziOpis = confirm(window.trenutniJezik === 'sr' ? "Da li želite da se na papirima za igrače sakrije 'Detaljan opis lokacije' u svrhu otežavanja igre?" : "Do you want to hide the 'Detailed location description' on player sheets to make the game more difficult?'?");
 
     let grid = window.izracunajMatematickuMrezu();
     let koordinateMape = {};
