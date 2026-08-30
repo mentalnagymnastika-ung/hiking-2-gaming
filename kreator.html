@@ -1846,7 +1846,7 @@ window.zatvoriPanelISacuvaj = function() {
     
     window.aktivniPin.imeLokacije = upisanoIme;
     window.aktivniPin.opisLokacije = upisanOpis;
-    if(window.slikeLokacijaMap) window.aktivniPin.slikaLokacije = window.slikeLokacijaMap[window.aktivniPin.id] || "";
+    if(window.slikeLokacijaMap) window.aktivniPin.opisLokacijeSlika = window.slikeLokacijaMap[window.aktivniPin.id] || "";
     window.aktivniPin.zadatak = podaciZadatka; 
     window.aktivniPin.isPocetna = isPocetna;
     
@@ -1922,9 +1922,8 @@ window.kreirajPin = function(lat, lng, data = null, isNewClick = false) {
     if(data && data.zadatak && data.zadatak.slika) { window.slikeZadatakaMap[pinId] = data.zadatak.slika; }
     if(data && data.zadatak && data.zadatak.zag_slika) { window.slikeZagonetkiMap[pinId] = data.zadatak.zag_slika; }
     if(data && data.zadatak && data.zadatak.nagradaSlika) { window.slikeNagradaMap[pinId] = data.zadatak.nagradaSlika; }
-    if(data && data.slikaLokacije) { window.slikeLokacijaMap[pinId] = data.slikaLokacije; }
-    else if(data && data.opisLokacijeSlika) { window.slikeLokacijaMap[pinId] = data.opisLokacijeSlika; }
-    
+    if(data && data.opisLokacijeSlika) { window.slikeLokacijaMap[pinId] = data.opisLokacijeSlika; }
+
     if(!data) { window.otvoriPanel(p, isNewClick); }
     
     window.promeneNisuSnimljene = true;
@@ -2923,7 +2922,7 @@ window.pripremiPodatkeZaCuvajne = function() {
             isPocetna: !!p.isPocetna,
             imeLokacije: p.imeLokacije || "",
             opisLokacije: p.opisLokacije || "",
-            slikaLokacije: window.slikeLokacijaMap[p.id] || "",
+            opisLokacijeSlika: window.slikeLokacijaMap[p.id] || "",
             zadatak: p.zadatak || null
         };
     });
@@ -2991,7 +2990,7 @@ window.snimiUBazu = async function() {
         return { 
             id: p.id, broj: p.broj, lat: latlng.lat, lng: latlng.lng, rad: p.rad, 
             dozvoliPomoc: p.dozvoliPomoc, isPocetna: p.isPocetna, imeLokacije: p.imeLokacije, 
-            opisLokacije: p.opisLokacije, slikaLokacije: window.slikeLokacijaMap[p.id] || "", 
+            opisLokacije: p.opisLokacije, opisLokacijeSlika: window.slikeLokacijaMap[p.id] || "", 
             zadatak: p.zadatak 
         }; 
     });
@@ -3085,7 +3084,7 @@ window.snimiJSON = function() {
             id: p.id, broj: p.broj, lat: latlng.lat, lng: latlng.lng, rad: p.rad, 
             dozvoliPomoc: p.dozvoliPomoc, isPocetna: p.isPocetna, imeLokacije: p.imeLokacije, 
             opisLokacije: p.opisLokacije, 
-            slikaLokacije: window.slikeLokacijaMap[p.id] || "",
+            opisLokacijeSlika: window.slikeLokacijaMap[p.id] || "",
             zadatak: p.zadatak 
         }; 
     });
@@ -3232,23 +3231,58 @@ window.snimiUBazu = async function() {
 };
 
 window.ucitajJSON = function(e) {
-        let file = e.target.files[0]; if(!file) return; let reader = new FileReader();
-        reader.onload = function(evt) {
-            try {
-                let d = JSON.parse(evt.target.result);
-                window.ucitajPodatkeIzObjekta(d);
-                alert(window.trenutniJezik==='sr'?"✅ Potraga uspešno učitana!":"✅ Quest loaded successfully!"); 
-                promeneNisuSnimljene = false; document.getElementById('ucitajFajl').value = ""; 
-            } catch(err) { alert("❌ Greška " + err.message); }
-        }; reader.readAsText(file);
-    }
+    let file = e.target.files[0]; 
+    if(!file) return; 
+    let reader = new FileReader();
+    reader.onload = function(evt) {
+        try {
+            let d = JSON.parse(evt.target.result);
+            window.ucitajPodatkeIzObjekta(d);
+            alert(window.trenutniJezik === 'sr' ? "✅ Potraga uspešno učitana!" : "✅ Quest loaded successfully!"); 
+            promeneNisuSnimljene = false; 
+            document.getElementById('ucitajFajl').value = ""; 
+        } catch(err) { 
+            alert("❌ Greška: " + err.message); 
+        }
+    }; 
+    reader.readAsText(file);
+};
 
-    let panelDrag = false, pX, pY;
-    window.pocniPrevlacenjePanela = function(e) { if(e.target.tagName === 'SPAN' || e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SUMMARY') return; panelDrag = true; let pan = document.getElementById('lebdeciPanel'); let clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; let clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; pX = clientX - pan.offsetLeft; pY = clientY - pan.offsetTop; }
-    document.addEventListener('mousemove', e => { if(panelDrag) { let pan = document.getElementById('lebdeciPanel'); pan.style.left = (e.clientX-pX)+'px'; pan.style.top = (e.clientY-pY)+'px'; }});
-    document.addEventListener('mouseup', () => panelDrag = false);
-    document.addEventListener('touchmove', e => { if(panelDrag) { let pan = document.getElementById('lebdeciPanel'); let clientX = e.touches[0].clientX; let clientY = e.touches[0].clientY; pan.style.left = (clientX-pX)+'px'; pan.style.top = (clientY-pY)+'px'; e.preventDefault(); }}, {passive: false});
-    document.addEventListener('touchend', () => panelDrag = false);
+let panelDrag = false, pX, pY;
+window.pocniPrevlacenjePanela = function(e) { 
+    // Optimizovana provera tagova
+    if(['SPAN', 'BUTTON', 'INPUT', 'TEXTAREA', 'SUMMARY'].includes(e.target.tagName)) return; 
+    
+    panelDrag = true; 
+    let pan = document.getElementById('lebdeciPanel'); 
+    let clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; 
+    let clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; 
+    pX = clientX - pan.offsetLeft; 
+    pY = clientY - pan.offsetTop; 
+};
+
+document.addEventListener('mousemove', e => { 
+    if(panelDrag) { 
+        let pan = document.getElementById('lebdeciPanel'); 
+        pan.style.left = (e.clientX - pX) + 'px'; 
+        pan.style.top = (e.clientY - pY) + 'px'; 
+    }
+});
+
+document.addEventListener('mouseup', () => panelDrag = false);
+
+document.addEventListener('touchmove', e => { 
+    if(panelDrag) { 
+        let pan = document.getElementById('lebdeciPanel'); 
+        let clientX = e.touches[0].clientX; 
+        let clientY = e.touches[0].clientY; 
+        pan.style.left = (clientX - pX) + 'px'; 
+        pan.style.top = (clientY - pY) + 'px'; 
+        e.preventDefault(); 
+    }
+}, {passive: false});
+
+document.addEventListener('touchend', () => panelDrag = false);
 
 window.ucitajPodatkeIzObjekta = function(d) {
     document.getElementById('gradPotrage').value = d.grad || ''; 
@@ -3259,30 +3293,43 @@ window.ucitajPodatkeIzObjekta = function(d) {
     window.promoSlikaBase64 = d.promoSlika || '';
     document.getElementById('autorPotrage').value = d.autor || '';
     
-    // Učitavanje opisa iz JSON objekta u HTML polje
     if (document.getElementById('autorOpis')) {
         document.getElementById('autorOpis').value = d.autorOpis || '';
-        }
+    }
 
-        document.getElementById('mesanjeRute').checked = !!d.mesanjeRute; 
-        document.getElementById('checkGrupna').checked = !!d.isGrupna;
-        if(d.isGrupna) { document.getElementById('brojTimovaGrupna').value = d.brojTimova || 2; document.getElementById('logikaGrupna').value = d.grupnaLogika || 'zajednicki_start_kraj'; }
-        if(d.trajanje) document.getElementById('trajanjePotrage').value = d.trajanje;
-        if(d.tip) { let btn = Array.from(document.querySelectorAll('.kretanje-btn')).find(b => b.innerText.includes(d.tip)); if(btn) window.postaviKretanje(d.tip, btn); }
-        if(d.healthPostavke) { document.getElementById('kaznaGreska').value = d.healthPostavke.kazna || 10; document.getElementById('nagradaTacno').value = d.healthPostavke.nagrada || 5; document.getElementById('cenaTraga').value = d.healthPostavke.trag || 10; }
-        
-        window.inicijalizujMapu(); 
-        window.obrisiSveBezPitanja();
-        
-        if(d.pinovi) { 
-            d.pinovi.sort((a, b) => a.broj - b.broj);
-            d.pinovi.forEach(p => { 
-                let lat = p.lat !== undefined ? p.lat : (45.2396 + (p.y / 10000)); 
-                let lng = p.lng !== undefined ? p.lng : (19.8227 + (p.x / 10000)); 
-                window.kreirajPin(lat, lng, p); 
-            }); 
-        }
-        
+    document.getElementById('mesanjeRute').checked = !!d.mesanjeRute; 
+    document.getElementById('checkGrupna').checked = !!d.isGrupna;
+    
+    if(d.isGrupna) { 
+        document.getElementById('brojTimovaGrupna').value = d.brojTimova || 2; 
+        document.getElementById('logikaGrupna').value = d.grupnaLogika || 'zajednicki_start_kraj'; 
+    }
+    
+    if(d.trajanje) document.getElementById('trajanjePotrage').value = d.trajanje;
+    
+    if(d.tip) { 
+        let btn = Array.from(document.querySelectorAll('.kretanje-btn')).find(b => b.innerText.includes(d.tip)); 
+        if(btn) window.postaviKretanje(d.tip, btn); 
+    }
+    
+    if(d.healthPostavke) { 
+        document.getElementById('kaznaGreska').value = d.healthPostavke.kazna || 10; 
+        document.getElementById('nagradaTacno').value = d.healthPostavke.nagrada || 5; 
+        document.getElementById('cenaTraga').value = d.healthPostavke.trag || 10; 
+    }
+    
+    window.inicijalizujMapu(); 
+    window.obrisiSveBezPitanja();
+    
+    if(d.pinovi) { 
+        d.pinovi.sort((a, b) => a.broj - b.broj);
+        d.pinovi.forEach(p => { 
+            let lat = p.lat !== undefined ? p.lat : (45.2396 + (p.y / 10000)); 
+            let lng = p.lng !== undefined ? p.lng : (19.8227 + (p.x / 10000)); 
+            window.kreirajPin(lat, lng, p); 
+        }); 
+    }
+};
 
         
         window.pokreniMapu(); 
@@ -3316,7 +3363,7 @@ window.autoSaveLocal = function() {
         return { 
             id: p.id, broj: p.broj, lat: latlng.lat, lng: latlng.lng, rad: p.rad, 
             dozvoliPomoc: p.dozvoliPomoc, isPocetna: p.isPocetna, imeLokacije: p.imeLokacije, 
-            opisLokacije: p.opisLokacije, slikaLokacije: window.slikeLokacijaMap[p.id] || "", zadatak: p.zadatak 
+            opisLokacije: p.opisLokacije, opisLokacijeSlika: window.slikeLokacijaMap[p.id] || "", zadatak: p.zadatak 
         }; 
     });
 
