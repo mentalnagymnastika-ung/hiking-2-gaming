@@ -7,7 +7,7 @@ const urlsToCache = [
     './admin-manifest.json',
     'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
     'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
-    'DIREKTAN_LINK_DO_NOVE_SLIKE.png'
+    'https://i.ibb.co/N2RN0Lwq/logo-G2-H-beli.png'
 ];
 
 // 1. INSTALACIJA - Prvo preuzimanje fajlova u keš
