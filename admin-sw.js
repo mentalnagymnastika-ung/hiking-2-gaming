@@ -1,5 +1,5 @@
 // Specifično ime keša za admina da se ne sudara sa običnim kreatorom
-const CACHE_NAME = 'admin-cache-v34.50';
+const CACHE_NAME = 'admin-cache-v35.50';
 
 // Spisak fajlova koje želimo odmah da sačuvamo za oflajn rad
 const urlsToCache = [
@@ -7,7 +7,7 @@ const urlsToCache = [
     './admin-manifest.json',
     'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
     'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
-    'https://i.ibb.co/VYdS4Yr9/logo-ikona-removebg-preview.png',
+    'https://i.ibb.co/B5NChvVp/location-pin-7495648.png',
     'https://i.ibb.co/ybWXLWh/location.png'
 ];
 
