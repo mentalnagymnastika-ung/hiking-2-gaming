@@ -887,150 +887,250 @@ window.obrisiSlikuNagrade = function() {
         document.addEventListener('touchend', naKraj);
     };
 
-    window.recnikKreator = {
-        "sr": {
-            "naslovAplikacije": "Kreator Staza V.31.00",
-            "btnNova": "✨ Kreiraj stazu",
-            "btnUcitaj": "📂 Učitaj",
-            "ttUcitaj": "Ovde učitavate potrage koje niste stigli da završite ili one koje želite da doradite.",
-            "lblPromo": "Promo slika",
-            "lblGrad": "Lokacija Grad <span style='color:#ef4444;'>*</span>",
-            "lblIme": "Ime potrage <span style='color:#ef4444;'>*</span>",
-            "lblAutor": "Igru osmislio Saradnik",
-            "lblObjasnjenje": "Objašnjenje / Uputstvo za početak <span style='color:#ef4444;'>*</span>",
-            "lblSifra": "Glavna šifra PASS <span style='color:#ef4444;'>*</span>",
-            "lblTrajanje": "Trajanje potrage",
-            "lblTipKretanja": "Tip kretanja",
-            "btnPesak": "🚶 Pešak",
-            "btnBicikl": "🚲 Bicikl",
-            "btnAuto": "🚗 Auto-ruta",
-            "lblMesanje": "🔀 Nasumičan redosled",
-            "ttMesanje": "Zadaci će svakom igraču biti prikazani drugačijim redosledom.",
-            "lblZdravlje": "🍏 Energija Bodovi",
-            "ttEnergija": "Odredite koliko energije se gubi za grešku, a koliko dobija za tačan odgovor.",
-            "lblKazna": "Greška (%)",
-            "lblNagrada": "Tačno (%)",
-            "lblTragCena": "Pomoć (%)",
-            "lblGrupnaNaslov": "🏆 Grupna potraga",
-            "lblGrupnaAktivacija": "Igra za više timova",
-            "ttGrupna": "Uključite ovo ako imate više ekipa koje se takmiče u isto vreme na istom terenu.",
-            "lblBrojTimova": "Broj timova",
-            "lblLogika": "Logika staza",
-            "ttLogika": "Određuje da li svi idu istim putem ili se staze mešaju da se timovi ne bi sretali.",
-            "optLog1": "Isti START i CILJ",
-            "optLog2": "Isti START i različit CILJ",
-            "optLog3": "Različit START i isti CILJ",
-            "optLog4": "Sve je nasumično",
-            "btnOtvoriMapu": "📍 Otvori Master Mapu",
-            "btnNazadBar": "⬅ Nazad",
-            "btnZavrsiTop": "🏁 Završi",
-            "btnModDodajUklj": "📍 Dodavanje tačke Uključeno",
-            "btnModDodajIsklj": "🖐 Pomeranje mape",
-            "txtIzlazNaslov": "Nesnimljene promene",
-            "txtIzlazTekst": "Imate rad koji nije sačuvan na disku. Šta želite da uradite pre izlaska",
-            "btnIzlazSnimi": "💾 Snimi rad pre izlaska",
-            "btnIzlazOdbaci": "🗑️ Izađi bez snimanja",
-            "btnIzlazOdustani": "Odustani",
-            "txtZavrsiNaslov": "🏁 Sačuvaj Potragu",
-            "txtZavrsiTekst": "Potraga je spremna. Preuzmite fajl ili ga sačuvajte na server.",
-            "btnZavrsiDisk": "💾 Preuzmi na Disk",
-            "btnZavrsiStampa": "🖨 Štampaj zadatke",
-            "btnZavrsiStampaMapu": "🗺️ Štampaj Mapu (Samo oreoli)",
-            "btnZavrsiNazad": "Nazad na mapu",
-            "txtPodesavanjeTacke": "Podešavanje Tačke",
-            "txtPrvaTacka": "▶️ Ovo je Start",
-            "btnPanelLociraj": "📍 Preuzmi moju trenutnu lokaciju",
-            "txtGpsZona": "Veličina zone za GPS",
-            "txtDozvoliGps": "Dozvoli GPS proveru lokacije",
-            "lblTipZadatka": "Tip zadatka na lokaciji",
-            "optZla": "Zlatnici na putu",
-            "txtZlatnikInfo": "Igrači ovde ne rešavaju zadatak. Samo sakupljaju zlatnik i idu dalje",
-            "optZag": "Zagonetka", "optKviz": "Kviz", "optKre": "Kreativni", "optPro": "Pronađi ovo", "optQr": "QR Kod", "optMulti": "🧩 Multi Zadatak (Roditelj + Dete)",
-            "lblZagTekst": "Tekst zagonetke Pitanje", "lblZagOdg": "Tačan odgovor",
-            "btnDodajPitanje": "Dodaj pitanje",
-            "lblKreTekst": "Uputstvo za crtež ili fotografiju",
-            "lblProSlika": "Mala fotografija lokacije", "lblProTekst": "Objašnjenje",
-            "lblQrTekst": "Uputstvo za pronalazak koda", "lblQrOdg": "Tajni kod iz QR koda",
-            "lblNagradniDeo": "🧩 Deo slagalice / Nagradni trag",
-            "txtPoslednjaTacka": "🏁 Ovo je Cilj",
-            "lblSmernicaNaslov": "📍 Kuda dalje", "lblSmernicaOpis": "Igrači će ovo pročitati nakon što reše ovu tačku.",
-            "lblZavrsnaNaslov": "🏆 Završna poruka", "lblZavrsnaOpis": "Ovo će igrači pročitati na kraju igre.",
-            "btnSacuvajTacku": "Sačuvaj ovu tačku", "btnObrisiTacku": "🗑 Obriši tačku",
-            "errPolja": "⚠️ Molimo popunite sva obavezna polja grad ime objašnjenje i šifru.",
-            "errKlon": "⚠️ Prvo učitajte originalnu stazu koju želite da klonirate."
-        },
-        "en": {
-            "naslovAplikacije": "Trail Creator V.30.00",
-            "btnNova": "✨ Create trail",
-            "btnUcitaj": "📂 Load",
-            "ttUcitaj": "Load quests that you haven't finished or want to edit.",
-            "lblPromo": "Promo image",
-            "lblGrad": "Location City <span style='color:#ef4444;'>*</span>",
-            "lblIme": "Quest name <span style='color:#ef4444;'>*</span>",
-            "lblAutor": "Game designed by",
-            "lblObjasnjenje": "Starting instructions <span style='color:#ef4444;'>*</span>",
-            "lblSifra": "Main code PASS <span style='color:#ef4444;'>*</span>",
-            "lblTrajanje": "Quest duration",
-            "lblTipKretanja": "Movement type",
-            "btnPesak": "🚶 Walking",
-            "btnBicikl": "🚲 Cycling",
-            "btnAuto": "🚗 Car route",
-            "lblMesanje": "🔀 Randomize order",
-            "ttMesanje": "Tasks will be shown to each player in a different random order.",
-            "lblZdravlje": "🍏 Energy Points",
-            "ttEnergija": "Set how much energy is lost for errors and gained for correct answers.",
-            "lblKazna": "Penalty (%)",
-            "lblNagrada": "Reward (%)",
-            "lblTragCena": "Hint cost (%)",
-            "lblGrupnaNaslov": "🏆 Group quest",
-            "lblGrupnaAktivacija": "Game for multiple teams",
-            "ttGrupna": "Enable this if you have multiple teams competing at the same time and place.",
-            "lblBrojTimova": "Number of teams",
-            "lblLogika": "Route logic",
-            "ttLogika": "Determines if everyone follows the same path or if routes are mixed to avoid teams meeting.",
-            "optLog1": "Same START and FINISH",
-            "optLog2": "Same START and different FINISH",
-            "optLog3": "Different START and same FINISH",
-            "optLog4": "Completely random",
-            "btnOtvoriMapu": "📍 Open Master Map",
-            "btnNazadBar": "⬅ Back",
-            "btnZavrsiTop": "🏁 Finish",
-            "btnModDodajUklj": "📍 Add point Enabled",
-            "btnModDodajIsklj": "🖐 Pan map",
-            "txtIzlazNaslov": "Unsaved changes",
-            "txtIzlazTekst": "You have work that is not saved to disk. What do you want to do before exiting",
-            "btnIzlazSnimi": "💾 Save work before exit",
-            "btnIzlazOdbaci": "🗑️ Exit without saving",
-            "btnIzlazOdustani": "Cancel",
-            "txtZavrsiNaslov": "🏁 Save Quest",
-            "txtZavrsiTekst": "The quest is ready. Download file or save to server.",
-            "btnZavrsiDisk": "💾 Download JSON",
-            "btnZavrsiStampa": "🖨 Print tasks",
-            "btnZavrsiStampaMapu": "🗺️ Print Map (Halos only)",
-            "btnZavrsiNazad": "Back to map",
-            "txtPodesavanjeTacke": "Point Settings",
-            "txtPrvaTacka": "▶️ This is Start",
-            "btnPanelLociraj": "📍 Get my current location",
-            "txtGpsZona": "GPS zone size",
-            "txtDozvoliGps": "Allow GPS location check",
-            "lblTipZadatka": "Task type at location",
-            "optZla": "Gold Coins on path",
-            "txtZlatnikInfo": "Players do not solve a task here. They just collect the coin and move on",
-            "optZag": "Riddle", "optKviz": "Quiz", "optKre": "Creative", "optPro": "Find this", "optQr": "QR Code", "optMulti": "🧩 Multi Task (Parent + Child)",
-            "lblZagTekst": "Riddle text Question", "lblZagOdg": "Correct answer",
-            "btnDodajPitanje": "Add question",
-            "lblKreTekst": "Photo instructions",
-            "lblProSlika": "Location photo", "lblProTekst": "Description",
-            "lblQrTekst": "Instructions to find code", "lblQrOdg": "Secret key from QR",
-            "lblNagradniDeo": "🧩 Puzzle piece / Reward hint",
-            "txtPoslednjaTacka": "🏁 This is Finish",
-            "lblSmernicaNaslov": "📍 Where to next", "lblSmernicaOpis": "Players will read this after solving this point.",
-            "lblZavrsnaNaslov": "🏆 Final message", "lblZavrsnaOpis": "Players will read this at the end of the game.",
-            "btnSacuvajTacku": "Save this point", "btnObrisiTacku": "🗑 Delete point",
-            "errPolja": "⚠️ Please fill in all required fields Name, Location, Description and Code.",
-            "errKlon": "⚠️ First load an original trail you want to clone."
-        }
-    };
+window.recnikKreator = {
+    "sr": {
+        "naslovAplikacije": "Kreator Staza V.40.01",
+        "btnNova": "✨ Kreiraj stazu",
+        "btnUcitaj": "📂 Učitaj",
+        "ttUcitaj": "Ovde učitavate potrage koje niste stigli da završite ili one koje želite da doradite.",
+        "btnKloniraj": "🚀 Kloniraj stazu",
+        "btnListaServer": "📋 LISTA SERVER",
+        "lblPromo": "Promo slika",
+        "lblGrad": "Lokacija Grad <span style='color:#ef4444;'>*</span>",
+        "btnLociraj": "Lociraj",
+        "lblIme": "Ime potrage <span style='color:#ef4444;'>*</span>",
+        "lblAutor": "Igru osmislio Saradnik",
+        "lblObjasnjenje": "Objašnjenje / Uputstvo za početak <span style='color:#ef4444;'>*</span>",
+        "lblSifra": "Glavna šifra PASS <span style='color:#ef4444;'>*</span>",
+        "btnGenerisi": "Generiši",
+        "lblDodatna": "⚙️ Podešavanja-Preferences",
+        "lblTrajanje": "Trajanje potrage",
+        "lblTipKretanja": "Tip kretanja",
+        "btnPesak": "🚶 Pešak",
+        "btnBicikl": "🚲 Bicikl",
+        "btnAuto": "🚗 Auto-ruta",
+        "lblMesanje": "🔀 Nasumičan redosled",
+        "ttMesanje": "Zadaci će svakom igraču biti prikazani drugačijim redosledom.",
+        "lblZdravlje": "🍏 Energija Bodovi",
+        "ttEnergija": "Odredite koliko energije se gubi za grešku, a koliko dobija za tačan odgovor.",
+        "lblKazna": "Greška (%)",
+        "lblNagrada": "Tačno (%)",
+        "lblTragCena": "Pomoć (%)",
+        "lblGrupnaNaslov": "🏆 Grupna potraga",
+        "lblGrupnaAktivacija": "Igra za više timova",
+        "ttGrupna": "Uključite ovo ako imate više ekipa koje se takmiče u isto vreme na istom terenu.",
+        "lblBrojTimova": "Broj timova",
+        "lblLogika": "Logika staza",
+        "ttLogika": "Određuje da li svi idu istim putem ili se staze mešaju da se timovi ne bi sretali.",
+        "optLog1": "Isti START i CILJ",
+        "optLog2": "Isti START i različit CILJ",
+        "optLog3": "Različit START i isti CILJ",
+        "optLog4": "Sve je nasumično",
+        "btnOtvoriMapu": "📍 Otvori mapu terena",
+        "btnNazadBar": "⬅ Nazad",
+        "btnZavrsiTop": "🏁 Završi",
+        "btnModDodajUklj": "📍 Dodavanje tačke Uključeno",
+        "btnModDodajIsklj": "🖐 Pomeranje mape",
+        "txtIzlazNaslov": "Nesnimljene promene",
+        "txtIzlazTekst": "Imate rad koji nije sačuvan na disku. Šta želite da uradite pre izlaska",
+        "btnIzlazSnimi": "💾 Snimi rad pre povratka",
+        "btnIzlazOdbaci": "🗑️ Izađi bez snimanja",
+        "btnIzlazOdustani": "Odustani",
+        "txtZavrsiNaslov": "🏁 Sačuvaj Potragu",
+        "txtZavrsiTekst": "Potraga je spremna. Preuzmite fajl ili ga sačuvajte na server.",
+        "btnZavrsiDisk": "💾 Disk JSON",
+        "btnZavrsiStampa": "🖨 Štampaj zadatke",
+        "btnZavrsiNazad": "Nazad na mapu",
+        "txtPodesavanjeTacke": "Podešavanje Tačke",
+        "txtPrvaTacka": "▶️ Ovo je Start",
+        "btnPanelLociraj": "📍 Preuzmi moju trenutnu lokaciju",
+        "txtGpsZona": "Veličina zone za GPS",
+        "txtDozvoliGps": "Dozvoli GPS proveru lokacije",
+        "lblTipZadatka": "Tip zadatka na lokaciji",
+        "optZla": "Zlatnici na putu",
+        "txtZlatnikInfo": "Igrači ovde ne rešavaju zadatak. Samo sakupljaju zlatnik i idu dalje",
+        "optZag": "Zagonetka", "optKviz": "Kviz", "optKre": "Kreativni", "optPro": "Pronađi ovo", "optQr": "QR Kod", "optMulti": "🧩 Multi Zadatak (Roditelj + Dete)",
+        "lblZagTekst": "Tekst zagonetke Pitanje", "lblZagOdg": "Tačan odgovor",
+        "btnDodajPitanje": "Dodaj pitanje",
+        "lblKreTekst": "Uputstvo za crtež ili fotografiju",
+        "lblProSlika": "Mala fotografija lokacije", "lblProTekst": "Objašnjenje",
+        "lblQrTekst": "Uputstvo za pronalazak koda", "lblQrOdg": "Tajni kod iz QR koda",
+        "lblNagradniDeo": "🧩 Deo slagalice / Nagradni trag",
+        "txtPoslednjaTacka": "🏁 Ovo je Cilj",
+        "lblSmernicaNaslov": "📍 Kuda dalje", "lblSmernicaOpis": "Igrači će ovo pročitati nakon što reše ovu tačku.",
+        "lblZavrsnaNaslov": "🏆 Završna poruka", "lblZavrsnaOpis": "Ovo će igrači pročitati na kraju igre.",
+        "btnSacuvajTacku": "Sačuvaj ovu tačku", "btnObrisiTacku": "🗑 Obriši tačku",
+        "errPolja": "⚠️ Molimo popunite sva obavezna polja grad ime objašnjenje i šifru.",
+        "errKlon": "⚠️ Prvo učitajte originalnu stazu koju želite da klonirate."
+    },
+    "en": {
+        "naslovAplikacije": "Trail Creator V.40.01",
+        "btnNova": "✨ Create trail",
+        "btnUcitaj": "📂 Load",
+        "ttUcitaj": "Load quests that you haven't finished or want to edit.",
+        "btnKloniraj": "🚀 Clone trail",
+        "btnListaServer": "📋 SERVER LIST",
+        "lblPromo": "Promo image",
+        "lblGrad": "Location City <span style='color:#ef4444;'>*</span>",
+        "btnLociraj": "Locate",
+        "lblIme": "Quest name <span style='color:#ef4444;'>*</span>",
+        "lblAutor": "Game designed by",
+        "lblObjasnjenje": "Starting instructions <span style='color:#ef4444;'>*</span>",
+        "lblSifra": "Main code PASS <span style='color:#ef4444;'>*</span>",
+        "btnGenerisi": "Generate",
+        "lblDodatna": "⚙️ Preferences",
+        "lblTrajanje": "Quest duration",
+        "lblTipKretanja": "Movement type",
+        "btnPesak": "🚶 Walking",
+        "btnBicikl": "🚲 Cycling",
+        "btnAuto": "🚗 Car route",
+        "lblMesanje": "🔀 Randomize order",
+        "ttMesanje": "Tasks will be shown to each player in a different random order.",
+        "lblZdravlje": "🍏 Energy Points",
+        "ttEnergija": "Set how much energy is lost for errors and gained for correct answers.",
+        "lblKazna": "Penalty (%)",
+        "lblNagrada": "Reward (%)",
+        "lblTragCena": "Hint cost (%)",
+        "lblGrupnaNaslov": "🏆 Group quest",
+        "lblGrupnaAktivacija": "Game for multiple teams",
+        "ttGrupna": "Enable this if you have multiple teams competing at the same time and place.",
+        "lblBrojTimova": "Number of teams",
+        "lblLogika": "Route logic",
+        "ttLogika": "Determines if everyone follows the same path or if routes are mixed to avoid teams meeting.",
+        "optLog1": "Same START and FINISH",
+        "optLog2": "Same START and different FINISH",
+        "optLog3": "Different START and same FINISH",
+        "optLog4": "Completely random",
+        "btnOtvoriMapu": "📍 Open map",
+        "btnNazadBar": "⬅ Back",
+        "btnZavrsiTop": "🏁 Finish",
+        "btnModDodajUklj": "📍 Add point Enabled",
+        "btnModDodajIsklj": "🖐 Pan map",
+        "txtIzlazNaslov": "Unsaved changes",
+        "txtIzlazTekst": "You have work that is not saved to disk. What do you want to do before exiting",
+        "btnIzlazSnimi": "💾 Save work before exit",
+        "btnIzlazOdbaci": "🗑️ Exit without saving",
+        "btnIzlazOdustani": "Cancel",
+        "txtZavrsiNaslov": "🏁 Save Quest",
+        "txtZavrsiTekst": "The quest is ready. Download file or save to server.",
+        "btnZavrsiDisk": "💾 Download JSON",
+        "btnZavrsiStampa": "🖨 Print tasks",
+        "btnZavrsiNazad": "Back to map",
+        "txtPodesavanjeTacke": "Point Settings",
+        "txtPrvaTacka": "▶️ This is Start",
+        "btnPanelLociraj": "📍 Get my current location",
+        "txtGpsZona": "GPS zone size",
+        "txtDozvoliGps": "Allow GPS location check",
+        "lblTipZadatka": "Task type at location",
+        "optZla": "Gold Coins on path",
+        "txtZlatnikInfo": "Players do not solve a task here. They just collect the coin and move on",
+        "optZag": "Riddle", "optKviz": "Quiz", "optKre": "Creative", "optPro": "Find this", "optQr": "QR Code", "optMulti": "🧩 Multi Task (Parent + Child)",
+        "lblZagTekst": "Riddle text Question", "lblZagOdg": "Correct answer",
+        "btnDodajPitanje": "Add question",
+        "lblKreTekst": "Photo instructions",
+        "lblProSlika": "Location photo", "lblProTekst": "Description",
+        "lblQrTekst": "Instructions to find code", "lblQrOdg": "Secret key from QR",
+        "lblNagradniDeo": "🧩 Puzzle piece / Reward hint",
+        "txtPoslednjaTacka": "🏁 This is Finish",
+        "lblSmernicaNaslov": "📍 Where to next", "lblSmernicaOpis": "Players will read this after solving this point.",
+        "lblZavrsnaNaslov": "🏆 Final message", "lblZavrsnaOpis": "Players will read this at the end of the game.",
+        "btnSacuvajTacku": "Save this point", "btnObrisiTacku": "🗑 Delete point",
+        "errPolja": "⚠️ Please fill in all required fields Name, Location, Description and Code.",
+        "errKlon": "⚠️ First load an original trail you want to clone."
+    }
+};
+
+window.promeniJezik = function(lang) {
+    window.trenutniJezik = lang;
+    let r = window.recnikKreator[lang];
+
+    let setHTML = (id, html) => { let el = document.getElementById(id); if (el && html !== undefined) el.innerHTML = html; };
+    let setText = (id, text) => { let el = document.getElementById(id); if (el && text !== undefined) el.innerText = text; };
+
+    setHTML('btnNova', r.btnNova);
+    setHTML('btnUcitaj', r.btnUcitaj);
+    setHTML('btnKloniraj', r.btnKloniraj);
+    setHTML('btnListaServer', r.btnListaServer);
+    setText('lblPromo', r.lblPromo);
+    setHTML('lblGrad', r.lblGrad);
+    let btnLoc = document.getElementById('btnLociraj'); if(btnLoc && r.btnLociraj) btnLoc.title = r.btnLociraj;
+    setHTML('lblIme', r.lblIme);
+    setText('lblAutor', r.lblAutor);
+    setHTML('lblObjasnjenje', r.lblObjasnjenje);
+    setHTML('lblSifra', r.lblSifra);
+    setText('btnGenerisi', r.btnGenerisi);
+    setText('lblDodatna', r.lblDodatna);
+    setText('lblTrajanje', r.lblTrajanje);
+    setText('lblTipKretanja', r.lblTipKretanja);
+    setText('btnPesak', r.btnPesak);
+    setText('btnBicikl', r.btnBicikl);
+    setText('btnAuto', r.btnAuto);
+    
+    setText('lblMesanje', r.lblMesanje);
+    setHTML('lblZdravlje', `🍏 ${r.lblZdravlje}`);
+    setText('lblKazna', r.lblKazna);
+    setText('lblNagrada', r.lblNagrada);
+    setText('lblTragCena', r.lblTragCena);
+    setText('lblGrupnaNaslov', r.lblGrupnaNaslov);
+    setText('txtGrupnaOpcija', r.lblGrupnaAktivacija);
+    setText('lblBrojTimova', r.lblBrojTimova);
+    setText('lblLogika', r.lblLogika);
+    setText('optLog1', r.optLog1);
+    setText('optLog2', r.optLog2);
+    setText('optLog3', r.optLog3);
+    setText('optLog4', r.optLog4);
+    setText('btnOtvoriMapu', r.btnOtvoriMapu);
+    setText('btnNazadBar', r.btnNazadBar);
+    setText('btnZavrsiTop', r.btnZavrsiTop);
+    
+    let btnDodajMod = document.getElementById('btnModDodaj');
+    if(btnDodajMod) btnDodajMod.innerText = window.dodajMod ? r.btnModDodajUklj : r.btnModDodajIsklj;
+
+    setText('txtIzlazNaslov', r.txtIzlazNaslov);
+    setText('txtIzlazTekst', r.txtIzlazTekst);
+    setText('btnIzlazSnimi', r.btnIzlazSnimi);
+    setText('btnIzlazOdbaci', r.btnIzlazOdbaci);
+    setText('btnIzlazOdustani', r.btnIzlazOdustani);
+
+    setText('txtZavrsiNaslov', r.txtZavrsiNaslov);
+    setText('txtZavrsiTekst', r.txtZavrsiTekst);
+    setText('btnZavrsiDisk', r.btnZavrsiDisk);
+    setText('btnZavrsiStampa', r.btnZavrsiStampa);
+    setText('btnZavrsiNazad', r.btnZavrsiNazad);
+
+    setText('txtPodesavanjeTacke', r.txtPodesavanjeTacke);
+    setText('txtPrvaTacka', r.txtPrvaTacka);
+    setText('txtGpsZona', r.txtGpsZona);
+    setText('txtDozvoliGps', r.txtDozvoliGps);
+    setText('lblTipZadatka', r.lblTipZadatka);
+    
+    setText('optZla', r.optZla);
+    setText('txtZlatnikInfo', r.txtZlatnikInfo);
+    
+    setText('optZag', r.optZag);
+    setText('optKviz', r.optKviz);
+    setText('optKre', r.optKre);
+    setText('optPro', r.optPro);
+    setText('optQr', r.optQr);
+    setText('optMulti', r.optMulti);
+    setText('lblZagTekst', r.lblZagTekst);
+    setText('lblZagOdg', r.lblZagOdg);
+    setText('btnDodajPitanje', r.btnDodajPitanje);
+    setText('lblKreTekst', r.lblKreTekst);
+    setText('lblProSlika', r.lblProSlika);
+    setText('lblProTekst', r.lblProTekst);
+    setText('lblQrTekst', r.lblQrTekst);
+    setText('lblQrOdg', r.lblQrOdg);
+    setText('lblNagradniDeo', r.lblNagradniDeo);
+    setText('txtPoslednjaTacka', r.txtPoslednjaTacka);
+    setText('btnSacuvajTacku', r.btnSacuvajTacku);
+    setHTML('btnObrisiTacku', `🗑 ${r.btnObrisiTacku}`);
+    
+    setText('greskaPoruka', r.errPolja);
+
+    window.toggleZavrsna(); 
+    window.izracunajVarijacije();
+};
 
     window.zatvoriPanel = function() { 
         document.getElementById('lebdeciPanel').style.display = 'none'; 
@@ -1069,95 +1169,6 @@ window.obrisiSveBezPitanja = function() {
     window.zatvoriPanel(); 
     window.izracunajVarijacije(); 
 }
-
-    window.promeniJezik = function(lang) {
-        window.trenutniJezik = lang;
-        let r = window.recnikKreator[lang];
-
-        document.getElementById('btnNova').innerHTML = r.btnNova;
-        document.getElementById('btnUcitaj').innerHTML = r.btnUcitaj;
-        document.getElementById('btnKloniraj').innerHTML = r.btnKloniraj;
-        document.getElementById('lblPromo').innerText = r.lblPromo;
-        document.getElementById('lblGrad').innerHTML = r.lblGrad;
-        document.getElementById('btnLociraj').title = r.btnLociraj;
-        document.getElementById('lblIme').innerHTML = r.lblIme;
-        document.getElementById('lblAutor').innerText = r.lblAutor;
-        document.getElementById('lblObjasnjenje').innerHTML = r.lblObjasnjenje;
-        document.getElementById('lblSifra').innerHTML = r.lblSifra;
-        document.getElementById('btnGenerisi').innerText = r.btnGenerisi;
-        document.getElementById('lblDodatna').innerText = r.lblDodatna;
-        document.getElementById('lblTrajanje').innerText = r.lblTrajanje;
-        document.getElementById('lblTipKretanja').innerText = r.lblTipKretanja;
-        document.getElementById('btnPesak').innerText = r.btnPesak;
-        document.getElementById('btnBicikl').innerText = r.btnBicikl;
-        document.getElementById('btnAuto').innerText = r.btnAuto;
-        
-        document.getElementById('lblMesanje').innerText = r.lblMesanje;
-        document.getElementById('lblZdravlje').innerHTML = `🍏 ${r.lblZdravlje}`;
-        document.getElementById('lblKazna').innerText = r.lblKazna;
-        document.getElementById('lblNagrada').innerText = r.lblNagrada;
-        document.getElementById('lblTragCena').innerText = r.lblTragCena;
-        document.getElementById('lblGrupnaNaslov').innerText = r.lblGrupnaNaslov;
-        document.getElementById('txtGrupnaOpcija').innerText = r.lblGrupnaAktivacija;
-        document.getElementById('lblBrojTimova').innerText = r.lblBrojTimova;
-        document.getElementById('lblLogika').innerText = r.lblLogika;
-        document.getElementById('optLog1').innerText = r.optLog1;
-        document.getElementById('optLog2').innerText = r.optLog2;
-        document.getElementById('optLog3').innerText = r.optLog3;
-        document.getElementById('optLog4').innerText = r.optLog4;
-        document.getElementById('btnOtvoriMapu').innerText = r.btnOtvoriMapu;
-        document.getElementById('btnNazadBar').innerText = r.btnNazadBar;
-        document.getElementById('btnZavrsiTop').innerText = r.btnZavrsiTop;
-        
-        let btnDodajMod = document.getElementById('btnModDodaj');
-        if(btnDodajMod) btnDodajMod.innerText = window.dodajMod ? r.btnModDodajUklj : r.btnModDodajIsklj;
-
-        document.getElementById('txtIzlazNaslov').innerText = r.txtIzlazNaslov;
-        document.getElementById('txtIzlazTekst').innerText = r.txtIzlazTekst;
-        document.getElementById('btnIzlazSnimi').innerText = r.btnIzlazSnimi;
-        document.getElementById('btnIzlazOdbaci').innerText = r.btnIzlazOdbaci;
-        document.getElementById('btnIzlazOdustani').innerText = r.btnIzlazOdustani;
-
-        document.getElementById('txtZavrsiNaslov').innerText = r.txtZavrsiNaslov;
-        document.getElementById('txtZavrsiTekst').innerText = r.txtZavrsiTekst;
-        document.getElementById('btnZavrsiDisk').innerText = r.btnZavrsiDisk;
-        document.getElementById('btnZavrsiStampa').innerText = r.btnZavrsiStampa;
-        document.getElementById('btnZavrsiStampaMapu').innerText = r.btnZavrsiStampaMapu;
-        document.getElementById('btnZavrsiNazad').innerText = r.btnZavrsiNazad;
-
-        document.getElementById('txtPodesavanjeTacke').innerText = r.txtPodesavanjeTacke;
-        document.getElementById('txtPrvaTacka').innerText = r.txtPrvaTacka;
-        document.getElementById('txtGpsZona').innerText = r.txtGpsZona;
-        document.getElementById('txtDozvoliGps').innerText = r.txtDozvoliGps;
-        document.getElementById('lblTipZadatka').innerText = r.lblTipZadatka;
-        
-        document.getElementById('optZla').innerText = r.optZla;
-        document.getElementById('txtZlatnikInfo').innerText = r.txtZlatnikInfo;
-        
-        document.getElementById('optZag').innerText = r.optZag;
-        document.getElementById('optKviz').innerText = r.optKviz;
-        document.getElementById('optKre').innerText = r.optKre;
-        document.getElementById('optPro').innerText = r.optPro;
-        document.getElementById('optQr').innerText = r.optQr;
-        document.getElementById('optMulti').innerText = r.optMulti;
-        document.getElementById('lblZagTekst').innerText = r.lblZagTekst;
-        document.getElementById('lblZagOdg').innerText = r.lblZagOdg;
-        document.getElementById('btnDodajPitanje').innerText = r.btnDodajPitanje;
-        document.getElementById('lblKreTekst').innerText = r.lblKreTekst;
-        document.getElementById('lblProSlika').innerText = r.lblProSlika;
-        document.getElementById('lblProTekst').innerText = r.lblProTekst;
-        document.getElementById('lblQrTekst').innerText = r.lblQrTekst;
-        document.getElementById('lblQrOdg').innerText = r.lblQrOdg;
-        document.getElementById('lblNagradniDeo').innerText = r.lblNagradniDeo;
-        document.getElementById('txtPoslednjaTacka').innerText = r.txtPoslednjaTacka;
-        document.getElementById('btnSacuvajTacku').innerText = r.btnSacuvajTacku;
-        document.getElementById('btnObrisiTacku').innerHTML = `🗑 ${r.btnObrisiTacku}`;
-        
-        document.getElementById('greskaPoruka').innerText = r.errPolja;
-
-        window.toggleZavrsna(); 
-        window.izracunajVarijacije();
-    }
 
     document.getElementById('checkPocetna').addEventListener('change', function() {
         if(this.checked) document.getElementById('checkZavrsna').checked = false;
@@ -1774,6 +1785,8 @@ window.resetujSve = function() {
         if(data && data.zadatak && data.zadatak.zag_slika) { window.slikeZagonetkiMap[pinId] = data.zadatak.zag_slika; }
         if(data && data.opisLokacijeSlika) { window.slikeLokacijaMap[pinId] = data.opisLokacijeSlika; }
         
+        if(data && data.zadatak && data.zadatak.nagradaSlika) { window.slikeNagradaMap[pinId] = data.zadatak.nagradaSlika; }
+
         if(!data && !window.modKloniranjaU_Toku) window.otvoriPanel(p, isNewClick); 
         window.promeneNisuSnimljene = true;
     }
@@ -2050,6 +2063,19 @@ window.resetujSve = function() {
                 }
             }
         } else { document.getElementById('tipZadatka').value = 'zlatnik'; }
+
+
+        //  DEO KOJI cita Slika nagrade ili logo (Opciono)
+        
+        if(window.slikeNagradaMap && window.slikeNagradaMap[p.id]) { 
+            let nPreview = document.getElementById('nagrada_slika_preview');
+            let kNN = document.getElementById('kontejnerSlikeNagrade');
+            if(nPreview && kNN) {
+                nPreview.src = window.slikeNagradaMap[p.id]; 
+                nPreview.style.display = 'block'; 
+                kNN.style.display = 'block'; 
+            }
+        }
 
         window.switchZadatak(); window.toggleZavrsna(); 
         
