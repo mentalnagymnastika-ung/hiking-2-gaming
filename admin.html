@@ -718,10 +718,18 @@
             <textarea id="multi_uputstvo" rows="2" placeholder="Npr. Dete rešava zagonetku, a zatim roditelj skenira QR kod..."></textarea>
         </div>
 
-        <div style="background:#fffbeb; padding:15px; border-radius:8px; border:1px dashed #f59e0b; margin-top:15px;">
+ <div style="background:#fffbeb; padding:15px; border-radius:8px; border:1px dashed #f59e0b; margin-top:15px;">
             <label id="lblNagradniDeo" style="margin-top:0; color:#b45309; font-size:15px;">🧩 Deo slagalice / Nagradni trag</label>
             <p style="font-size:12px; color:#78350f; margin-top:5px; margin-bottom:10px;">Ovo će se prikazati igračima nakon uspešnog rešavanja.</p>
-            <input type="text" id="nagradniDeo" placeholder="Npr. Dobili ste slovo 'A' ili 'Deo mape 1'" style="border-color:#fcd34d;">
+            <input type="text" id="nagradniDeo" placeholder="Npr. Dobili ste slovo 'A' ili 'Deo mape 1'" style="border-color:#fcd34d; margin-bottom: 10px;">
+            
+            <label style="color:#b45309; font-size:13px; font-weight:bold; margin-top:5px;">📷 Slika nagrade ili logo (Opciono)</label>
+            <input type="file" id="nagrada_upload_btn" accept="image/*" onchange="window.pripremiSlikaNagrade(event)" style="padding: 4px; font-size:12px; background:white; width: 100%; box-sizing: border-box; margin-bottom: 10px;">
+            
+            <div id="kontejnerSlikeNagrade" style="position:relative; display:none; margin-bottom:10px; width:100%;">
+                <img id="nagrada_slika_preview" src="" style="width:100%; max-height:120px; object-fit:contain; border-radius:8px; border: 2px solid #fcd34d;">
+                <button onclick="window.obrisiSlikuNagrade()" style="position:absolute; top:5px; right:5px; background:#ef4444; color:white; border:none; border-radius:50%; width:24px; height:24px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">X</button>
+            </div>
         </div>
 
         <div id="poljeSmernica" style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0; margin-top:15px;">
@@ -754,6 +762,7 @@
     window.slikeLokacijaMap = {};
     window.slikeZagonetkiMap = {}; // Dodata nezavisna mapa za slike zagonetki
     window.autorSlikaBase64 = "";
+    window.slikeNagradaMap = {};
 
     window.mojMarkerLokacije = null;
     window.mojKrugPreciznosti = null;
@@ -800,6 +809,49 @@
         if(zUp) zUp.value = '';
         window.promeneNisuSnimljene = true;
     };
+
+
+    window.pripremiSlikaNagrade = function(event) {
+    let file = event.target.files[0]; 
+    if(!file || !window.aktivniPin) return;
+    let reader = new FileReader();
+    reader.onload = function(e) {
+        let img = new Image();
+        img.onload = function() {
+            let canvas = document.createElement('canvas');
+            let max_size = 300; let width = img.width; let height = img.height;
+            if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } } 
+            else { if (height > max_size) { width *= max_size / height; height = max_size; } }
+            canvas.width = width; canvas.height = height;
+            let ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+            
+            let novaSlikaBase64 = canvas.toDataURL('image/jpeg', 0.5); 
+            window.slikeNagradaMap[window.aktivniPin.id] = novaSlikaBase64;
+            
+            let nPreview = document.getElementById('nagrada_slika_preview');
+            let kontejner = document.getElementById('kontejnerSlikeNagrade');
+            if(nPreview && kontejner) { 
+                nPreview.src = novaSlikaBase64; 
+                kontejner.style.display = 'block'; 
+            }
+            window.promeneNisuSnimljene = true;
+        }
+        img.src = e.target.result;
+    }; 
+    reader.readAsDataURL(file);
+};
+
+window.obrisiSlikuNagrade = function() {
+    if(!window.aktivniPin) return;
+    delete window.slikeNagradaMap[window.aktivniPin.id];
+    let nPreview = document.getElementById('nagrada_slika_preview');
+    if(nPreview) nPreview.src = '';
+    let nKont = document.getElementById('kontejnerSlikeNagrade');
+    if(nKont) nKont.style.display = 'none';
+    let nUp = document.getElementById('nagrada_upload_btn');
+    if(nUp) nUp.value = '';
+    window.promeneNisuSnimljene = true;
+};
 
     window.skretniPrikazCene = function() {
         let tip = document.getElementById('unosPristupTip').value;
@@ -990,9 +1042,12 @@
         window.map.removeLayer(window.aktivniPin.marker); 
         window.map.removeLayer(window.aktivniPin.krug); 
         window.pinovi = window.pinovi.filter(p => p !== window.aktivniPin); 
+
         delete window.slikeZadatakaMap[window.aktivniPin.id];
         delete window.slikeLokacijaMap[window.aktivniPin.id]; 
         delete window.slikeZagonetkiMap[window.aktivniPin.id];
+        delete window.slikeNagradaMap[window.aktivniPin.id];
+
         window.osveziPinove(); 
         window.crtajLinije(); 
         window.zatvoriPanel(); 
@@ -1000,19 +1055,20 @@
         window.promeneNisuSnimljene = true; 
     }
 
-    window.obrisiSveBezPitanja = function() { 
-        window.pinovi.forEach(p => { 
-            window.map.removeLayer(p.marker); 
-            window.map.removeLayer(p.krug); 
-        }); 
-        window.pinovi = []; 
-        window.slikeZadatakaMap = {}; 
-        window.slikeLokacijaMap = {}; 
-        window.slikeZagonetkiMap = {};
-        window.crtajLinije(); 
-        window.zatvoriPanel(); 
-        window.izracunajVarijacije(); 
-    }
+window.obrisiSveBezPitanja = function() { 
+    window.pinovi.forEach(p => { 
+        window.map.removeLayer(p.marker); 
+        window.map.removeLayer(p.krug); 
+    }); 
+    window.pinovi = []; 
+    window.slikeZadatakaMap = {}; 
+    window.slikeLokacijaMap = {}; 
+    window.slikeZagonetkiMap = {};
+    window.slikeNagradaMap = {}; // Dodato
+    window.crtajLinije(); 
+    window.zatvoriPanel(); 
+    window.izracunajVarijacije(); 
+}
 
     window.promeniJezik = function(lang) {
         window.trenutniJezik = lang;
@@ -1588,24 +1644,51 @@ window.pripremiSlikuAutora = function(event) {
         document.getElementById('zavrsiModal').style.display='flex';
     }
 
-    window.resetujSve = function() {
-        if(!window.proveriNesacuvano()) return;
-        ['gradPotrage','imePotrage','sifraPotrage','promoTekst'].forEach(id => window.ukloniGresku(document.getElementById(id)));
-        document.getElementById('gradPotrage').value = ''; document.getElementById('imePotrage').value = '';
-        if(document.getElementById('unosJezikStaze')) document.getElementById('unosJezikStaze').value = 'sr';
-        document.getElementById('autorPotrage').value = '';
-        document.getElementById('sifraPotrage').value = ''; document.getElementById('promoTekst').value = '';
-        document.getElementById('promoSlikaUpload').value = ''; document.getElementById('mesanjeRute').checked = false;
-        document.getElementById('checkGrupna').checked = false;
-        window.promoSlikaBase64 = ''; window.slikeZadatakaMap = {}; window.slikeZagonetkiMap = {}; document.getElementById('trajanjePotrage').selectedIndex = 0;
-        window.postaviKretanje('Pešak', document.getElementById('btnPesak'));
-        
-        document.getElementById('unosPristupTip').value = 'da';
-        document.getElementById('cenaStazeZlatnici').value = 50;
-        window.skretniPrikazCene();
-        
-        window.obrisiSveBezPitanja(); window.izracunajVarijacije(); window.promeneNisuSnimljene = false;
-    }
+window.resetujSve = function() {
+    if(!window.proveriNesacuvano()) return;
+    
+    ['gradPotrage','imePotrage','sifraPotrage','promoTekst'].forEach(id => window.ukloniGresku(document.getElementById(id)));
+    
+    document.getElementById('gradPotrage').value = ''; 
+    document.getElementById('imePotrage').value = '';
+    
+    if(document.getElementById('unosJezikStaze')) document.getElementById('unosJezikStaze').value = 'sr';
+    
+    document.getElementById('autorPotrage').value = '';
+    if(document.getElementById('autorOpis')) document.getElementById('autorOpis').value = '';
+    
+    document.getElementById('sifraPotrage').value = ''; 
+    document.getElementById('promoTekst').value = '';
+    document.getElementById('promoSlikaUpload').value = ''; 
+    if(document.getElementById('autorSlikaUpload')) document.getElementById('autorSlikaUpload').value = '';
+    
+    document.getElementById('mesanjeRute').checked = false;
+    document.getElementById('checkGrupna').checked = false;
+    
+    window.promoSlikaBase64 = '';
+    window.autorSlikaBase64 = '';
+    
+    // Potpuno čišćenje svih globalnih mapa sa slikama
+    window.slikeZadatakaMap = {};
+    window.slikeZagonetkiMap = {}; 
+    window.slikeLokacijaMap = {}; 
+    window.slikeNagradaMap = {}; 
+    
+    document.getElementById('trajanjePotrage').selectedIndex = 0;
+    window.postaviKretanje('Pešak', document.getElementById('btnPesak'));
+    
+    document.getElementById('unosPristupTip').value = 'da';
+    document.getElementById('cenaStazeZlatnici').value = 50;
+    window.skretniPrikazCene();
+    
+    // Poništavanje prikaza slike autora ako postoji na interfejsu
+    if(document.getElementById('kontejnerSlikeAutora')) document.getElementById('kontejnerSlikeAutora').style.display = 'none';
+    if(document.getElementById('autorSlikaPreview')) document.getElementById('autorSlikaPreview').src = '';
+    
+    window.obrisiSveBezPitanja(); 
+    window.izracunajVarijacije(); 
+    window.promeneNisuSnimljene = false;
+}
 
     window.nazadNaMeni = function() {
         if (window.promeneNisuSnimljene) {
@@ -2216,7 +2299,9 @@ mIgra.innerHTML = `
         }
         
         podaciZadatka.nagradniDeo = document.getElementById('nagradniDeo').value.trim();
-        
+        podaciZadatka.nagradaSlika = window.slikeNagradaMap[window.aktivniPin.id] || "";
+
+
         let upisanoIme = document.getElementById('imeLokacije').value.trim();
         let upisanOpis = document.getElementById('opisLokacije').value.trim();
         
@@ -2389,6 +2474,7 @@ window.snimiJSON = function() {
             grad: document.getElementById('gradPotrage').value || "Nepoznata lokacija", 
             ime: document.getElementById('imePotrage').value || "Nova Potraga", 
             sifra: sifra, 
+            jezik: document.getElementById('unosJezikStaze') ? document.getElementById('unosJezikStaze').value : "sr",
             autor: autor,
             autorOpis: autorOpis,
             autorSlika: autorSlika,
@@ -2486,6 +2572,7 @@ window.snimiUBazu = async function() {
             grad: document.getElementById('gradPotrage').value || "Nepoznato", 
             ime: document.getElementById('imePotrage').value || "Nova Potraga", 
             sifra: sifra, 
+            jezik: document.getElementById('unosJezikStaze') ? document.getElementById('unosJezikStaze').value : "sr",
             autor: autor,
             autorOpis: autorOpis,
             autorSlika: autorSlika,
@@ -2693,7 +2780,9 @@ window.autoSaveLocal = function() {
             grad: document.getElementById('gradPotrage').value || "", 
             ime: document.getElementById('imePotrage').value || "", 
             sifra: document.getElementById('sifraPotrage').value || "", 
+            jezik: document.getElementById('unosJezikStaze') ? document.getElementById('unosJezikStaze').value : "sr",
             autor: document.getElementById('autorPotrage').value || "",
+
             autorOpis: document.getElementById('autorOpis') ? document.getElementById('autorOpis').value.trim() : "",
             autorSlika: window.autorSlikaBase64 || "",
             besplatna: document.getElementById('unosPristupTip').value === 'da',
@@ -2717,51 +2806,64 @@ window.autoSaveLocal = function() {
         localStorage.setItem('autosave_potraga', JSON.stringify(data));
     }
 
-    window.ucitajPodatkeIzObjekta = function(d) {
-        document.getElementById('gradPotrage').value = d.grad || ''; 
-      if(document.getElementById('unosJezikStaze')) document.getElementById('unosJezikStaze').value = d.jezik || 'sr';  
-        document.getElementById('imePotrage').value = d.ime || ''; 
-        document.getElementById('sifraPotrage').value = d.sifra || ''; 
-        document.getElementById('promoTekst').value = d.objasnjenje || ''; 
-        window.promoSlikaBase64 = d.promoSlika || '';
-        document.getElementById('autorPotrage').value = d.autor || '';
-        document.getElementById('mesanjeRute').checked = !!d.mesanjeRute; 
-        document.getElementById('checkGrupna').checked = !!d.isGrupna;
-        
-        if (d.besplatna !== undefined) {
-            document.getElementById('unosPristupTip').value = d.besplatna ? 'da' : 'ne';
-        } else {
-            document.getElementById('unosPristupTip').value = 'da';
-        }
-        document.getElementById('cenaStazeZlatnici').value = d.cena || 50;
-        window.skretniPrikazCene();
-        
-        if (document.getElementById('checkTakmicarski')) {
-            document.getElementById('checkTakmicarski').checked = !!d.takmicarskiMod;
-        }
-
-        if(d.isGrupna) { document.getElementById('brojTimovaGrupna').value = d.brojTimova || 2; document.getElementById('logikaGrupna').value = d.grupnaLogika || 'zajednicki_start_kraj'; }
-        if(d.trajanje) document.getElementById('trajanjePotrage').value = d.trajanje;
-        if(d.tip) { let btn = Array.from(document.querySelectorAll('.kretanje-btn')).find(b => b.innerText.includes(d.tip)); if(btn) window.postaviKretanje(d.tip, btn); }
-        if(d.healthPostavke) { document.getElementById('kaznaGreska').value = d.healthPostavke.kazna || 10; document.getElementById('nagradaTacno').value = d.healthPostavke.nagrada || 5; document.getElementById('cenaTraga').value = d.healthPostavke.trag || 10; }
-        
-        if(typeof window.inicijalizujMapu === 'function') window.inicijalizujMapu(); 
-        if(typeof window.obrisiSveBezPitanja === 'function') window.obrisiSveBezPitanja();
-        
-        if(d.pinovi) { d.pinovi.forEach(p => { let lat = p.lat !== undefined ? p.lat : (45.2396 + (p.y / 10000)); let lng = p.lng !== undefined ? p.lng : (19.8227 + (p.x / 10000)); window.kreirajPin(lat, lng, p); }); }
-        
-        if(typeof window.pokreniMapu === 'function') window.pokreniMapu(); 
-        if(typeof window.izracunajVarijacije === 'function') window.izracunajVarijacije(); 
-        if(typeof window.zatvoriModalAktivnih === 'function') window.zatvoriModalAktivnih();
-        window.promeneNisuSnimljene = true;
-
-        setTimeout(() => {
-            if (window.pinovi.length > 0) {
-                let bounds = L.featureGroup(window.pinovi.map(p => p.krug)).getBounds();
-                window.map.fitBounds(bounds, {padding: [50, 50]});
-            }
-        }, 500); 
+window.ucitajPodatkeIzObjekta = function(d) {
+    document.getElementById('gradPotrage').value = d.grad || ''; 
+    if(document.getElementById('unosJezikStaze')) document.getElementById('unosJezikStaze').value = d.jezik || 'sr';
+    window.promeniJezik(d.jezik || 'sr'); // Dodato vizuelno prevođenje
+    document.getElementById('imePotrage').value = d.ime || ''; 
+    document.getElementById('sifraPotrage').value = d.sifra || ''; 
+    document.getElementById('promoTekst').value = d.objasnjenje || ''; 
+    window.promoSlikaBase64 = d.promoSlika || '';
+    document.getElementById('autorPotrage').value = d.autor || '';
+    
+    if (document.getElementById('autorOpis')) {
+        document.getElementById('autorOpis').value = d.autorOpis || '';
     }
+
+    document.getElementById('mesanjeRute').checked = !!d.mesanjeRute; 
+    document.getElementById('checkGrupna').checked = !!d.isGrupna;
+    
+    if(d.isGrupna) { 
+        document.getElementById('brojTimovaGrupna').value = d.brojTimova || 2; 
+        document.getElementById('logikaGrupna').value = d.grupnaLogika || 'zajednicki_start_kraj'; 
+    }
+    
+    if(d.trajanje) document.getElementById('trajanjePotrage').value = d.trajanje;
+    
+    if(d.tip) { 
+        let btn = Array.from(document.querySelectorAll('.kretanje-btn')).find(b => b.innerText.includes(d.tip)); 
+        if(btn) window.postaviKretanje(d.tip, btn); 
+    }
+    
+    if(d.healthPostavke) { 
+        document.getElementById('kaznaGreska').value = d.healthPostavke.kazna || 10; 
+        document.getElementById('nagradaTacno').value = d.healthPostavke.nagrada || 5; 
+        document.getElementById('cenaTraga').value = d.healthPostavke.trag || 10; 
+    }
+    
+    window.inicijalizujMapu(); 
+    window.obrisiSveBezPitanja();
+    
+    if(d.pinovi) { 
+        d.pinovi.sort((a, b) => a.broj - b.broj);
+        d.pinovi.forEach(p => { 
+            let lat = p.lat !== undefined ? p.lat : (45.2396 + (p.y / 10000)); 
+            let lng = p.lng !== undefined ? p.lng : (19.8227 + (p.x / 10000)); 
+            window.kreirajPin(lat, lng, p); 
+        }); 
+    }
+    
+    window.pokreniMapu(); 
+    if(typeof window.izracunajVarijacije === 'function') window.izracunajVarijacije(); 
+    window.promeneNisuSnimljene = true;
+
+    setTimeout(() => {
+        if (window.pinovi.length > 0) {
+            let bounds = L.featureGroup(window.pinovi.map(p => p.krug)).getBounds();
+            window.map.fitBounds(bounds, {padding: [50, 50]});
+        }
+    }, 500); 
+};
 
     setInterval(() => {
         if (window.promeneNisuSnimljene) {
