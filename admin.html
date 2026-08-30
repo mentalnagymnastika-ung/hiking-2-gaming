@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="admin-manifest.json">
     <meta name="theme-color" content="#0f172a">
-    <link rel="apple-touch-icon" href="https://i.ibb.co/N2RN0Lwq/logo-G2-H-beli.png">
-    <link rel="icon" href="https://i.ibb.co/N2RN0Lwq/logo-G2-H-beli.png" type="image/png">
-    
+    <link rel="apple-touch-icon" href="https://i.ibb.co/VYdS4Yr9/logo-ikona-removebg-preview.png">
+
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -354,7 +353,7 @@
                 </div>
             </div>
             <div>
-                <h2 id="naslovAplikacije">G2H ADMIN V.41.50</h2>
+                <h2 id="naslovAplikacije">ADMIN Kreator Staza V.41.50</h2>
                 <div class="brend-tekst">
                     Udruženje Mentalna Gimnastika<br>
                     Centar Mentalne Gimnastike
@@ -404,27 +403,29 @@
             </select>
 
             <label id="lblPromo">Promo slika</label>
-            <div style="display:flex; gap:10px; align-items: stretch;">
-                <input type="file" id="promoSlikaUpload" accept="image/*" onchange="window.pripremiSliku(event)" style="padding: 8px; background:white; flex-grow: 1;">
-                <button onclick="window.obrisiPromoSliku()" title="Poništi učitanu sliku" style="background:#ef4444; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; padding: 0 15px;">X</button>
-            </div>
-            
-            <label id="lblObjasnjenje">Objašnjenje / Uputstvo za početak <span style="color:#ef4444;">*</span></label>
-            <textarea id="promoTekst" rows="3" placeholder="Gde igrači treba da odu da bi našli prvu tačku" oninput="window.ukloniGresku(this)"></textarea>
-            
-            <label id="lblAutor">Igru osmislio Saradnik</label>
-            <input type="text" id="autorPotrage" placeholder="Tvoje ime i prezime..." oninput="promeneNisuSnimljene=true">
-            <textarea id="autorOpis" rows="2" placeholder="Kratka biografija (npr. Vaspitač sa dugogodišnjim iskustvom u radu sa decom)..." oninput="promeneNisuSnimljene=true" style="margin-top: 10px;"></textarea>
+<div style="display:flex; gap:10px; align-items: stretch;">
+    <input type="file" id="promoSlikaUpload" accept="image/*" onchange="window.pripremiSliku(event)" style="display:none;">
+    <button onclick="document.getElementById('promoSlikaUpload').click()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; cursor:pointer; font-weight:bold; padding: 0 15px;">📁 Odaberi</button>
+    <input type="text" id="promoSlikaStatus" readonly value="Nije odabrano" style="flex-grow: 1; background: #f8fafc; color: #475569; font-weight:bold; border: 1px solid #cbd5e1; border-radius:8px; padding: 8px; outline:none;">
+    <img id="promoSlikaPreview" src="" style="display:none; width:38px; height:38px; object-fit:cover; border-radius:6px; border:1px solid #cbd5e1;">
+    <button onclick="window.obrisiPromoSliku()" title="Poništi" style="background:#ef4444; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; padding: 0 15px;">X</button>
+</div>
 
-            <label style="font-size:13px; color:#1d4ed8; font-weight:bold; margin-top:10px;">📷 Profilna slika saradnika (Opciono)</label>
-            <div style="display:flex; gap:10px; align-items:flex-start;">
-                <input type="file" id="autorSlikaUpload" accept="image/*" onchange="window.pripremiSlikuAutora(event)" style="padding: 8px; background:white; flex-grow: 1;">
-                <div id="kontejnerSlikeAutora" style="display:none; position:relative; width: 50px; height: 50px; flex-shrink: 0;">
-                    <img id="autorSlikaPreview" src="" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 2px solid #3b82f6;">
-                    <button onclick="window.obrisiSlikuAutora()" title="Obriši sliku" style="position:absolute; top:-5px; right:-5px; background:#ef4444; color:white; border:none; border-radius:50%; width:20px; height:20px; font-size:10px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">X</button>
-                </div>
-            </div>
+<label id="lblObjasnjenje">Objašnjenje / Uputstvo za početak <span style="color:#ef4444;">*</span></label>
+<textarea id="promoTekst" rows="3" placeholder="Gde igrači treba da odu da bi našli prvu tačku" oninput="window.ukloniGresku(this)"></textarea>
 
+<label id="lblAutor">Igru osmislio Saradnik</label>
+<input type="text" id="autorPotrage" placeholder="Tvoje ime i prezime..." oninput="promeneNisuSnimljene=true">
+<textarea id="autorOpis" rows="2" placeholder="Kratka biografija..." oninput="promeneNisuSnimljene=true" style="margin-top: 10px;"></textarea>
+
+<label style="font-size:13px; color:#1d4ed8; font-weight:bold; margin-top:10px;">📷 Tvoja profilna slika (Opciono)</label>
+<div style="display:flex; gap:10px; align-items: stretch;">
+    <input type="file" id="autorSlikaUpload" accept="image/*" onchange="window.pripremiSlikuAutora(event)" style="display:none;">
+    <button onclick="document.getElementById('autorSlikaUpload').click()" style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:8px; cursor:pointer; font-weight:bold; padding: 0 15px;">📁 Odaberi</button>
+    <input type="text" id="autorSlikaStatus" readonly value="Nije odabrano" style="flex-grow: 1; background: #f8fafc; color: #475569; font-weight:bold; border: 1px solid #cbd5e1; border-radius:8px; padding: 8px; outline:none;">
+    <img id="autorSlikaPreview" src="" style="display:none; width:38px; height:38px; object-fit:cover; border-radius:50%; border:2px solid #3b82f6;">
+    <button onclick="window.obrisiSlikuAutora()" title="Obriši" style="background:#ef4444; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; padding: 0 15px;">X</button>
+</div>
 
             <!-- VRAĆENA ŠIFRA I ZATVOREN DIV KARTICE -->
             <label id="lblSifra">Glavna šifra PASS <span style="color:#ef4444;">*</span></label>
@@ -2834,63 +2835,90 @@ window.autoSaveLocal = function() {
     }
 
 window.ucitajPodatkeIzObjekta = function(d) {
-    document.getElementById('gradPotrage').value = d.grad || ''; 
-    if(document.getElementById('unosJezikStaze')) document.getElementById('unosJezikStaze').value = d.jezik || 'sr';
-    window.promeniJezik(d.jezik || 'sr'); // Dodato vizuelno prevođenje
-    document.getElementById('imePotrage').value = d.ime || ''; 
-    document.getElementById('sifraPotrage').value = d.sifra || ''; 
-    document.getElementById('promoTekst').value = d.objasnjenje || ''; 
-    window.promoSlikaBase64 = d.promoSlika || '';
-    document.getElementById('autorPotrage').value = d.autor || '';
-    
-    if (document.getElementById('autorOpis')) {
-        document.getElementById('autorOpis').value = d.autorOpis || '';
-    }
-
-    document.getElementById('mesanjeRute').checked = !!d.mesanjeRute; 
-    document.getElementById('checkGrupna').checked = !!d.isGrupna;
-    
-    if(d.isGrupna) { 
-        document.getElementById('brojTimovaGrupna').value = d.brojTimova || 2; 
-        document.getElementById('logikaGrupna').value = d.grupnaLogika || 'zajednicki_start_kraj'; 
-    }
-    
-    if(d.trajanje) document.getElementById('trajanjePotrage').value = d.trajanje;
-    
-    if(d.tip) { 
-        let btn = Array.from(document.querySelectorAll('.kretanje-btn')).find(b => b.innerText.includes(d.tip)); 
-        if(btn) window.postaviKretanje(d.tip, btn); 
-    }
-    
-    if(d.healthPostavke) { 
-        document.getElementById('kaznaGreska').value = d.healthPostavke.kazna || 10; 
-        document.getElementById('nagradaTacno').value = d.healthPostavke.nagrada || 5; 
-        document.getElementById('cenaTraga').value = d.healthPostavke.trag || 10; 
-    }
-    
-    window.inicijalizujMapu(); 
-    window.obrisiSveBezPitanja();
-    
-    if(d.pinovi) { 
-        d.pinovi.sort((a, b) => a.broj - b.broj);
-        d.pinovi.forEach(p => { 
-            let lat = p.lat !== undefined ? p.lat : (45.2396 + (p.y / 10000)); 
-            let lng = p.lng !== undefined ? p.lng : (19.8227 + (p.x / 10000)); 
-            window.kreirajPin(lat, lng, p); 
-        }); 
-    }
-    
-    window.pokreniMapu(); 
-    if(typeof window.izracunajVarijacije === 'function') window.izracunajVarijacije(); 
-    window.promeneNisuSnimljene = true;
-
-    setTimeout(() => {
-        if (window.pinovi.length > 0) {
-            let bounds = L.featureGroup(window.pinovi.map(p => p.krug)).getBounds();
-            window.map.fitBounds(bounds, {padding: [50, 50]});
+        document.getElementById('gradPotrage').value = d.grad || ''; 
+        if(document.getElementById('unosJezikStaze')) document.getElementById('unosJezikStaze').value = d.jezik || 'sr';
+        if(typeof window.promeniJezik === 'function') window.promeniJezik(d.jezik || 'sr');
+        
+        document.getElementById('imePotrage').value = d.ime || ''; 
+        document.getElementById('sifraPotrage').value = d.sifra || ''; 
+        document.getElementById('promoTekst').value = d.objasnjenje || ''; 
+        
+        // Učitavanje i prikaz Promo slike
+        window.promoSlikaBase64 = d.promoSlika || '';
+        if(document.getElementById('promoSlikaStatus')) {
+            document.getElementById('promoSlikaStatus').value = window.promoSlikaBase64 ? "✅ Učitana iz JSON fajla" : "Nije odabrano";
         }
-    }, 500); 
-};
+        let pPrev = document.getElementById('promoSlikaPreview');
+        if (pPrev) { pPrev.src = window.promoSlikaBase64; pPrev.style.display = window.promoSlikaBase64 ? 'block' : 'none'; }
+
+        document.getElementById('autorPotrage').value = d.autor || '';
+        if (document.getElementById('autorOpis')) {
+            document.getElementById('autorOpis').value = d.autorOpis || '';
+        }
+
+        // Učitavanje i prikaz Slike Autora
+        window.autorSlikaBase64 = d.autorSlika || '';
+        if(document.getElementById('autorSlikaStatus')) {
+            document.getElementById('autorSlikaStatus').value = window.autorSlikaBase64 ? "✅ Učitana iz JSON fajla" : "Nije odabrano";
+        }
+        let aPrev = document.getElementById('autorSlikaPreview');
+        if (aPrev) { aPrev.src = window.autorSlikaBase64; aPrev.style.display = window.autorSlikaBase64 ? 'block' : 'none'; }
+
+        document.getElementById('mesanjeRute').checked = !!d.mesanjeRute; 
+        document.getElementById('checkGrupna').checked = !!d.isGrupna;
+        
+        if(d.isGrupna) { 
+            document.getElementById('brojTimovaGrupna').value = d.brojTimova || 2; 
+            document.getElementById('logikaGrupna').value = d.grupnaLogika || 'zajednicki_start_kraj'; 
+        }
+        
+        if(d.trajanje) document.getElementById('trajanjePotrage').value = d.trajanje;
+        
+        if(d.tip) { 
+            let btn = Array.from(document.querySelectorAll('.kretanje-btn')).find(b => b.innerText.includes(d.tip)); 
+            if(btn) window.postaviKretanje(d.tip, btn); 
+        }
+        
+        if(d.healthPostavke) { 
+            document.getElementById('kaznaGreska').value = d.healthPostavke.kazna || 10; 
+            document.getElementById('nagradaTacno').value = d.healthPostavke.nagrada || 5; 
+            document.getElementById('cenaTraga').value = d.healthPostavke.trag || 10; 
+        }
+
+        window.inicijalizujMapu(); 
+        window.obrisiSveBezPitanja();
+        
+        if(d.pinovi) { 
+            d.pinovi.sort((a, b) => a.broj - b.broj);
+            d.pinovi.forEach(p => { 
+                let lat = p.lat !== undefined ? p.lat : (45.2396 + (p.y / 10000)); 
+                let lng = p.lng !== undefined ? p.lng : (19.8227 + (p.x / 10000)); 
+                window.kreirajPin(lat, lng, p); 
+            }); 
+        }
+        
+        window.pokreniMapu(); 
+        if(typeof window.izracunajVarijacije === 'function') window.izracunajVarijacije(); 
+        window.promeneNisuSnimljene = true;
+
+        setTimeout(() => {
+            if (window.pinovi.length > 0) {
+                let bounds = L.featureGroup(window.pinovi.map(p => p.krug)).getBounds();
+                window.map.fitBounds(bounds, {padding: [50, 50]});
+            }
+        }, 500); 
+    }; 
+
+    window.promeneNisuSnimljene = false;
+
+    window.proveriNesacuvano = function() {
+        if (window.promeneNisuSnimljene) {
+            return confirm(window.trenutniJezik === 'sr' ? 
+                "Imate nesnimljene izmene! Da li ste sigurni da želite da učitate novu stazu i obrišete trenutni rad?" : 
+                "You have unsaved changes! Are you sure you want to load a new trail?");
+        }
+        return true;
+    };
 
     setInterval(() => {
         if (window.promeneNisuSnimljene) {
