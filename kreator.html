@@ -3287,6 +3287,8 @@ document.addEventListener('touchend', () => panelDrag = false);
 window.ucitajPodatkeIzObjekta = function(d) {
     document.getElementById('gradPotrage').value = d.grad || ''; 
     if(document.getElementById('unosJezikStaze')) document.getElementById('unosJezikStaze').value = d.jezik || 'sr';
+    if(typeof window.promeniJezik === 'function') window.promeniJezik(d.jezik || 'sr');
+    
     document.getElementById('imePotrage').value = d.ime || ''; 
     document.getElementById('sifraPotrage').value = d.sifra || ''; 
     document.getElementById('promoTekst').value = d.objasnjenje || ''; 
@@ -3300,6 +3302,19 @@ window.ucitajPodatkeIzObjekta = function(d) {
     document.getElementById('mesanjeRute').checked = !!d.mesanjeRute; 
     document.getElementById('checkGrupna').checked = !!d.isGrupna;
     
+    if (d.besplatna !== undefined) {
+        if(document.getElementById('unosPristupTip')) document.getElementById('unosPristupTip').value = d.besplatna ? 'da' : 'ne';
+    } else {
+        if(document.getElementById('unosPristupTip')) document.getElementById('unosPristupTip').value = 'da';
+    }
+    
+    if(document.getElementById('cenaStazeZlatnici')) document.getElementById('cenaStazeZlatnici').value = d.cena || 50;
+    if(typeof window.skretniPrikazCene === 'function') window.skretniPrikazCene();
+    
+    if (document.getElementById('checkTakmicarski')) {
+        document.getElementById('checkTakmicarski').checked = !!d.takmicarskiMod;
+    }
+
     if(d.isGrupna) { 
         document.getElementById('brojTimovaGrupna').value = d.brojTimova || 2; 
         document.getElementById('logikaGrupna').value = d.grupnaLogika || 'zajednicki_start_kraj'; 
@@ -3318,8 +3333,8 @@ window.ucitajPodatkeIzObjekta = function(d) {
         document.getElementById('cenaTraga').value = d.healthPostavke.trag || 10; 
     }
     
-    window.inicijalizujMapu(); 
-    window.obrisiSveBezPitanja();
+    if(typeof window.inicijalizujMapu === 'function') window.inicijalizujMapu(); 
+    if(typeof window.obrisiSveBezPitanja === 'function') window.obrisiSveBezPitanja();
     
     if(d.pinovi) { 
         d.pinovi.sort((a, b) => a.broj - b.broj);
@@ -3329,20 +3344,20 @@ window.ucitajPodatkeIzObjekta = function(d) {
             window.kreirajPin(lat, lng, p); 
         }); 
     }
+    
+    if(typeof window.pokreniMapu === 'function') window.pokreniMapu(); 
+    if(typeof window.izracunajVarijacije === 'function') window.izracunajVarijacije(); 
+    if(typeof window.zatvoriModalAktivnih === 'function') window.zatvoriModalAktivnih();
+    window.promeneNisuSnimljene = true;
+
+    setTimeout(() => {
+        if (window.pinovi && window.pinovi.length > 0) {
+            let bounds = L.featureGroup(window.pinovi.map(p => p.krug)).getBounds();
+            window.map.fitBounds(bounds, {padding: [50, 50]});
+        }
+    }, 500); 
 };
 
-        
-        window.pokreniMapu(); 
-        if(typeof window.izracunajVarijacije === 'function') window.izracunajVarijacije(); 
-        promeneNisuSnimljene = true;
-
-        setTimeout(() => {
-            if (pinovi.length > 0) {
-                let bounds = L.featureGroup(pinovi.map(p => p.krug)).getBounds();
-                map.fitBounds(bounds, {padding: [50, 50]});
-            }
-        }, 500); 
-    }
 
 window.autoSaveLocal = function() {
     if(window.pinovi.length === 0) return;
