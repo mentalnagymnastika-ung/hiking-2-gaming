@@ -3135,7 +3135,7 @@ window.pripremiZaStampu = function() {
     let ukupnaDistanca = document.getElementById('pDist').innerText || '0.00';
     let isGrupna = document.getElementById('checkGrupna').checked;
     
-    let prikaziOpis = confirm(window.trenutniJezik === 'sr' ? "Da li želite da se na papirima za igrače sakrije 'Detaljan opis lokacije' u svrhu otežavanja igre?" : "Do you want to hide the 'Detailed location description' on player sheets to make the game more difficult?'?");
+    let prikaziOpis = confirm(window.trenutniJezik === 'sr' ? "Da li želite da se na papirima za igrače prikaže 'Detaljan opis lokacije' u svrhu olakšavanja igre?" : "Do you want to hide the 'Detailed location description' on player sheets to make the game more difficult?'?");
 
     let grid = window.izracunajMatematickuMrezu();
     let koordinateMape = {};
