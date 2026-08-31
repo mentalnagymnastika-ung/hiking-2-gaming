@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -531,96 +531,130 @@ const pokreniOporavak = (sData, potragaData) => {
 </div>
     </div>
 
-    <div id="ekranIntro" class="ekran" style="flex-direction: column !important; height: 100% !important; max-height: 100% !important; overflow: hidden !important; padding: 15px; box-sizing: border-box; position: relative;">
-        
-        <!-- 1. GORNJI DEO (Fiksiran) -->
-        <div style="flex-shrink: 0; background: white;">
-            <!-- Gornja traka -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <button class="btn-nazad" onclick="window.prikaziEkran('ekranOdabir')" id="btnNazadIntro">⬅ Nazad</button>
-                <select class="jezik-birac" id="izborJezikaIntro" onchange="window.promeniJezik(this.value)">
-                    <option value="sr">SRB</option>
-                    <option value="en">ENG</option>
-                    <option value="sl">SLO</option>
-                    <option value="de">DEU</option>
-                    <option value="hr">HRV</option>
-                </select>
-            </div>
-
-            <!-- Naslov i Slika -->
-            <h1 id="txtNaslovIntro" style="margin-top: 0; margin-bottom: 10px;">Zdrava Potraga</h1>
-            <div class="promo-slika-kontejner" style="margin-bottom: 10px;">
-                <img id="introSlika" src="" alt="Promo Slika" style="display:block; max-height: 30vh; width: 100%; object-fit: contain; border-radius: 12px;">
-            </div>
+<div id="ekranIntro" class="ekran" style="display: flex !important; flex-direction: column !important; height: 100% !important; max-height: 100% !important; overflow: hidden !important; padding: 15px; box-sizing: border-box; position: relative;">
+    
+    <!-- 1. GORNJI DEO (Fiksiran) -->
+    <div style="flex-shrink: 0; background: white;">
+        <!-- Gornja traka -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <button class="btn-nazad" onclick="window.prikaziEkran('ekranOdabir')" id="btnNazadIntro">⬅ Nazad</button>
+            <select class="jezik-birac" id="izborJezikaIntro" onchange="window.promeniJezik(this.value)">
+                <option value="sr">SRB</option>
+                <option value="en">ENG</option>
+                <option value="sl">SLO</option>
+                <option value="de">DEU</option>
+                <option value="hr">HRV</option>
+            </select>
         </div>
 
-        <!-- 2. SREDNJI DEO (Dugme koje poziva Modal) -->
-        <div style="flex-grow: 1; display: flex; justify-content: center; align-items: center; padding: 10px 0;">
-            <button onclick="document.getElementById('modalInformacije').style.display='flex'" style="background: #f8fafc; color: #0f172a; border: 2px solid #cbd5e1; padding: 20px; border-radius: 15px; font-weight: 900; font-size: 16px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; transition: transform 0.1s;">
-                <span style="font-size: 28px;">🔵</span>
-                <span>INFO O STAZI</span>
-            </button>
+        <!-- Naslov i Slika -->
+        <h1 id="txtNaslovIntro" style="margin-top: 0; margin-bottom: 8px; font-size: 22px; text-align: center;">Zdrava Potraga</h1>
+        <div class="promo-slika-kontejner" style="margin-bottom: 8px;">
+            <img id="introSlika" src="" alt="Promo Slika" style="display:block; max-height: 22vh; width: 100%; object-fit: contain; border-radius: 12px; margin: 0 auto;">
         </div>
-        
-        <!-- 3. DONJI DEO (Fiksiran na dnu) -->
-        <div style="flex-shrink: 0; padding-top: 10px; background: white;">
-            <button class="btn-glavno" onclick="window.idiNaPrijavu()" id="btnDalje" style="margin: 0; width: 100%;">PRIJAVI EKIPU</button>
-            
-            <!-- Futer -->
-            <div class="brend-podnozje" style="margin-top: 15px !important; padding: 5px 0 0 0 !important; border-top: none; line-height: 1.1;">
-                <span class="brend-ime prevod-futer-centar">Centar Mentalne Gimnastike</span><br>
-                <span class="brend-ime prevod-futer-udruzenje">Udruženje Mentalna Gimnastika</span>
-            </div>
-        </div>
-
-        <!-- ========================================== -->
-        <!-- MODALNI PROZOR ZA INFORMACIJE O STAZI -->
-        <!-- ========================================== -->
-        <div id="modalInformacije" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); z-index: 100000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(5px);">
-            
-            <div style="background: white; width: 100%; max-width: 500px; max-height: 85vh; border-radius: 16px; display: flex; flex-direction: column; border: 4px solid #16a085; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
-                
-                <!-- Zaglavlje modala (Fiksno) -->
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 2px solid #e2e8f0; background: #f8fafc; border-radius: 12px 12px 0 0; flex-shrink: 0;">
-                    <b style="color: #16a085; font-size: 16px;" id="txtObjasnjenjeNaslov">🔵 Informacije</b>
-                    
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                        <button onclick="window.promeniFont(-1)" style="background: #e2e8f0; color: #475569; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 900; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">A-</button>
-                        <button onclick="window.promeniFont(1)" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 900; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">A+</button>
-                        <button onclick="document.getElementById('modalInformacije').style.display='none'" style="background: #ef4444; color: white; border: none; width: 34px; height: 34px; border-radius: 50%; font-weight: bold; cursor: pointer; margin-left: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); display: flex; justify-content: center; align-items: center; font-size: 16px; padding: 0;">✖</button>
-                    </div>
-                </div>
-
-                <!-- Telo modala (Skrolabilno, raste sa tekstom) -->
-                <div style="padding: 20px; overflow-y: auto; flex-grow: 1; background: white;">
-                    <span id="txtObjasnjenjeTekst" style="font-size: 15px; line-height: 1.6; color: #334155; font-weight: 500; display: block; text-align: left;">Ovde će se pojaviti uputstvo kada učitate igru.</span>
-                </div>
-                
-                <!-- Dno modala (Fiksno) -->
-                <div style="padding: 15px; border-top: 2px solid #e2e8f0; background: #f8fafc; border-radius: 0 0 12px 12px; flex-shrink: 0;">
-                    <button onclick="document.getElementById('modalInformacije').style.display='none'" style="background: #0f172a; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 900; width: 100%; cursor: pointer; font-size: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">RAZUMEM, ZATVORI PROZOR</button>
-                </div>
-            </div>
-            
-        </div>
-        <!-- ========================================== -->
-
     </div>
 
-    <!-- SKRIPTA ZA FONT -->
-    <script>
-        window.promeniFont = function(korak) {
-            let tekst = document.getElementById('txtObjasnjenjeTekst');
-            if(tekst) {
-                let stil = window.getComputedStyle(tekst);
-                let trenutnaVelicina = parseInt(stil.fontSize);
-                let novaVelicina = trenutnaVelicina + (korak * 2);
-                if(novaVelicina >= 12 && novaVelicina <= 28) {
-                    tekst.style.fontSize = novaVelicina + 'px';
-                }
+    <!-- 2. SREDNJI DEO (Dugmad za modale) -->
+    <div style="flex-grow: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 8px 0; gap: 10px;">
+        
+        <!-- DUGME ZA AUTORA (Zadržan ID radi JS kompatibilnosti) -->
+        <div id="prikazAutoraKontejner" style="display: none; width: 100%;">
+            <button onclick="document.getElementById('modalAutor').style.display='flex'" style="background: #ffffff; color: #0f172a; border: 2px solid #cbd5e1; padding: 12px; border-radius: 12px; font-weight: 900; font-size: 15px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
+                <span style="font-size: 20px;">👤</span>
+                <span>O AUTORU</span>
+            </button>
+        </div>
+
+        <!-- DUGME ZA INFO O STAZI -->
+        <button onclick="document.getElementById('modalInformacije').style.display='flex'" style="background: #ffffff; color: #0f172a; border: 2px solid #cbd5e1; padding: 12px; border-radius: 12px; font-weight: 900; font-size: 15px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
+            <span style="font-size: 20px;">🔵</span>
+            <span>INFO O STAZI</span>
+        </button>
+    </div>
+    
+    <!-- 3. DONJI DEO (Fiksiran na dnu) -->
+    <div style="flex-shrink: 0; padding-top: 8px; background: white;">
+        <button class="btn-glavno" onclick="window.idiNaPrijavu()" id="btnDalje" style="margin: 0; width: 100%;">PRIJAVI EKIPU</button>
+        
+        <!-- Futer -->
+        <div class="brend-podnozje" style="margin-top: 10px !important; padding: 5px 0 0 0 !important; border-top: none; line-height: 1.1; text-align: center;">
+            <span class="brend-ime prevod-futer-centar">Centar Mentalne Gimnastike</span><br>
+            <span class="brend-ime prevod-futer-udruzenje">Udruženje Mentalna Gimnastika</span>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 1: INFORMACIJE O AUTORU             -->
+    <!-- ========================================== -->
+    <div id="modalAutor" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); z-index: 100000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(5px);">
+        <div style="background: white; width: 100%; max-width: 500px; max-height: 85vh; border-radius: 16px; display: flex; flex-direction: column; border: 4px solid #3b82f6; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+            
+            <!-- Zaglavlje modala -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 2px solid #e2e8f0; background: #f8fafc; border-radius: 12px 12px 0 0; flex-shrink: 0;">
+                <b style="color: #3b82f6; font-size: 16px;">👤 O Autoru</b>
+                <button onclick="document.getElementById('modalAutor').style.display='none'" style="background: #ef4444; color: white; border: none; width: 34px; height: 34px; border-radius: 50%; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 16px;">✖</button>
+            </div>
+
+            <!-- Telo modala sa podacima o autoru -->
+            <div style="padding: 20px; overflow-y: auto; flex-grow: 1; background: white; text-align: center;">
+                <img id="prikazAutoraSlika" src="" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #3b82f6; margin: 0 auto 12px auto; display: none;">
+                <div style="font-size: 11px; color: #3b82f6; font-weight: 900; text-transform: uppercase; margin-bottom: 4px;">Igru osmislio/la:</div>
+                <div id="prikazAutoraIme" style="font-size: 20px; font-weight: 900; color: #0f172a; margin-bottom: 8px;"></div>
+                <div id="prikazAutoraOpis" style="font-size: 14px; color: #475569; line-height: 1.5; font-weight: 500; text-align: left;"></div>
+            </div>
+            
+            <!-- Dno modala -->
+            <div style="padding: 15px; border-top: 2px solid #e2e8f0; background: #f8fafc; border-radius: 0 0 12px 12px; flex-shrink: 0;">
+                <button onclick="document.getElementById('modalAutor').style.display='none'" style="background: #0f172a; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 900; width: 100%; cursor: pointer; font-size: 16px;">ZATVORI</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 2: INFORMACIJE O STAZI              -->
+    <!-- ========================================== -->
+    <div id="modalInformacije" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); z-index: 100000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(5px);">
+        <div style="background: white; width: 100%; max-width: 500px; max-height: 85vh; border-radius: 16px; display: flex; flex-direction: column; border: 4px solid #16a085; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+            
+            <!-- Zaglavlje modala -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 2px solid #e2e8f0; background: #f8fafc; border-radius: 12px 12px 0 0; flex-shrink: 0;">
+                <b style="color: #16a085; font-size: 16px;" id="txtObjasnjenjeNaslov">🔵 Informacije</b>
+                
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button onclick="window.promeniFont(-1)" style="background: #e2e8f0; color: #475569; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 900; cursor: pointer;">A-</button>
+                    <button onclick="window.promeniFont(1)" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 900; cursor: pointer;">A+</button>
+                    <button onclick="document.getElementById('modalInformacije').style.display='none'" style="background: #ef4444; color: white; border: none; width: 34px; height: 34px; border-radius: 50%; font-weight: bold; cursor: pointer; margin-left: 5px; display: flex; justify-content: center; align-items: center; font-size: 16px;">✖</button>
+                </div>
+            </div>
+
+            <!-- Telo modala -->
+            <div style="padding: 20px; overflow-y: auto; flex-grow: 1; background: white;">
+                <span id="txtObjasnjenjeTekst" style="font-size: 15px; line-height: 1.6; color: #334155; font-weight: 500; display: block; text-align: left;">Ovde će se pojaviti uputstvo kada učitate igru.</span>
+            </div>
+            
+            <!-- Dno modala -->
+            <div style="padding: 15px; border-top: 2px solid #e2e8f0; background: #f8fafc; border-radius: 0 0 12px 12px; flex-shrink: 0;">
+                <button onclick="document.getElementById('modalInformacije').style.display='none'" style="background: #0f172a; color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 900; width: 100%; cursor: pointer; font-size: 16px;">RAZUMEM, ZATVORI PROZOR</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- SKRIPTA ZA FONT -->
+<script>
+    window.promeniFont = function(korak) {
+        let tekst = document.getElementById('txtObjasnjenjeTekst');
+        if(tekst) {
+            let stil = window.getComputedStyle(tekst);
+            let trenutnaVelicina = parseInt(stil.fontSize);
+            let novaVelicina = trenutnaVelicina + (korak * 2);
+            if(novaVelicina >= 12 && novaVelicina <= 28) {
+                tekst.style.fontSize = novaVelicina + 'px';
             }
-        };
-    </script>
+        }
+    };
+</script>
 
 
     <div id="ekranZadatak" class="ekran">
@@ -1995,7 +2029,7 @@ let safeSifra = String(podaci.sifra).replace(/'/g, "\\'");
                 <div class="k-udaljenost ${distKlasa}">${distTxt}</div>
                 
                 <div style="font-size: 13px, color: #16a34a, font-weight: bold, margin-bottom: 14px, background: #f0fdf4, padding: 6px 10px, border-radius: 6px, display: inline-block, border: 1px solid #bbf7d0;">
-                    💰 Na ovoj ruti možete zaraditi do ${procenjenaMaksimalnaZarada} zlatnika
+                    💰 Na ovoj ruti možete sakupiti do ${procenjenaMaksimalnaZarada} zlatnika
                 </div>
 
                 ${dugmeHtml}
@@ -2035,17 +2069,15 @@ window.izaberiPotragu = function(podaci) {
             let udaljenostStart = window.izracunajUdaljenost(userLat, userLng, prvaTacka.lat, prvaTacka.lng);
             let udaljenostCilj = window.izracunajUdaljenost(userLat, userLng, poslednjaTacka.lat, poslednjaTacka.lng);
             
-            // Ako je cilj bliži, okrećemo stazu unazad
+            // Ako je cilj bliži okrećemo stazu unazad
             if (udaljenostCilj < udaljenostStart) {
                 console.log("Igrač je bliži kraju staze. Okrećem redosled zadataka!");
-                podaci.pinovi.reverse(); // Magija koja preokreće niz
+                podaci.pinovi.reverse(); 
                 
-                // Ažuriramo startne koordinate kako bi mapa pokazala pravo mesto
                 podaci.startLat = poslednjaTacka.lat;
                 podaci.startLng = poslednjaTacka.lng;
             }
         }
-        // -------------------------------------------------------------
 
         window.odabranaPotraga = podaci;
         
@@ -2057,6 +2089,34 @@ window.izaberiPotragu = function(podaci) {
             img.style.display = "block"; 
         } else {
             img.style.display = "none";
+        }
+
+        // NOVO: Prikaz podataka o autoru saradniku
+        let autorKontejner = document.getElementById('prikazAutoraKontejner');
+        let autorSlika = document.getElementById('prikazAutoraSlika');
+        let autorIme = document.getElementById('prikazAutoraIme');
+        let autorOpis = document.getElementById('prikazAutoraOpis');
+        
+        if (podaci.autor || podaci.autorOpis) {
+            autorKontejner.style.display = 'flex';
+            autorIme.innerText = podaci.autor || "Saradnik UMG";
+            
+            if (podaci.autorOpis) {
+                autorOpis.innerText = podaci.autorOpis;
+                autorOpis.style.display = 'block';
+            } else {
+                autorOpis.style.display = 'none';
+            }
+            
+            if (podaci.autorSlika && podaci.autorSlika.length > 10) {
+                autorSlika.src = podaci.autorSlika;
+                autorSlika.style.display = 'block';
+            } else {
+                autorSlika.style.display = 'none';
+                autorSlika.src = '';
+            }
+        } else {
+            autorKontejner.style.display = 'none';
         }
         
         // Odmah prikazujemo info ekran umesto prijave
@@ -2191,7 +2251,7 @@ window.idiNaPrijavu = function() {
         document.body.appendChild(modal);
     };
 
-    window.zapocniIgru = async function() {
+window.zapocniIgru = async function() {
         
    // 🛑 1. PRAVNA BLOKADA: Apsolutni prioritet pre bilo kakvog drugog koda
     let chkPravna = document.getElementById('chkPravnaOdgovornost');
@@ -2303,10 +2363,23 @@ window.idiNaPrijavu = function() {
             const sesijaRef = window.doc(window.db, "sesije", window.timIdentifikator);
             const sesijaSnap = await window.getDoc(sesijaRef);
             
-            if(sesijaSnap.exists() && sesijaSnap.data().expiresAt > new Date().getTime()) {
-                window.sesijaPodaci = sesijaSnap.data();
-                document.getElementById('modalDijalog').style.display = 'flex'; 
-                btnKreni.innerText = window.recnik[window.trenutniJezik].btnKreni; 
+            if(sesijaSnap.exists()) {
+                let podaci = sesijaSnap.data();
+                let mojOtisak = window.dajOtisakUredjaja();
+                
+                if (!podaci.zavrsena && podaci.expiresAt > new Date().getTime()) {
+                    if (podaci.deviceId === mojOtisak) {
+                        window.sesijaPodaci = podaci;
+                        document.getElementById('modalDijalog').style.display = 'flex'; 
+                        btnKreni.innerText = window.recnik[window.trenutniJezik].btnKreni; 
+                    } else {
+                        window.prikaziObavestenjeSredina("Tim je zauzet", window.recnik[window.trenutniJezik].porukaZauzeto || "Ovaj tim je već u igri na terenu. Molimo izaberite drugi!", "🛑", "#ef4444");
+                        btnKreni.innerText = window.recnik[window.trenutniJezik].btnKreni; 
+                        return;
+                    }
+                } else {
+                    window.napraviNovuSesiju();
+                }
             } else { 
                 window.napraviNovuSesiju();
             }
@@ -2488,9 +2561,53 @@ window.napraviNovuSesiju = async function() {
     }
 };
 
-window.zavrsiKreiranjeSesije = async function(okreniStazu) {
-    let jeRotirana = okreniStazu;
-    let pinovi = window.potragaPodaci.pinovi;
+window.primeniModelStaze = function(podaciStaze, okreniStazu, brojTima) {
+    let pinovi = [...podaciStaze.pinovi];
+    if (podaciStaze.isGrupna && podaciStaze.ruteTimova && podaciStaze.ruteTimova[brojTima]) {
+        pinovi = podaciStaze.ruteTimova[brojTima];
+    } else if (podaciStaze.mesanjeRute && pinovi.length > 1) {
+        let poslednja = pinovi.pop();
+        for (let i = pinovi.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            let temp = pinovi[i];
+            pinovi[i] = pinovi[j];
+            pinovi[j] = temp;
+        }
+        pinovi.push(poslednja);
+    } else if (okreniStazu) {
+        pinovi.reverse();
+    }
+    let zavrsnaPorukaTekst = "";
+    let indexKrajnje = pinovi.findIndex(p => p.zadatak && p.zadatak.isKrajnjaPoruka);
+    if (indexKrajnje !== -1) {
+        zavrsnaPorukaTekst = pinovi[indexKrajnje].zadatak.usmeravanje || window.GlavnaZavrsnaPoruka || "";
+        pinovi[indexKrajnje].zadatak.isKrajnjaPoruka = false;
+        pinovi[indexKrajnje].zadatak.usmeravanje = "";
+    }
+    for (let i = 0; i < pinovi.length - 1; i++) {
+        let sledecaTacka = pinovi[i + 1];
+        let ime = sledecaTacka.imeLokacije || "Tačka " + sledecaTacka.broj;
+        let opis = sledecaTacka.opisLokacije ? " (" + sledecaTacka.opisLokacije + ")" : "";
+        if (pinovi[i].zadatak) {
+            pinovi[i].zadatak.usmeravanje = (window.trenutniJezik === 'sr' ? 'Sledeća lokacija:' : 'Next location:') + " " + ime + opis;
+            pinovi[i].zadatak.isKrajnjaPoruka = false;
+        }
+    }
+    let poslednjiIndeks = pinovi.length - 1;
+    if (pinovi[poslednjiIndeks] && pinovi[poslednjiIndeks].zadatak) {
+        pinovi[poslednjiIndeks].zadatak.isKrajnjaPoruka = true;
+        pinovi[poslednjiIndeks].zadatak.usmeravanje = zavrsnaPorukaTekst;
+    }
+    window.GlavnaZavrsnaPoruka = zavrsnaPorukaTekst;
+    return pinovi;
+};
+
+window.primeniModelStaze = function(podaciStaze, okreniStazu, brojTima) {
+    // Pravimo kopiju niza da ne oštetimo original
+    let pinovi = [];
+    if (podaciStaze.pinovi) {
+        pinovi = JSON.parse(JSON.stringify(podaciStaze.pinovi)); 
+    }
 
     // 1. Sačuvamo završnu poruku pre bilo kakvih izmena
     let zavrsnaPorukaTekst = "";
@@ -2501,9 +2618,22 @@ window.zavrsiKreiranjeSesije = async function(okreniStazu) {
         pinovi[indexKrajnje].zadatak.usmeravanje = "";
     }
 
-    // 2. Ako je staza rotirana, obrćemo niz tačaka
-    if (okreniStazu) {
-        pinovi.reverse();
+    // 2. Primena modela (Grupna, Mešanje ili Okretanje)
+    if (podaciStaze.isGrupna && podaciStaze.ruteTimova && podaciStaze.ruteTimova[brojTima]) {
+        pinovi = JSON.parse(JSON.stringify(podaciStaze.ruteTimova[brojTima]));
+    } else if (podaciStaze.mesanjeRute && pinovi.length > 1) {
+        let poslednja = pinovi.pop(); // Skini zadnju
+        let prva = pinovi.shift();    // Skini prvu
+        for (let i = pinovi.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            let temp = pinovi[i];
+            pinovi[i] = pinovi[j];
+            pinovi[j] = temp;
+        }
+        pinovi.unshift(prva);  // Vrati prvu na početak
+        pinovi.push(poslednja); // Vrati zadnju na kraj
+    } else if (okreniStazu) {
+        pinovi.reverse(); // Ako je igrač bliži kraju, cela staza se obrće
     }
 
     // 3. Generisanje ispravnih usmeravanja za sve tačke u novom redosledu
@@ -2514,7 +2644,7 @@ window.zavrsiKreiranjeSesije = async function(okreniStazu) {
         
         if (pinovi[i].zadatak) {
             pinovi[i].zadatak.usmeravanje = `${window.trenutniJezik === 'sr' ? 'Sledeća lokacija:' : 'Next location:'} ${ime}${opis}`;
-            pinovi[i].zadatak.isKrajnjaPoruka = false; // Osiguravamo da obične tačke nisu krajnje
+            pinovi[i].zadatak.isKrajnjaPoruka = false;
         }
     }
 
@@ -2526,21 +2656,29 @@ window.zavrsiKreiranjeSesije = async function(okreniStazu) {
     }
 
     window.GlavnaZavrsnaPoruka = zavrsnaPorukaTekst;
+    return pinovi;
+};
 
-    // --- NASTAVAK ORIGINALNE LOGIKE ZA MEŠANJE I UPIS SESIJE ---
-    if (window.potragaPodaci.isGrupna && window.potragaPodaci.ruteTimova) {
-        let br = document.getElementById('unosBrojTima').value;
-        if(window.potragaPodaci.ruteTimova[br]) window.potragaPodaci.pinovi = window.potragaPodaci.ruteTimova[br];
-    } else if(window.potragaPodaci.mesanjeRute && window.potragaPodaci.pinovi && window.potragaPodaci.pinovi.length > 1) {
-        // (ostali deo vašeg koda za mešanje ostaje nepromenjen)
-    }
-
+window.zavrsiKreiranjeSesije = async function(okreniStazu) {
+    let brojTima = document.getElementById('unosBrojTima') ? document.getElementById('unosBrojTima').value : null;
+    
+    // Pozivamo pametnu funkciju koja sve sortira i vraća nam gotov niz
+    window.potragaPodaci.pinovi = window.primeniModelStaze(window.potragaPodaci, okreniStazu, brojTima);
+    
     let tezinaSelect = document.getElementById('unosTezina');
     let odabranaBoja = "bela";
+    
     if (tezinaSelect && tezinaSelect.value) {
         let odabranaDuzina = parseInt(tezinaSelect.value);
         if (odabranaDuzina > 0 && odabranaDuzina < window.potragaPodaci.pinovi.length) {
             window.potragaPodaci.pinovi = window.potragaPodaci.pinovi.slice(0, odabranaDuzina);
+            
+            // Ako smo isekli stazu (kraća težina), moramo ponovo osigurati završnu poruku na novom kraju!
+            let indexZadnje = window.potragaPodaci.pinovi.length - 1;
+            if (window.potragaPodaci.pinovi[indexZadnje] && window.potragaPodaci.pinovi[indexZadnje].zadatak) {
+                window.potragaPodaci.pinovi[indexZadnje].zadatak.isKrajnjaPoruka = true;
+                window.potragaPodaci.pinovi[indexZadnje].zadatak.usmeravanje = window.GlavnaZavrsnaPoruka;
+            }
         }
         if (tezinaSelect.options[tezinaSelect.selectedIndex]) {
             let tekstOpcije = tezinaSelect.options[tezinaSelect.selectedIndex].text.toLowerCase();
@@ -2564,7 +2702,8 @@ window.zavrsiKreiranjeSesije = async function(okreniStazu) {
         pinovi: window.potragaPodaci.pinovi,
         zavrseneTacke: [],
         preskoceneTacke: 0,
-        stazaRotirana: jeRotirana
+        stazaRotirana: okreniStazu,
+        deviceId: window.dajOtisakUredjaja() // Obezbeđen pečat uređaja
     };
     
     try {
@@ -3058,8 +3197,10 @@ window.prikaziZadatak = function() {
             let staraKameraBtn = document.getElementById('btnKamera');
             if (staraKameraBtn) staraKameraBtn.style.display = 'none';
             
+
             window.slikaSlikanaSada = false;
             window.multiZlatnikSakupljen = false; 
+            window.G2H_trenutniStatusIgreUspeh = false; // Resetovanje statusa igre
             document.getElementById('kvizUI').style.display = 'none';
             document.getElementById('txtNapomena').style.display = 'none';
             
@@ -3202,12 +3343,12 @@ window.prikaziZadatak = function() {
                     </div>`;
                 }
                 
-                if (elovi.includes('igrica')) {
+                    if (elovi.includes('igrica')) {
                     tekstZaPrikaz += `
                     <div style="background:#eff6ff; border: 2px solid #2563eb; padding:15px; border-radius:12px; margin-bottom:12px; text-align:center;">
                         <div style="font-size:35px; margin-bottom:5px;">🎮</div>
                         <b style="font-size:18px; color:#2563eb; display:block; margin-bottom:5px;">Logički izazov aktiviran!</b>
-                        <button onclick="window.otvoriG2HIgruUPunomEkranu()" style="background:#ff9800; color:white; font-weight:900; border:none; padding:12px 15px; border-radius:8px; font-size:18px; cursor:pointer; width:100%; box-shadow:0 4px 6px rgba(255,152,0,0.2);">🚀 POKRENI IGRU PREKO CELOG EKRANA</button>
+                        <button id="btn_multi_g2h_pokreni" data-reseno="ne" onclick="window.otvoriG2HIgruUPunomEkranu()" style="background:#ff9800; color:white; font-weight:900; border:none; padding:12px 15px; border-radius:8px; font-size:18px; cursor:pointer; width:100%; box-shadow:0 4px 6px rgba(255,152,0,0.2);">🚀 POKRENI IGRU PREKO CELOG EKRANA</button>
                     </div>
                     <div id="g2h_multi_puni_ekran" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#ffffff; z-index:99999; padding:15px; box-sizing:border-box; overflow-y:auto;">
                         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #e2e8f0; padding-bottom:10px; margin-bottom:15px;">
@@ -3613,9 +3754,19 @@ window.generisiKvizUI = function(kvizData) {
                 }
             }
             
-            // 6. Provera ugrađene logičke igrice
-            if (sveTacno && elovi.includes('igrica')) {
-                if (!window.G2H_trenutniStatusIgreUspeh) {
+            // 6. Provera ugrađene logičke igrice i sprečavanje ponovnog igranja
+            let igraJeTekSadaResena = false;
+            if (elovi.includes('igrica')) {
+                let btnG2H = document.getElementById('btn_multi_g2h_pokreni');
+                if (window.G2H_trenutniStatusIgreUspeh) {
+                    if (btnG2H && btnG2H.getAttribute('data-reseno') !== 'da') {
+                        btnG2H.style.background = '#10b981';
+                        btnG2H.innerText = window.trenutniJezik === 'sr' ? '✔️ IGRA JE REŠENA' : '✔️ GAME SOLVED';
+                        btnG2H.onclick = null; // Isključuje ponovno igranje
+                        btnG2H.setAttribute('data-reseno', 'da');
+                        igraJeTekSadaResena = true;
+                    }
+                } else if (sveTacno) {
                     sveTacno = false;
                     porukaGreske = window.trenutniJezik === 'sr' ? "Morate uspešno rešiti logičku igru!" : "G2H logic game is not finished!";
                 }
@@ -3627,9 +3778,20 @@ window.generisiKvizUI = function(kvizData) {
                 }
                 window.uspehZadatka(); 
             } else {
-                window.azurirajZdravlje(-window.KAZNA_GRESKA); 
-                window.osveziSesijuNaServeru(); 
-                window.prikaziGresku(porukaGreske);
+                if (igraJeTekSadaResena) {
+                    // Ako je igra upravo rešena automatski je pozvala ovu proveru, 
+                    // ali ostali delovi nisu gotovi. Ne skidamo energiju!
+                    let pp = document.getElementById('porukaPolje');
+                    pp.style.display = 'block';
+                    pp.className = 'poruka info'; 
+                    pp.innerHTML = "💡 " + (window.trenutniJezik === 'sr' ? "Bravo za igru! Sada rešite i ostale zadatke." : "Game solved! Now finish the rest.");
+                    setTimeout(() => { pp.style.display = 'none'; }, 4000);
+                } else {
+                    // Redovna provera i kazna ako igrač sam pritisne glavno dugme a nešto nije tačno
+                    window.azurirajZdravlje(-window.KAZNA_GRESKA); 
+                    window.osveziSesijuNaServeru(); 
+                    window.prikaziGresku(porukaGreske);
+                }
             }
             return; 
         }
