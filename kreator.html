@@ -2364,7 +2364,7 @@ window.pripremiZaStampu = function(orijentacija = 'uspravno') {
         printStyle.id = 'dynamicPrintPageStyle';
         document.head.appendChild(printStyle);
     }
-    printStyle.innerHTML = `@page { size: A4 ${isPortrait ? 'portrait' : 'landscape'}; margin: 10mm; }`;
+    printStyle.innerHTML = `@page { size: A4 ${isPortrait ? 'portrait' : 'landscape'}; margin: 5mm; }`;
 
     let zM = document.getElementById('zavrsiModal'); 
     if(zM) zM.style.display = 'none'; 
@@ -2542,7 +2542,7 @@ window.pripremiZaStampu = function(orijentacija = 'uspravno') {
     let html = `
     <style>
         #printArea * { box-sizing: border-box !important; }
-        .print-wrapper { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #ffffff; color: #000000; margin: 0 auto; padding: 0; max-width: 190mm; }
+        .print-wrapper { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #ffffff; color: #000000; margin: 0 auto; padding: 0; max-width: 95%; }
         .print-page { width: 100%; margin: 0; padding: 0; }
         
         .print-header { display: flex; align-items: center; gap: 15px; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
@@ -2614,15 +2614,15 @@ window.pripremiZaStampu = function(orijentacija = 'uspravno') {
                     <p>${promo}</p>
                 </div>
             </div>
-
+       
             <div class="vaspitaci-sekcija">
                 <h2>LIST ZA VODIČA ORGANIZATORA</h2>
                 <table>
                     <colgroup>
-                        <col style="width: 25%;">
-                        <col style="width: 30%;">
+                        <col style="width: 28%;">
                         <col style="width: 20%;">
-                        <col style="width: 25%;">
+                        <col style="width: 24%;">
+                        <col style="width: 28%;">
                     </colgroup>
                     <thead>
                         <tr>
