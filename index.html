@@ -806,10 +806,11 @@ const pokreniOporavak = (sData, potragaData) => {
                 BRAVO! Spremni ste za dalje.
             </div>
             
-            <div id="nagradniDeoKontejner" style="display:none; background: #fffbeb; border: 2px dashed #f59e0b; padding: 15px; border-radius: 12px; margin-top: 15px; text-align: center; box-shadow: 0 4px 10px rgba(245,158,11,0.2);">
-                <div style="color: #206b10; font-weight: bold; font-size: 26px; text-transform: uppercase;">🧩 Vaš deo slagalice!</div>
-                <div id="txtNagradniDeo" style="font-size: 24px; font-weight: 900; color: #000; margin-top: 5px;"></div>
-            </div>
+        <div id="nagradniDeoKontejner" style="display:none; background: #fffbeb; border: 2px dashed #f59e0b; padding: 15px; border-radius: 12px; margin-top: 15px; text-align: center; box-shadow: 0 4px 10px rgba(245,158,11,0.2);">
+        <div style="color: #206b10; font-weight: bold; font-size: 26px; text-transform: uppercase;">🧩 Vaš deo slagalice!</div>
+        <div id="txtNagradniDeo" style="font-size: 24px; font-weight: 900; color: #000; margin-top: 5px;"></div>
+        <img id="slikaNagradniDeo" src="" style="display:none; width:100%; max-height:220px; object-fit:contain; margin-top:15px; border-radius:8px; border:2px solid #fcd34d;">
+        </div>
 
             <div style="background: #e3f2fd; border: 2px solid #90caf9; padding: 15px; border-radius: 12px; margin-top: 15px; text-align: center;">
                 <span style="color: #1565c0; font-size: 24px;">Uspešno ste rešili lokaciju <b id="prikazReseneTacke">1</b>!</span><br>
@@ -3860,11 +3861,27 @@ window.uspehZadatka = function() {
         if(galKontejner) galKontejner.style.display = "none";
 
         document.getElementById('prikazReseneTacke').innerText = window.trenutnaTackaIndeks + 1;
-
+        
+        // pokayivanje slike iz nagrade
         let nagradaDeo = originalniPin.zadatak?.nagradniDeo;
+        let nagradaSlika = originalniPin.zadatak?.nagradaSlika;
         let nagradaKontejner = document.getElementById('nagradniDeoKontejner');
-        if(nagradaDeo && nagradaDeo.trim() !== '') {
-            document.getElementById('txtNagradniDeo').innerText = nagradaDeo;
+        let imgNagrada = document.getElementById('slikaNagradniDeo');
+        
+        let imaTekst = nagradaDeo && nagradaDeo.trim() !== '';
+        let imaSliku = nagradaSlika && nagradaSlika.trim() !== '';
+
+        if(imaTekst || imaSliku) {
+            document.getElementById('txtNagradniDeo').innerText = imaTekst ? nagradaDeo : '';
+            document.getElementById('txtNagradniDeo').style.display = imaTekst ? 'block' : 'none';
+            
+            if (imaSliku) {
+                imgNagrada.src = nagradaSlika;
+                imgNagrada.style.display = 'block';
+            } else {
+                imgNagrada.src = '';
+                imgNagrada.style.display = 'none';
+            }
             nagradaKontejner.style.display = 'block';
         } else {
             nagradaKontejner.style.display = 'none';
