@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="utf-8">
+    <title>Mala parkovska avantura - Radna sveska</title>
+    <style>
+        /* Osnovna podešavanja za ekran i prikaz */
+        body {
+            font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+            color: #000000;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        * { box-sizing: border-box; }
+
+        /* Kontrolni panel (ne štampa se) */
+        .controls {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .control-group label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="file"], select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .print-btn {
+            background-color: #2e7d32;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background-color 0.3s;
+        }
+        .print-btn:hover { background-color: #1b5e20; }
+
+        /* Kontejner za sadržaj */
+        #contentArea {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* --- STILOVI ZA RAZLIČITE MODELE ŠTAMPE --- */
+
+        /* 1. Harmonika (A4 Položeno, 4 panela po strani) */
+        .layout-harmonika .page-container {
+            width: 297mm;
+            height: 210mm;
+            background-color: #ffffff;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: row;
+            padding: 5mm;
+            overflow: hidden;
+        }
+        .layout-harmonika .panel {
+            width: 25%;
+            height: 100%;
+            border: 1px dashed #cccccc;
+            padding: 5mm;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            text-align: center;
+        }
+
+        /* 3. Mreža (A4 Uspravno, 2 kolone u stilu kartica) */
+        .layout-mreza .page-container {
+            width: 210mm;
+            height: 297mm;
+            background-color: #ffffff;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: repeat(2, 1fr); /* Dva reda na jednoj A4 stranici, ukupno 4 panela */
+            gap: 10mm;
+            padding: 10mm;
+            overflow: hidden;
+            page-break-after: always; /* Osigurava da svaki kontejner bude na svojoj stranici */
+        }
+        .layout-mreza .panel {
+            border: 2px solid #81c784;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            text-align: center;
+            background-color: #fff;
+            height: 100%; /* Da panel popuni čitav red */
+            page-break-inside: avoid;
+        }
+
+        /* Zajednički elementi panela */
+        .cell-content {
+            position: relative;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 { font-size: 18pt; margin-bottom: 10px; margin-top: 30px; color: #000; }
+        h2 { font-size: 13pt; margin-bottom: 10px; margin-top: 0; color: #000; }
+        p { font-size: 10pt; line-height: 1.4; margin-bottom: 5px; color: #333; }
+
+        .name-line {
+            margin-top: 20mm;
+            border-bottom: 1px solid #000;
+            width: 80%;
+            margin-left: 10%;
+            text-align: left;
+            font-size: 12pt;
+            padding-bottom: 5px;
+        }
+
+        .location-image {
+            width: 100%;
+            max-height: 25mm;
+            object-fit: contain;
+            margin-bottom: 5px;
+            border-radius: 4px;
+        }
+
+        .top-text {
+            font-size: 9pt;
+            line-height: 1.2;
+            color: #333;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .drawing-box {
+            border: 2px solid #000000;
+            flex-grow: 1; /* Crtanje zauzima preostali prostor */
+            margin-top: 5px;
+            border-radius: 8px;
+            position: relative; /* Da bi krug unutra mogao apsolutno da se pozicionira */
+            background-color: transparent;
+            min-height: 40px;
+        }
+        
+        .sticker-circle {
+            width: 26mm;
+            height: 26mm;
+            border: 2px dashed #000000;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 2mm; /* Smešteno u donji desni ugao unutar boksa */
+            right: 2mm; /* Smešteno u donji desni ugao unutar boksa */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #ffffff;
+            overflow: hidden;
+            z-index: 2; /* Da bude iznad crteža */
+        }
+        .sticker-circle span { color: #666666; font-size: 8pt; text-align: center; }
+
+        .stickers-area {
+            position: absolute;
+            bottom: 5mm;
+            width: 100%;
+            left: 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .layout-mreza .stickers-area {
+            position: relative;
+            bottom: auto;
+            margin-top: 15px;
+        }
+
+        .color-sticker {
+            width: 22mm;
+            height: 22mm;
+            border: 2px solid #388e3c;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16pt;
+            background-color: #f1f8e9;
+            color: #000;
+            overflow: hidden;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .color-sticker img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Pravila za štampač */
+        @media print {
+            body { margin: 0; padding: 0; background-color: #ffffff; }
+            .no-print { display: none !important; }
+            .page-container {
+                box-shadow: none !important;
+                margin: 0 !important;
+                page-break-after: always;
+            }
+            .layout-harmonika .page-container { width: 297mm; height: 210mm; }
+            .layout-mreza .page-container { 
+                width: 210mm; 
+                height: 297mm; 
+                padding: 10mm;
+                gap: 10mm;
+            }
+        }
+    </style>
+    <style id="print-page-style">
+        @page { size: A4 portrait; margin: 0; }
+    </style>
+</head>
+<body>
+
+    <!-- KONTROLNI PANEL -->
+    <div class="controls no-print">
+        <div class="control-group">
+            <label for="jsonInput">Učitaj JSON staze:</label>
+            <input type="file" id="jsonInput" accept=".json">
+        </div>
+        <div class="control-group">
+            <label for="layoutSelect">Model štampe:</label>
+            <select id="layoutSelect">
+                <option value="mreza">Mreža (A4 Uspravno, 2 kolone)</option>
+                <option value="harmonika">Harmonika (A4 Položeno, 4 po strani)</option>
+            </select>
+        </div>
+        <button class="print-btn" onclick="window.print()">🖨️ Odštampaj svesku</button>
+    </div>
+
+    <!-- PROSTOR GDE SE GENERIŠE SADRŽAJ -->
+    <div id="contentArea" class="layout-mreza"></div>
+
+    <script>
+        let currentData = null;
+        const defaultEmojis = ['🌳', '🐛', '🪄', '🪑', '🐢', '📖', '🔍', '⭐', '🧩', '🏆'];
+
+        document.getElementById('jsonInput').addEventListener('change', handleFileLoad);
+        document.getElementById('layoutSelect').addEventListener('change', renderView);
+
+        function handleFileLoad(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    currentData = JSON.parse(e.target.result);
+                    renderView();
+                } catch (err) {
+                    alert("Greška pri čitanju JSON fajla. Proverite format.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function pripremiSlicicu(izvor, fallbackEmoji) {
+            if (izvor && (izvor.startsWith('data:image') || izvor.startsWith('http'))) {
+                return `<img src="${izvor}" alt="slika">`;
+            }
+            return fallbackEmoji;
+        }
+
+        function renderView() {
+            const contentArea = document.getElementById('contentArea');
+            const layout = document.getElementById('layoutSelect').value;
+            const printStyle = document.getElementById('print-page-style');
+            
+            contentArea.className = 'layout-' + layout;
+            if (layout === 'harmonika') {
+                printStyle.innerHTML = '@page { size: A4 landscape; margin: 0; }';
+            } else {
+                printStyle.innerHTML = '@page { size: A4 portrait; margin: 0; }';
+            }
+
+            if (!currentData) {
+                contentArea.innerHTML = '<p style="color: #666; margin-top: 50px;">Učitajte JSON fajl da biste videli pregled.</p>';
+                return;
+            }
+
+            const ime = currentData.ime || "Avantura";
+            const grad = currentData.grad || "Park";
+            const pinovi = currentData.pinovi || [];
+
+            let html = '';
+            let currentPanelCount = 0;
+            let panelsPerPage = 4; // Sada je i za harmoniku i za mrežu 4 panela po strani
+
+            const openPage = () => { html += '<div class="page-container">'; };
+            const closePage = () => { html += '</div>'; };
+
+            openPage();
+
+            // 1. NASLOVNA STRANA
+            if (layout !== 'mreza' || currentPanelCount === 0) {
+                html += `
+                    <div class="panel">
+                        <div class="cell-content" style="padding-top: 30mm;">
+                            <h1>${ime}</h1>
+                            <p>${grad}</p>
+                            <div class="name-line">Ime: </div>
+                            
+                            <!-- Logotipi na dnu naslovne strane -->
+                            <div style="position: absolute; bottom: 5mm; width: 100%; display: flex; justify-content: center; gap: 20px; left: 0;">
+                                <img src="logo_net_1.png" alt="Logo 1" style="width: 50px; height: 50px; object-fit: contain;">
+                                <img src="logo.png" alt="Logo 2" style="width: 50px; height: 50px; object-fit: contain;">
+                            </div>
+                        </div>
+                    </div>`;
+                currentPanelCount++;
+            }
+
+            // ZADACI (PINOVI)
+            let stickerEmojisHtml = '';
+            
+            pinovi.forEach((pin, index) => {
+                if (currentPanelCount >= panelsPerPage) {
+                    closePage();
+                    openPage();
+                    currentPanelCount = 0;
+                }
+
+                // Bezbedno parsiranje teksta bez HTML tagova
+                let opis = pin.opisLokacije || pin.zagonetka || "Reši zadatak na ovoj lokaciji.";
+                let tempDiv = document.createElement("div");
+                tempDiv.innerHTML = opis;
+                let cistOpis = tempDiv.textContent || tempDiv.innerText || "";
+                
+                // Izdvajamo tekst zagonetke za prikaz na dnu
+                let tekstZadatka = "";
+                if(pin.zadatak && pin.zadatak.tekst_zadatka) {
+                    tekstZadatka = pin.zadatak.tekst_zadatka;
+                }
+
+                let emoji = defaultEmojis[index % defaultEmojis.length];
+                let slikaNalepnice = "";
+                
+                if (pin.zadatak) {
+                    if (pin.zadatak.nagradaSlika) {
+                        slikaNalepnice = pripremiSlicicu(pin.zadatak.nagradaSlika, emoji);
+                    } else if (pin.zadatak.zag_slika) {
+                         slikaNalepnice = pripremiSlicicu(pin.zadatak.zag_slika, emoji);
+                    } else if (pin.zadatak.slika) {
+                        slikaNalepnice = pripremiSlicicu(pin.zadatak.slika, emoji);
+                    }
+                }
+                
+                if(!slikaNalepnice) slikaNalepnice = pripremiSlicicu(null, emoji);
+                
+                stickerEmojisHtml += `<div class="color-sticker">${slikaNalepnice}</div>`;
+
+                let slikaLokacijeHtml = '';
+                if (pin.opisLokacijeSlika) {
+                    slikaLokacijeHtml = `<img class="location-image" src="${pin.opisLokacijeSlika}" alt="Lokacija">`;
+                } else if (pin.slikaLokacije) {
+                    slikaLokacijeHtml = `<img class="location-image" src="${pin.slikaLokacije}" alt="Lokacija">`;
+                }
+
+                html += `
+                <div class="panel">
+                    <div class="cell-content">
+                        <h2>${index + 1}. ${pin.imeLokacije || 'Tajna lokacija'}</h2>
+                        ${slikaLokacijeHtml}
+                        <div class="top-text">${tekstZadatka || cistOpis}</div>
+                        <div class="drawing-box">
+                            <div class="sticker-circle"><span>Zalepi</span></div>
+                        </div>
+                    </div>
+                </div>`;
+                
+                currentPanelCount++;
+            });
+
+            if (currentPanelCount >= panelsPerPage) {
+                closePage();
+                openPage();
+                currentPanelCount = 0;
+            }
+
+            // ZAVRŠNA STRANA (NALEPNICE)
+            html += `
+                <div class="panel">
+                    <div class="cell-content">
+                        <h2 style="color: #d32f2f;">Nalepnice</h2>
+                        <p style="font-size: 9pt;">Iseci ove krugove pre početka igre i ponesi ih sa sobom.</p>
+                        <div class="stickers-area">
+                            ${stickerEmojisHtml}
+                        </div>
+                    </div>
+                </div>`;
+            
+            closePage(); 
+            contentArea.innerHTML = html;
+        }
+
+        renderView();
+    </script>
+</body>
+</html>
