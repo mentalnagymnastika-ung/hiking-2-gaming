@@ -1428,70 +1428,72 @@ window.obrisiSveBezPitanja = function() {
 
     window.faktorijel = function(num) { if(num < 0) return 0; if(num === 0 || num === 1) return 1; let result = 1; for(let i=2; i<=num; i++) { result *= i; if(result > 10000) return 10000; } return result; }
 
-    window.pripremiSliku = function(event) {
-        let file = event.target.files[0]; if(!file) return;
-        let reader = new FileReader();
-        reader.onload = function(e) {
-            let img = new Image();
-            img.onload = function() {
-                let canvas = document.createElement('canvas');
-                let max_size = 500; let width = img.width; let height = img.height;
-                if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } } 
-                else { if (height > max_size) { width *= max_size / height; height = max_size; } }
-                canvas.width = width; canvas.height = height;
-                let ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
-                window.promoSlikaBase64 = canvas.toDataURL('image/jpeg', 0.4); 
-                window.promeneNisuSnimljene = true; alert(window.trenutniJezik === 'sr' ? "Slika spremna" : "Image ready");
-            }
-            img.src = e.target.result;
-        }; reader.readAsDataURL(file);
-    }
+window.pripremiSliku = function(event) {
+    let file = event.target.files[0]; if(!file) return;
+    let reader = new FileReader();
+    reader.onload = function(e) {
+        let img = new Image();
+        img.onload = function() {
+            let canvas = document.createElement('canvas');
+            let max_size = 500; let width = img.width; let height = img.height;
+            if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } } 
+            else { if (height > max_size) { width *= max_size / height; height = max_size; } }
+            canvas.width = width; canvas.height = height;
+            let ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+            window.promoSlikaBase64 = canvas.toDataURL('image/jpeg', 0.4); 
+            
+            if(document.getElementById('promoSlikaStatus')) document.getElementById('promoSlikaStatus').value = "✅ " + file.name;
+            let pPrev = document.getElementById('promoSlikaPreview');
+            if (pPrev) { pPrev.src = window.promoSlikaBase64; pPrev.style.display = 'block'; }
+            
+            window.promeneNisuSnimljene = true; 
+        }
+        img.src = e.target.result;
+    }; reader.readAsDataURL(file);
+}
 
-    window.obrisiPromoSliku = function() {
-        document.getElementById('promoSlikaUpload').value = ''; 
-        window.promoSlikaBase64 = ""; 
-        window.promeneNisuSnimljene = true; 
-    }
+window.obrisiPromoSliku = function() {
+    document.getElementById('promoSlikaUpload').value = ''; 
+    window.promoSlikaBase64 = ""; 
+    if(document.getElementById('promoSlikaStatus')) document.getElementById('promoSlikaStatus').value = "Nije odabrano";
+    let pPrev = document.getElementById('promoSlikaPreview');
+    if (pPrev) { pPrev.src = ''; pPrev.style.display = 'none'; }
+    window.promeneNisuSnimljene = true; 
+}
 
 window.pripremiSlikuAutora = function(event) {
-        let file = event.target.files[0]; 
-        if(!file) return;
-        let reader = new FileReader();
-        reader.onload = function(e) {
-            let img = new Image();
-            img.onload = function() {
-                let canvas = document.createElement('canvas');
-                let max_size = 200; 
-                let width = img.width; let height = img.height;
-                if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } } 
-                else { if (height > max_size) { width *= max_size / height; height = max_size; } }
-                canvas.width = width; canvas.height = height;
-                let ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
-                
-                window.autorSlikaBase64 = canvas.toDataURL('image/jpeg', 0.5); 
-                
-                let preview = document.getElementById('autorSlikaPreview');
-                let kontejner = document.getElementById('kontejnerSlikeAutora');
-                if(preview && kontejner) {
-                    preview.src = window.autorSlikaBase64;
-                    kontejner.style.display = 'block';
-                }
-                window.promeneNisuSnimljene = true; 
-            }
-            img.src = e.target.result;
-        }; 
-        reader.readAsDataURL(file);
-    }
+    let file = event.target.files[0]; if(!file) return;
+    let reader = new FileReader();
+    reader.onload = function(e) {
+        let img = new Image();
+        img.onload = function() {
+            let canvas = document.createElement('canvas');
+            let max_size = 200; let width = img.width; let height = img.height;
+            if (width > height) { if (width > max_size) { height *= max_size / width; width = max_size; } } 
+            else { if (height > max_size) { width *= max_size / height; height = max_size; } }
+            canvas.width = width; canvas.height = height;
+            let ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+            
+            window.autorSlikaBase64 = canvas.toDataURL('image/jpeg', 0.5); 
+            
+            if(document.getElementById('autorSlikaStatus')) document.getElementById('autorSlikaStatus').value = "✅ " + file.name;
+            let aPrev = document.getElementById('autorSlikaPreview');
+            if (aPrev) { aPrev.src = window.autorSlikaBase64; aPrev.style.display = 'block'; }
+            
+            window.promeneNisuSnimljene = true; 
+        }
+        img.src = e.target.result;
+    }; reader.readAsDataURL(file);
+}
 
-    window.obrisiSlikuAutora = function() {
-        window.autorSlikaBase64 = "";
-        document.getElementById('autorSlikaUpload').value = '';
-        let preview = document.getElementById('autorSlikaPreview');
-        if(preview) preview.src = '';
-        let kontejner = document.getElementById('kontejnerSlikeAutora');
-        if(kontejner) kontejner.style.display = 'none';
-        window.promeneNisuSnimljene = true;
-    }
+window.obrisiSlikuAutora = function() {
+    window.autorSlikaBase64 = "";
+    document.getElementById('autorSlikaUpload').value = '';
+    if(document.getElementById('autorSlikaStatus')) document.getElementById('autorSlikaStatus').value = "Nije odabrano";
+    let aPrev = document.getElementById('autorSlikaPreview');
+    if (aPrev) { aPrev.src = ''; aPrev.style.display = 'none'; }
+    window.promeneNisuSnimljene = true;
+}
 
     window.pripremiSlikuPitanja = function(event) {
         let file = event.target.files[0]; if(!file) return;
