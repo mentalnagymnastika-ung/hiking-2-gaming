@@ -2762,29 +2762,34 @@ window.azurirajRedosledNaServeru = async function(sifra, novaVrednost) {
         document.getElementById('dashboardModal').style.display = 'none';
     }
 
-    window.ucitajSaServera = async function(sifra) {
-        if(window.promeneNisuSnimljene && !confirm(window.trenutniJezik==='sr'?"Imate nesnimljen rad. Da li ste sigurni da želite da učitate novu stazu?":"Unsaved work. Load new trail anyway?")) return;
-        
-        let staroDugme = document.getElementById('btnListaServer').innerHTML;
-        document.getElementById('btnListaServer').innerHTML = "⏳ Učitavanje...";
-        
-        try {
-            const docSnap = await window.getDoc(window.doc(window.db, "potrage", sifra));
-            if (docSnap.exists()) {
-                let d = docSnap.data();
-                window.ucitajPodatkeIzObjekta(d);
-                let modalAktivna = document.getElementById('modalAktivnaCheck');
-                if (modalAktivna) modalAktivna.checked = !!d.aktivna;
-                alert(window.trenutniJezik==='sr'?"✅ Staza uspešno preuzeta sa servera i spremna za izmenu! Zatvorite pregled i kreirajte ili pregledajte učitanu stazu.":"✅ Trail successfully loaded from the server and ready for editing! Close the overview to create or review the loaded trail."); 
-            } else {
-                alert(window.trenutniJezik==='sr'?"❌ Staza nije pronađena na serveru!":"❌ Trail not found on server!");
-            }
-        } catch(err) { 
-            alert("❌ Greška: " + err.message); 
-        } finally {
-            document.getElementById('btnListaServer').innerHTML = staroDugme;
+window.ucitajSaServera = async function(sifra) {
+    if(window.promeneNisuSnimljene && !confirm(window.trenutniJezik==='sr'?"Imate nesnimljen rad. Da li ste sigurni da želite da učitate novu stazu?":"Unsaved work. Load new trail anyway?")) return;
+    
+    let staroDugme = document.getElementById('btnListaServer').innerHTML;
+    document.getElementById('btnListaServer').innerHTML = "⏳ Učitavanje...";
+    
+    try {
+        const docSnap = await window.getDoc(window.doc(window.db, "potrage", sifra));
+        if (docSnap.exists()) {
+            let d = docSnap.data();
+            window.ucitajPodatkeIzObjekta(d);
+            let modalAktivna = document.getElementById('modalAktivnaCheck');
+            if (modalAktivna) modalAktivna.checked = !!d.aktivna;
+            
+            alert(window.trenutniJezik==='sr'?"✅ Staza uspešno preuzeta sa servera i spremna za izmenu!":"✅ Trail successfully loaded from the server and ready for editing!"); 
+            
+            // Automatsko zatvaranje panela sa listom
+            if(typeof window.zatvoriModalAktivnih === 'function') window.zatvoriModalAktivnih();
+            
+        } else {
+            alert(window.trenutniJezik==='sr'?"❌ Staza nije pronađena na serveru!":"❌ Trail not found on server!");
         }
+    } catch(err) { 
+        alert("❌ Greška: " + err.message); 
+    } finally {
+        document.getElementById('btnListaServer').innerHTML = staroDugme;
     }
+}
 
     window.toggleStatusNaServeru = async function(sifra, trenutnoAktivna) {
         try {
