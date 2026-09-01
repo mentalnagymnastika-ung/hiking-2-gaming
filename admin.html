@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="sr">
 <head>
     <meta charset="UTF-8">
@@ -2775,7 +2775,7 @@ window.azurirajRedosledNaServeru = async function(sifra, novaVrednost) {
                 window.ucitajPodatkeIzObjekta(d);
                 let modalAktivna = document.getElementById('modalAktivnaCheck');
                 if (modalAktivna) modalAktivna.checked = !!d.aktivna;
-                alert(window.trenutniJezik==='sr'?"✅ Staza uspešno preuzeta sa servera i spremna za izmenu!":"✅ Trail successfully loaded from server!"); 
+                alert(window.trenutniJezik==='sr'?"✅ Staza uspešno preuzeta sa servera i spremna za izmenu! Zatvorite pregled i kreirajte ili pregledajte učitanu stazu.":"✅ Trail successfully loaded from the server and ready for editing! Close the overview to create or review the loaded trail."); 
             } else {
                 alert(window.trenutniJezik==='sr'?"❌ Staza nije pronađena na serveru!":"❌ Trail not found on server!");
             }
