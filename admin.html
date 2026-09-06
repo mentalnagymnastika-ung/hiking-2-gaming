@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="sr">
 <head>
     <meta charset="UTF-8">
@@ -2006,29 +2006,29 @@ window.resetujSve = function() {
                 if(elovi.includes('kreativni')) {
                     document.getElementById('kre_uputstvo').value = p.zadatak.kre_uputstvo || '';
                 }
-                if(elovi.includes('igrica')) {
-                    let mIgra = document.getElementById('g2h_izbor_igre');
-                    let mTezina = document.getElementById('g2h_izbor_tezine');
-                    let mSifra = p.zadatak.igrica_kod || 'memorija1';
-                    
-                    let nadjenaIgra = sacuvanaSifra.startsWith('pametne_igre') ? 'pametne_igre' :
-                                  sacuvanaSifra.startsWith('memorija') ? 'memorija' : 
-                                  sacuvanaSifra.startsWith('skocko') ? 'skocko' : 
-                                  sacuvanaSifra.startsWith('prekidaci') ? 'prekidaci' : 
-                                  sacuvanaSifra.startsWith('slagalica') ? 'slagalica' : 
-                                  sacuvanaSifra.startsWith('simon') ? 'simon' :
-                                  sacuvanaSifra.startsWith('matricaboja') ? 'matricaboja' :
-                                  sacuvanaSifra.startsWith('staza') ? 'staza' :
-                                  sacuvanaSifra.startsWith('radna') ? 'radna' : 'pametne_igre';
-                    
-                    if (mIgra) {
-                        mIgra.value = nadjenaIgra;
-                        mIgra.onchange(); 
-                    }
-                    if (mTezina) {
-                        mTezina.value = mSifra.replace(nadjenaIgra, '');
-                    }
-                }
+if(elovi.includes('igrica')) {
+    let mIgra = document.getElementById('g2h_izbor_igre');
+    let mTezina = document.getElementById('g2h_izbor_tezine');
+    let mSifra = p.zadatak.igrica_kod || 'memorija1';
+    
+    let nadjenaIgra = mSifra.startsWith('pametne_igre') ? 'pametne_igre' :
+                  mSifra.startsWith('memorija') ? 'memorija' : 
+                  mSifra.startsWith('skocko') ? 'skocko' : 
+                  mSifra.startsWith('prekidaci') ? 'prekidaci' : 
+                  mSifra.startsWith('slagalica') ? 'slagalica' : 
+                  mSifra.startsWith('simon') ? 'simon' :
+                  mSifra.startsWith('matricaboja') ? 'matricaboja' :
+                  mSifra.startsWith('staza') ? 'staza' :
+                  mSifra.startsWith('radna') ? 'radna' : 'pametne_igre';
+    
+    if (mIgra) {
+        mIgra.value = nadjenaIgra;
+        mIgra.onchange(); 
+    }
+    if (mTezina) {
+        mTezina.value = mSifra.replace(nadjenaIgra, '');
+    }
+}
                 if(elovi.includes('pronadji')) {
                     document.getElementById('pronadji_opis').value = p.zadatak.pronadji_opis || '';
                     let kontejner = document.getElementById('kontejnerSlikePronadji');
@@ -2450,7 +2450,7 @@ window.snimiJSON = function() {
         document.getElementById('izlazModal').style.display='none';
         if(window.pinovi.length === 0) { alert(window.trenutniJezik==='sr'?"Mapa je prazna.":"Map is empty."); return; }
         
-        let sifra = document.getElementById('sifraPotrage').value.trim(); 
+        let sifra = document.getElementById('sifraPotrage').value.trim().toUpperCase(); 
         let isGrupna = document.getElementById('checkGrupna').checked; 
         let brojTimova = parseInt(document.getElementById('brojTimovaGrupna').value); 
         let grupnaLogika = document.getElementById('logikaGrupna').value;
@@ -2491,8 +2491,8 @@ window.snimiJSON = function() {
                         cisceniPin.opisLokacijeSlika = ""; 
                         if(cisceniPin.zadatak) {
                             cisceniPin.zadatak = { ...cisceniPin.zadatak };
-                            delete cisceniPin.zadatak.slika; 
-                            delete cisceniPin.zadatak.zag_slika; 
+                            // delete cisceniPin.zadatak.slika; 
+                            // delete cisceniPin.zadatak.zag_slika; 
                         }
                         return cisceniPin;
                     });
@@ -2557,7 +2557,7 @@ window.snimiJSON = function() {
 window.snimiUBazu = async function() {
         if(window.pinovi.length === 0) { alert("Mapa je prazna."); return; }
         
-        let sifra = document.getElementById('sifraPotrage').value.trim();
+        let sifra = document.getElementById('sifraPotrage').value.trim().toUpperCase();
         if(!sifra) { alert("Šifra je obavezna za server!"); return; }
 
         let isGrupna = document.getElementById('checkGrupna').checked;
@@ -2589,8 +2589,8 @@ window.snimiUBazu = async function() {
                         cisceniPin.opisLokacijeSlika = ""; 
                         if(cisceniPin.zadatak) {
                             cisceniPin.zadatak = { ...cisceniPin.zadatak };
-                            delete cisceniPin.zadatak.slika; 
-                            delete cisceniPin.zadatak.zag_slika; 
+                           // delete cisceniPin.zadatak.slika; 
+                           // delete cisceniPin.zadatak.zag_slika; 
                         }
                         return cisceniPin;
                     });
@@ -2762,7 +2762,7 @@ window.azurirajRedosledNaServeru = async function(sifra, novaVrednost) {
         document.getElementById('dashboardModal').style.display = 'none';
     }
 
-window.ucitajSaServera = async function(sifra) {
+    window.ucitajSaServera = async function(sifra) {
     if(window.promeneNisuSnimljene && !confirm(window.trenutniJezik==='sr'?"Imate nesnimljen rad. Da li ste sigurni da želite da učitate novu stazu?":"Unsaved work. Load new trail anyway?")) return;
     
     let staroDugme = document.getElementById('btnListaServer').innerHTML;
@@ -2788,8 +2788,8 @@ window.ucitajSaServera = async function(sifra) {
         alert("❌ Greška: " + err.message); 
     } finally {
         document.getElementById('btnListaServer').innerHTML = staroDugme;
+       }
     }
-}
 
     window.toggleStatusNaServeru = async function(sifra, trenutnoAktivna) {
         try {
@@ -2814,7 +2814,7 @@ window.autoSaveLocal = function() {
         let data = { 
             grad: document.getElementById('gradPotrage').value || "", 
             ime: document.getElementById('imePotrage').value || "", 
-            sifra: document.getElementById('sifraPotrage').value || "", 
+            sifra: document.getElementById('sifraPotrage').value ? document.getElementById('sifraPotrage').value.trim().toUpperCase() : "", 
             jezik: document.getElementById('unosJezikStaze') ? document.getElementById('unosJezikStaze').value : "sr",
             autor: document.getElementById('autorPotrage').value || "",
 
