@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Trezora Banke</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f4f8; }
+        .mg-blue { background-color: #1e3a8a; }
+        .mg-blue-hover:hover { background-color: #1e40af; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-gray-200">
+        <div class="mg-blue text-white p-6 text-center border-b-4 border-yellow-500">
+            <i class="fa-solid fa-building-columns text-3xl mb-2 text-yellow-400"></i>
+            <h1 class="text-2xl font-bold">Kreiranje Bankovnog Trezora</h1>
+            <p class="text-sm text-blue-200 mt-1">Mentalna Gimnastika - Admin Alat</p>
+        </div>
+
+        <div class="p-6 space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Pristupna šifra / PIN (npr. 34, KOD88)</label>
+                <input type="text" id="sifra" class="w-full border-2 border-gray-300 rounded-lg p-3 outline-none focus:border-blue-600 transition" placeholder="Unesite PIN za banku">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Vrsta bankovnog transfera (Nagrada)</label>
+                <select id="vrsta_nagrade" class="w-full border-2 border-gray-300 rounded-lg p-3 outline-none focus:border-blue-600 transition" onchange="promeniVrstuNagrade()">
+                    <option value="tekst">Informacija o računu (Samo Tekst)</option>
+                    <option value="link">Odobren transfer (Dugme / Link ka sajtu)</option>
+                    <option value="slika_tekst">Slika i Tekst (Prikazuju se zajedno)</option>
+                </select>
+            </div>
+
+            <div id="polje_slika" class="hidden space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">URL Slike</label>
+                    <input type="url" id="slika_nagrade" class="w-full border-2 border-gray-300 rounded-lg p-3 outline-none focus:border-blue-600 transition" placeholder="https://...">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">URL Link preko slike (Opciono - pretvara sliku u dugme)</label>
+                    <input type="url" id="link_preko_slike" class="w-full border-2 border-gray-300 rounded-lg p-3 outline-none focus:border-blue-600 transition" placeholder="https://zdrava-aktivnost.web.app/vremenska_kapsula.html">
+                </div>
+            </div>
+
+            <div id="polje_tekst">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tajna poruka / Stanje na računu</label>
+                <textarea id="tekst_nagrade" rows="3" class="w-full border-2 border-gray-300 rounded-lg p-3 outline-none focus:border-blue-600 transition" placeholder="Pristup odobren. Stanje na računu..."></textarea>
+            </div>
+
+            <div id="polje_link" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-1">URL (Link ka programu/nagradi)</label>
+                <input type="url" id="link_nagrade" class="w-full border-2 border-gray-300 rounded-lg p-3 outline-none focus:border-blue-600 transition" placeholder="https://...">
+            </div>
+
+            <div id="poruka_greska" class="hidden bg-red-100 text-red-700 p-3 rounded-lg text-sm text-center font-medium">
+                <!-- Poruka o gresci ide ovde -->
+            </div>
+
+            <button onclick="generisiKod()" class="w-full mg-blue mg-blue-hover text-white font-bold rounded-lg p-4 transition shadow-lg mt-4 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-qrcode"></i> Generiši Bankovni QR Kod
+            </button>
+
+            <div id="rezultat" class="hidden mt-6 pt-6 border-t border-gray-200 flex flex-col items-center">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Vaš QR Kod je spreman!</h3>
+                <div id="qrcode" class="p-4 bg-white border-2 border-gray-100 rounded-xl shadow-sm"></div>
+                
+                <p class="text-xs text-gray-500 mt-4 text-center break-all w-full bg-blue-50 p-3 rounded border border-blue-100">
+                    <span class="font-bold block mb-1 text-blue-800">Link za testiranje:</span>
+                    <a href="#" id="test_link" target="_blank" class="text-blue-600 underline"></a>
+                </p>
+                <p class="text-sm text-gray-600 mt-3 text-center">Preuzmite QR kod (Desni klik -> Save Image) i uručite ga igračima.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function prikaziGresku(poruka) {
+            const divGreska = document.getElementById('poruka_greska');
+            divGreska.innerText = poruka;
+            divGreska.classList.remove('hidden');
+            setTimeout(() => divGreska.classList.add('hidden'), 3000);
+        }
+
+        function promeniVrstuNagrade() {
+            const vrsta = document.getElementById('vrsta_nagrade').value;
+            if (vrsta === 'tekst') {
+                document.getElementById('polje_tekst').classList.remove('hidden');
+                document.getElementById('polje_link').classList.add('hidden');
+                document.getElementById('polje_slika').classList.add('hidden');
+            } else if (vrsta === 'link') {
+                document.getElementById('polje_tekst').classList.add('hidden');
+                document.getElementById('polje_link').classList.remove('hidden');
+                document.getElementById('polje_slika').classList.add('hidden');
+            } else if (vrsta === 'slika_tekst') {
+                document.getElementById('polje_tekst').classList.remove('hidden');
+                document.getElementById('polje_link').classList.add('hidden');
+                document.getElementById('polje_slika').classList.remove('hidden');
+            }
+        }
+
+        function prilagodiLinkSlike(link) {
+            if (!link) return "";
+            const driveRegex = /drive\.google\.com\/file\/d\/([^\/]+)/;
+            const match = link.match(driveRegex);
+            if (match && match[1]) {
+                const id = match[1];
+                return `https://drive.google.com/uc?export=view&id=${id}`;
+            }
+            return link; 
+        }
+
+        function generisiKod() {
+            const sifra = document.getElementById('sifra').value.trim();
+            const vrsta = document.getElementById('vrsta_nagrade').value;
+            let sadrzaj = "";
+            let dodatno = "";
+            let linkPrekoSlike = "";
+
+            if (!sifra) {
+                prikaziGresku("Morate uneti pristupnu šifru (PIN)!");
+                return;
+            }
+
+            if (vrsta === 'tekst') {
+                sadrzaj = document.getElementById('tekst_nagrade').value.trim();
+                if (!sadrzaj) { prikaziGresku("Unesite tekst nagrade!"); return; }
+            } else if (vrsta === 'link') {
+                sadrzaj = document.getElementById('link_nagrade').value.trim();
+                if (!sadrzaj) { prikaziGresku("Unesite validan link!"); return; }
+            } else if (vrsta === 'slika_tekst') {
+                sadrzaj = document.getElementById('tekst_nagrade').value.trim(); // Običan tekst
+                linkPrekoSlike = document.getElementById('link_preko_slike').value.trim(); // Link preko slike
+                let originalSlika = document.getElementById('slika_nagrade').value.trim();
+                dodatno = prilagodiLinkSlike(originalSlika);
+                
+                if (!sadrzaj) { prikaziGresku("Unesite tekst poruke!"); return; }
+                if (!dodatno) { prikaziGresku("Unesite link do slike!"); return; }
+
+                // Ako je unet link preko slike, pakujemo i tekst i taj link u JSON paket
+                if (linkPrekoSlike) {
+                    sadrzaj = JSON.stringify({ poruka: sadrzaj, url: linkPrekoSlike });
+                }
+            }
+
+            const podaci = {
+                s: sifra.toUpperCase(), 
+                v: vrsta, 
+                n: sadrzaj 
+            };
+            if(dodatno) {
+                podaci.i = dodatno;
+            }
+
+            const jsonString = JSON.stringify(podaci);
+            const base64Podaci = btoa(encodeURIComponent(jsonString));
+
+            const baseURL = "https://zdrava-aktivnost.web.app/banka.html";
+            const finalniURL = baseURL + "?q=" + base64Podaci;
+
+            document.getElementById('poruka_greska').classList.add('hidden');
+            document.getElementById('rezultat').classList.remove('hidden');
+            
+            const linkElement = document.getElementById('test_link');
+            linkElement.href = finalniURL;
+            linkElement.innerText = finalniURL;
+
+            document.getElementById('qrcode').innerHTML = ""; 
+            new QRCode(document.getElementById('qrcode'), {
+                text: finalniURL,
+                width: 200,
+                height: 200,
+                colorDark : "#1e3a8a", 
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+    </script>
+</body>
+</html>

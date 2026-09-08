@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zdrava Potraga — Glavna Kontrolna Tabla</title>
+    
+    <!-- Uvoz Flatpickr kalendara (Svetla tema) i Chart.js biblioteke -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/airbnb.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* SVETLA TEMA - OSNOVA */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; padding: 20px; box-sizing: border-box; }
+        .glavni-naslov { color: #0284c7; font-size: 28px; font-weight: 900; text-transform: uppercase; margin-bottom: 5px; }
+        .podnaslov { color: #475569; font-size: 14px; margin-bottom: 25px; font-weight: 500; }
+        
+        /* SISTEM TABOVA I ZAGLAVLJE */
+        .tab-zaglavlje { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; flex-wrap: wrap; gap: 15px; }
+        .tab-meni { display: flex; gap: 10px; flex-wrap: wrap; }
+        .tab-dugme { background: #ffffff; color: #475569; border: 1px solid #cbd5e1; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; text-transform: uppercase; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .tab-dugme:hover { background: #f1f5f9; }
+        .tab-dugme.aktivno { background: #0284c7; color: #ffffff; border-color: #0284c7; box-shadow: 0 4px 12px rgba(2,132,199,0.3); }
+        .tab-sadrzaj { display: none; }
+        .tab-sadrzaj.aktivno { display: block; }
+
+        /* KARTICE ZA PREGLED */
+        .kartica-panela { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 8px 20px rgba(0,0,0,0.04); }
+        
+        /* B2B MENADŽER */
+        .kartica-b2b { background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
+        .naslov-kartice { font-size: 18px; font-weight: bold; color: #0f172a; margin-top: 0; margin-bottom: 15px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+        
+        /* MREŽA STATISTIKE */
+        .stat-gornja-mreza { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .stat-box-plavi { background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid #0ea5e9; padding: 20px; border-radius: 10px; display: flex; flex-direction: column; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .stat-box-zeleni { background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid #10b981; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .stat-box-naslov { font-size: 12px; color: #64748b; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; }
+        .stat-broj { font-size: 38px; font-weight: 900; color: #0f172a; margin-bottom: 5px; }
+        .stat-box-plavi ul { margin: 0; padding-left: 18px; color: #334155; font-size: 13px; list-style-type: square; }
+        .stat-box-plavi li { margin-bottom: 4px; }
+
+        /* KONTROLNI DIZAJN GRAFIKONA SA SKROLOVANJEM */
+        .stat-kartica-grafik { border-left-color: #f59e0b; overflow: hidden; }
+        .grafik-kontejner-scroll { width: 100%; overflow-x: auto; height: 160px; margin-top: auto; }
+        .grafik-unutrasnji { height: 100%; min-width: 100%; position: relative; }
+        .grafik-kontejner-scroll::-webkit-scrollbar { height: 8px; }
+        .grafik-kontejner-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .grafik-kontejner-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .grafik-kontejner-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* FILTERI I TRAKE */
+        .filter-traka { background: #ffffff; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center; border: 1px solid #e2e8f0; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        
+        /* POLJA ZA UNOS - SVETLA TEMA */
+        input[type="text"], input[type="number"], select { 
+            background: #f8fafc; 
+            border: 1px solid #cbd5e1; 
+            padding: 12px; 
+            border-radius: 8px; 
+            color: #0f172a; 
+            font-size: 14px; 
+            font-weight: 600; 
+            outline: none; 
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus { border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1); background: #ffffff; }
+        
+        /* DUGMIĆI */
+        .btn-plavo { background: #0284c7; color: #ffffff; font-weight: bold; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-size: 13px; box-shadow: 0 2px 4px rgba(2,132,199,0.2); }
+        .btn-zeleno { background: #10b981; color: #ffffff; font-weight: bold; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-size: 13px; box-shadow: 0 2px 4px rgba(16,185,129,0.2); }
+        .btn-osvezi { background: #f59e0b; color: #000000; font-weight: 900; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-size: 14px; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px rgba(245,158,11,0.2); }
+        .btn-link { background: #8b5cf6; color: #ffffff; font-weight: bold; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; text-transform: uppercase; transition: background 0.2s; }
+        .btn-link:hover { background: #7c3aed; }
+        .btn-plavo:hover, .btn-zeleno:hover, .btn-osvezi:hover { transform: translateY(-1px); }
+
+        /* TABELE - SVETLA TEMA */
+        .tabela-omotac { overflow-x: auto; width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; background: #ffffff; border-radius: 8px; overflow: hidden; }
+        th { background: #f1f5f9; color: #475569; padding: 15px 12px; font-weight: bold; border-bottom: 2px solid #cbd5e1; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+        td { padding: 12px; border-bottom: 1px solid #e2e8f0; color: #334155; font-weight: 500; }
+        tr:hover { background: #f8fafc; }
+
+        .ambasador-znacka { font-size: 11px; color: #047857; background: #d1fae5; padding: 3px 8px; border-radius: 6px; font-weight: bold; display: inline-block; margin-top: 5px; border: 1px solid #34d399; }
+        .brisi-btn { color: #ef4444; background: transparent; border: none; font-weight: bold; cursor: pointer; font-size: 18px; padding: 0 5px; border-radius: 4px; }
+        .brisi-btn:hover { background: #fee2e2; }
+        .staza-tag { background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-size: 12px; margin-right: 5px; display: inline-block; font-weight: bold; color: #0369a1; border: 1px solid #cbd5e1; margin-bottom: 4px; }
+
+        /* STILOVI ZA MODAL */
+        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.7); align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+        .modal-sadrzaj { background: #ffffff; padding: 30px; border-radius: 16px; width: 80%; max-width: 700px; max-height: 80vh; overflow-y: auto; border: 1px solid #e2e8f0; text-align: left; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .modal-zaglavlje { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; }
+        .modal-zaglavlje h2 { color: #0284c7; margin: 0; text-transform: uppercase; font-weight: 900; }
+        .zatvori-modal { color: #94a3b8; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .zatvori-modal:hover { color: #0f172a; }
+        .mesec-blok { background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid #10b981; border-top: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+        .mesec-naslov { font-size: 18px; font-weight: bold; color: #047857; margin-bottom: 8px; text-transform: capitalize; }
+
+        /* Značka na kalendaru */
+        .flatpickr-day.ima-aktivnosti { background: #d1fae5 !important; border-color: #10b981 !important; color: #047857 !important; font-weight: bold; }
+        .fp-brojac { position: absolute; top: 2px; right: 2px; font-size: 9px; background: #10b981; color: #ffffff; padding: 1px 4px; border-radius: 4px; line-height: 1; font-weight: 900; }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/sr.js"></script>
+</head>
+<body>
+
+    <div class="glavni-naslov">Zdrava Potraga</div>
+    <div class="podnaslov">Kompletan hronološki, partnerski i finansijski pregled kognitivnog sistema uživo sa terena.</div>
+
+    <!-- MERAČ DNEVNOG KAPACITETA SERVERA + RUČNA BLOKADA -->
+    <div id="kontejnerKapaciteta" style="background: #ffffff; border: 1px solid #e2e8f0; border-left: 5px solid #10b981; padding: 20px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+        <div>
+            <div style="font-size: 12px; color: #64748b; font-weight: bold; text-transform: uppercase;">Dnevno opterećenje servera (Besplatni Tier)</div>
+            <div style="font-size: 24px; font-weight: 900; color: #0f172a; margin-top: 4px;">
+                Danas aktivno: <span id="statDanasAktivno" style="color: #0284c7;">0</span> / <span style="color: #94a3b8;">399 ekipa</span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div id="statusKapacitetaOznaka" style="background: #d1fae5; color: #047857; border: 1px solid #34d399; padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 13px;">
+                🟢 KAPACITET BEZBEDAN
+            </div>
+            <button id="btnRucnaBlokada" onclick="window.promeniRucnuBlokadu()" style="background: #ef4444; color: #ffffff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 13px; text-transform: uppercase; box-shadow: 0 2px 4px rgba(239,68,68,0.2);">
+                🛑 ZAKLJUČAJ ULAZE
+            </button>
+        </div>
+    </div>
+
+    <div class="tab-zaglavlje">
+        <div class="tab-meni">
+            <button class="tab-dugme aktivno" onclick="window.promeniTab('tab-teren', this)">🚶 Uživo sa terena</button>
+            <button class="tab-dugme" onclick="window.promeniTab('tab-b2b', this)">🤝 B2B Partneri & Vaučeri</button>
+            <button class="tab-dugme" onclick="window.promeniTab('tab-sefovi', this)">🔐 Kognitivni sefovi</button>
+        </div>
+        <button id="btnGlavnoOsvezavanje" class="btn-osvezi" onclick="window.osveziSvePodatke()">
+            🔄 OSVEŽI PODATKE
+        </button>
+    </div>
+
+    <!-- TAB 1: UŽIVO SA TERENA -->
+    <div id="tab-teren" class="tab-sadrzaj aktivno">
+        
+        <div class="stat-gornja-mreza">
+            <div class="stat-box-plavi">
+                <div class="stat-box-naslov">📊 Rezime za izabrani prikaz</div>
+                <div class="stat-broj" id="statUkupnoEkipa">0</div>
+                <div style="font-size: 13px; color: #64748b; margin-bottom: 10px;">Ukupno pokrenutih staza / ekipa</div>
+                <ul id="zastupljenostIgaraLista" style="line-height: 1.6; margin-top: 10px; padding-left: 15px; font-size: 13px; color: #334155;">
+                    <span style="color:#94a3b8; font-style:italic;">Podaci nisu očitani.</span>
+                </ul>
+            </div>
+            <div class="stat-box-plavi stat-kartica-grafik">
+                <div class="stat-box-naslov">📈 Hronologija opterećenja (Svi dani)</div>
+                <div class="grafik-kontejner-scroll">
+                    <div class="grafik-unutrasnji" id="grafikWrapperSve">
+                        <canvas id="hronologijaChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-box-plavi stat-kartica-grafik" style="border-left-color: #10b981;">
+                <div class="stat-box-naslov">📊 Odigrane igre za izabrani prikaz</div>
+                <div class="grafik-kontejner-scroll">
+                    <div class="grafik-unutrasnji" id="grafikWrapperDan">
+                        <canvas id="igreDanasChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-traka">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <span style="color:#475569; font-weight:bold; font-size:13px; text-transform:uppercase;">Izaberi datum:</span>
+                <input type="text" id="filterDatum" placeholder="Biraj datum..." style="width:140px;">
+                <button class="btn-plavo" onclick="window.ponistiDatum()">Prikaži sve dane</button>
+                <button class="btn-zeleno" onclick="window.otvoriMesečniIzveštaj()">📅 Mesečni izveštaj</button>
+            </div>
+            
+            <div style="margin-left:auto; display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="color:#475569; font-weight:bold; font-size:13px; text-transform:uppercase;">Status:</span>
+                    <select id="filterTerenStatus" onchange="window.osveziTabeluTerena()" style="padding: 10px; border: 2px solid #0ea5e9; font-weight: bold; border-radius: 8px; background: #ffffff; cursor: pointer;">
+                        <option value="SVE">Sve ekipe</option>
+                        <option value="AKTIVNO">🏃 Na stazi (Aktivni)</option>
+                        <option value="ZAVRSENO">🏆 Stigli do cilja</option>
+                        <option value="ISTEKLO">⌛ Isteklo vreme (Odustali)</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="color:#475569; font-weight:bold; font-size:13px; text-transform:uppercase;">Aktivnost:</span>
+                    <select id="filterStaza" onchange="window.osveziTabeluTerena()" style="padding: 10px; border-radius: 8px;">
+                        <option value="SVE">Sve aktivne potrage</option>
+                    </select>
+                    <!-- PRAVILNO POSTAVLJENO DUGME ZA TABELU USPEHA -->
+                    <button class="btn-plavo" onclick="window.prikaziRezultateTrke()" style="background: #8b5cf6; margin-left: 5px; font-weight: 900;">🏆 TABELA USPEHA</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="kartica-panela">
+            <div class="naslov-kartice">📋 Tabela sesija sa terena</div>
+            <div class="tabela-omotac">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Start / Vreme u igri</th>
+                            <th>Naziv potrage (Šifra)</th>
+                            <th>Ime ekipe / ID</th>
+                            <th>Trenutna lokacija</th>
+                            <th>Energija tima</th>
+                            <th>Status</th>
+                            <th>Fotografije</th>
+                            <th>Akcija</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaSesijaTelo">
+                        <tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:30px; font-weight:600;">Podaci miruju. Kliknite na dugme OSVEŽI PODATKE da preuzmete stanje.</td></tr>
+                    </tbody>
+                </table>
+                <div id="paginacijaKontrole" style="display: flex; justify-content: center; gap: 8px; padding: 15px; margin-top: 10px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: B2B PARTNERI I VAUČERI -->
+    <div id="tab-b2b" class="tab-sadrzaj">
+        <div class="kartica-panela kartica-b2b">
+            <div class="naslov-kartice">🔑 Menadžer VIP Kodova i Vaučera</div>
+            <p style="color: #475569; font-size: 14px; margin-top: 0; margin-bottom: 20px; font-weight: 500; line-height: 1.5;">
+                Ovo je sistem za prodaju i zakazivanje privatnih tura, kao i za dodelu promotivnih kvota promoterima. Generišite kod (npr. <b style="color: #0284c7;">RODJENDAN26</b> ili <b style="color: #8b5cf6;">123</b>), dodelite mu stazu, odaberite paket po broju uređaja ili kvotu ulaza i odredite mu rok trajanja.
+            </p>
+            
+            <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #cbd5e1;">
+                <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: block;">1. Unesite VIP / Promo Šifru</label>
+                        <input type="text" id="b2bKod" placeholder="Npr. 123 ili FILIP26" style="width: 100%; border: 2px solid #0284c7; text-transform: uppercase; box-sizing: border-box;">
+                    </div>
+                    
+                    <div style="flex: 1; min-width: 180px;">
+                        <label style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: block;">2. Dodeli Stazu iz baze</label>
+                        <select id="b2bStaza" style="width: 100%; border: 2px solid #10b981; box-sizing: border-box;">
+                            <option value="">Izaberite stazu...</option>
+                        </select>
+                    </div>
+
+                    <div style="flex: 1; min-width: 180px;">
+                        <label style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: block;">3. Ime Klijenta (Opisno)</label>
+                        <input type="text" id="b2bNaziv" placeholder="Ime kupca ili promotera" style="width: 100%; box-sizing: border-box;">
+                    </div>
+
+                    <div style="width: 100px;">
+                        <label style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: block;">4. Bonus</label>
+                        <input type="number" id="b2bBonus" placeholder="Bonus" value="50" style="width: 100%; box-sizing: border-box;">
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; border-top: 1px dashed #cbd5e1; padding-top: 15px;">
+                    <div style="flex: 1; min-width: 180px;">
+                        <label style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: block;">Veličina Paketa</label>
+                        <select id="b2bPaketUredjaja" style="width: 100%; box-sizing: border-box;">
+                            <option value="1">SOLO PAKET (1 telefon)</option>
+                            <option value="2">DUO PAKET (Do 2 telefona)</option>
+                            <option value="5" selected>GRUPNI PAKET (Do 5 telefona)</option>
+                            <option value="999">NEOGRANIČENO (Za test/velike grupe)</option>
+                        </select>
+                    </div>
+
+                    <div style="flex: 1; min-width: 220px;">
+                        <label style="font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: block;">Vremensko Ograničenje / Tip</label>
+                        <select id="b2bTipVremena" onchange="window.promeniTipVremenaUI()" style="width: 100%; box-sizing: border-box;">
+                            <option value="sati">TURISTIČKI VAUČER (Traje X sati od aktivacije)</option>
+                            <option value="datum">FIKSNI DOGAĐAJ (Zaključava se na dan i sat)</option>
+                            <option value="promo">🎁 AMBASADORSKI PROMO (Kvota solo ulaza za deljenje)</option>
+                        </select>
+                    </div>
+
+                    <div id="kontejnerSati" style="width: 120px;">
+                        <label style="font-size: 11px; font-weight: bold; color: #0284c7; text-transform: uppercase; margin-bottom: 4px; display: block;">Ističe za (Sati)</label>
+                        <input type="number" id="b2bTrajanjeSati" value="24" style="width: 100%; text-align: center; box-sizing: border-box; border-color: #0284c7; background: #e0f2fe;">
+                    </div>
+
+                    <div id="kontejnerDatuma" style="width: 180px; display: none;">
+                        <label style="font-size: 11px; font-weight: bold; color: #10b981; text-transform: uppercase; margin-bottom: 4px; display: block;">Tačan Datum i Vreme</label>
+                        <input type="text" id="b2bKrajnjiDatum" placeholder="Izaberi..." style="width: 100%; text-align: center; box-sizing: border-box; border-color: #10b981; background: #d1fae5;">
+                    </div>
+
+                    <div id="kontejnerPromo" style="width: 130px; display: none;">
+                        <label style="font-size: 11px; font-weight: bold; color: #8b5cf6; text-transform: uppercase; margin-bottom: 4px; display: block;">Promo Kvota</label>
+                        <input type="number" id="b2bPromoKvota" value="10" placeholder="Br. ulaza" style="width: 100%; text-align: center; box-sizing: border-box; border-color: #8b5cf6; background: #f3e8ff; font-weight: 900;">
+                    </div>
+
+                    <div style="flex: 1; min-width: 150px;">
+                        <button class="btn-zeleno" id="btnKreirajB2B" style="width: 100%; height: 45px; font-size: 14px;">💾 KREIRAJ PROPUSNICU</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; flex-wrap: wrap; gap: 10px;">
+                    <div style="font-weight: 800; color: #0f172a; text-transform: uppercase; font-size: 14px;">
+                        Aktivne propusnice i prodati vaučeri:
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 12px; font-weight: bold; color: #64748b; text-transform: uppercase;">Filter prikaza:</span>
+                        <select id="filterB2BStatus" onchange="window.osveziTabeluB2B()" style="padding: 8px 12px; font-size: 13px; font-weight: bold; border: 2px solid #0284c7; border-radius: 8px; background: #ffffff; cursor: pointer;">
+                            <option value="SVE">Sve propusnice i kampanje</option>
+                            <option value="AKTIVNO">🟢 Samo aktivne / otvorene</option>
+                            <option value="ZATVORENO">🔴 Samo zatvorene / potrošene</option>
+                            <option value="PROMO">🎁 Samo Promo kampanje</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="tabela-omotac">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>VIP Šifra</th>
+                                <th>Klijent / Opis</th>
+                                <th>Ciljana Staza</th>
+                                <th>Pravila (Paket / Vreme)</th>
+                                <th>Uređaji (Podeljeno)</th>
+                                <th>Stat PIN</th>
+                                <th>Status</th>
+                                <th>Akcija</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaB2BPartneriTelo">
+                            <tr><td colspan="8" style="text-align:center; color:#94a3b8; padding:20px; font-weight:600;">Podaci miruju. Kliknite na osvežavanje.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: KOGNITIVNI SEFOVI -->
+    <div id="tab-sefovi" class="tab-sadrzaj">
+        <div style="display: flex; gap: 20px; margin-bottom: 25px; flex-wrap: wrap;">
+            <div class="stat-box-plavi" style="flex: 1; min-width: 200px;">
+                <div class="stat-box-naslov">Registrovana sefa roditelja</div>
+                <div class="stat-broj" id="statUkupnoSefova">0</div>
+            </div>
+            <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 12px; justify-content: center;">
+                <button onclick="window.preuzmiEmaileSefova()" style="width: 100%; padding: 14px; background: #10b981; color: #ffffff; font-size: 14px; font-weight: 900; border: none; border-radius: 10px; cursor: pointer; text-transform: uppercase; box-shadow: 0 4px 6px rgba(16,185,129,0.2); transition: transform 0.1s;">
+                    📥 PREUZMI SVE E-MAIL ADRESE
+                </button>
+                <button onclick="window.preuzmiVipEmaile()" style="width: 100%; padding: 14px; background: #f59e0b; color: #000000; font-size: 14px; font-weight: 900; border: none; border-radius: 10px; cursor: pointer; text-transform: uppercase; box-shadow: 0 4px 6px rgba(245,158,11,0.2); transition: transform 0.1s;">
+                    👑 PREUZMI VIP EMAILE (TITULA)
+                </button>
+            </div>
+        </div>
+
+        <div class="kartica-panela">
+            <div class="naslov-kartice">🔐 Pregled akumuliranog blaga roditelja</div>
+            <div class="tabela-omotac">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>E-mail adresa (Ključ sefa)</th>
+                            <th>Sakupljeno blago</th>
+                            <th>Odigrane / Otključane rute</th>
+                            <th>Vezani telefon (Otisak)</th>
+                            <th>Akcija</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaSefovaTelo">
+                        <tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:30px; font-weight:600;">Podaci miruju. Kliknite na osvežavanje.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALNI PROZOR ZA IZVEŠTAJE -->
+    <div id="izvestaj-modal" class="modal">
+        <div class="modal-sadrzaj">
+            <div class="modal-zaglavlje">
+                <h2>📈 Izveštaj</h2>
+                <span class="zatvori-modal" onclick="window.zatvoriMesečniIzveštaj()">&times;</span>
+            </div>
+            <div id="izvestaj-modal-telo"></div>
+        </div>
+    </div>
+
+<script type="module">
+    window.PROMO_SAJT_URL = "https://mentalnagymnastika-ung.github.io/nagrade_G2H/promo/";
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, getDoc, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"; 
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB6cYBydkMN-PMMVu9zMxGUd-B8VdSPCEM",
+        authDomain: "zdrava-aktivnost.firebaseapp.com",
+        projectId: "zdrava-aktivnost",
+        storageBucket: "zdrava-aktivnost.firebasestorage.app",
+        messagingSenderId: "998592303349",
+        appId: "1:998592303349:web:af7f63de96b024ddf6b5bc"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app); 
+
+    signInAnonymously(auth).then(() => {
+        console.log("✅ Autorizovan admin pristup bazi.");
+    }).catch(err => console.error("Greška pri autorizaciji:", err));
+
+    window.promeniTab = function(tabId, dugme) {
+        document.querySelectorAll('.tab-sadrzaj').forEach(s => s.classList.remove('aktivno'));
+        document.querySelectorAll('.tab-dugme').forEach(d => d.classList.remove('aktivno'));
+        document.getElementById(tabId).classList.add('aktivno');
+        dugme.classList.add('aktivno');
+    };
+
+    let sveSesijeBaza = []; 
+    let sviSefoviEmailovi = [];
+    let vipEmailovi = []; 
+    let potrageMap = {};
+    let aktivniDaniMape = {};
+    let sviAmbasadoriBaza = []; 
+
+    let filterStazaSelect = document.getElementById('filterStaza');
+    let filterDatumInput = document.getElementById('filterDatum');
+    
+    let fp = flatpickr(filterDatumInput, {
+        locale: "sr", 
+        dateFormat: "Y-m-d", 
+        altInput: true, 
+        altFormat: "d.m.Y",
+        defaultDate: new Date(),
+        onChange: () => { window.osveziTabeluTerena(); },
+        onDayCreate: function(dObj, dStr, fpInstance, dayElem) {
+            const y = dayElem.dateObj.getFullYear();
+            const m = String(dayElem.dateObj.getMonth() + 1).padStart(2, '0');
+            const d = String(dayElem.dateObj.getDate()).padStart(2, '0');
+            const kljucDana = `${y}-${m}-${d}`;
+            if (aktivniDaniMape[kljucDana]) {
+                dayElem.classList.add("ima-aktivnosti");
+                dayElem.innerHTML += `<span class="fp-brojac">${aktivniDaniMape[kljucDana]}</span>`;
+            }
+        }
+    });
+
+    window.ponistiDatum = function() {
+        fp.clear();
+        window.osveziTabeluTerena();
+    };
+
+    let fpB2B = flatpickr("#b2bKrajnjiDatum", {
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+        time_24hr: true,
+        locale: "sr"
+    });
+
+    window.promeniTipVremenaUI = function() {
+        let tip = document.getElementById('b2bTipVremena').value;
+        let paketSelect = document.getElementById('b2bPaketUredjaja');
+        
+        document.getElementById('kontejnerSati').style.display = (tip === 'sati' || tip === 'promo') ? 'block' : 'none';
+        document.getElementById('kontejnerDatuma').style.display = (tip === 'datum') ? 'block' : 'none';
+        document.getElementById('kontejnerPromo').style.display = (tip === 'promo') ? 'block' : 'none';
+
+        if (tip === 'promo') {
+            paketSelect.disabled = true;
+            paketSelect.style.opacity = '0.5';
+        } else {
+            paketSelect.disabled = false;
+            paketSelect.style.opacity = '1';
+        }
+    };
+
+    let trenutnaStranica = 1;
+    const redovaPoStranici = 10;
+    let filtriraneSesije = [];
+
+    window.promeniStranicu = function(broj) {
+        trenutnaStranica = broj;
+        window.iscrtajTabeluTerena();
+    };
+
+    window.osveziSvePodatke = async function() {
+        let btn = document.getElementById('btnGlavnoOsvezavanje');
+        let originalTekst = btn.innerHTML;
+        btn.innerHTML = "⏳ UČITAVAM...";
+        btn.disabled = true;
+
+        try {
+            const potrageSnap = await getDocs(collection(db, "potrage"));
+            potrageMap = {};
+            let stazaSelectB2B = document.getElementById('b2bStaza');
+            stazaSelectB2B.innerHTML = '<option value="">2. IZABERITE STAZU...</option>';
+        potrageSnap.forEach(docSnap => { 
+              let podaci = docSnap.data();
+              potrageMap[docSnap.id.toLowerCase()] = podaci; 
+              let stazaSifra = docSnap.id.toUpperCase();
+              let originalniID = docSnap.id; 
+              stazaSelectB2B.innerHTML += `<option value="${originalniID}">${podaci.ime || stazaSifra} (${stazaSifra})</option>`;
+        });
+
+            let sesijeRef = collection(db, "sesije");
+            let izabranDatumStr = filterDatumInput.value;
+            let q;
+            
+            if (izabranDatumStr) {
+                let pocetak = new Date(izabranDatumStr);
+                pocetak.setHours(0, 0, 0, 0);
+                let pocetakMs = pocetak.getTime();
+                
+                let kraj = new Date(izabranDatumStr);
+                kraj.setHours(23, 59, 59, 999);
+                let krajMs = kraj.getTime();
+                
+                q = query(sesijeRef, where("kreirano", ">=", pocetakMs), where("kreirano", "<=", krajMs));
+            } else {
+                q = query(sesijeRef, orderBy("kreirano", "desc"), limit(200));
+            }
+
+            const sesijeSnap = await getDocs(q);
+            sveSesijeBaza = [];
+            aktivniDaniMape = {};
+            let danasEkipa = 0;
+            let danasnjiDatumStr = new Date().toISOString().split('T')[0];
+            
+            sesijeSnap.forEach((docSnap) => {
+                let data = docSnap.data();
+                sveSesijeBaza.push({ id: docSnap.id, ...data });
+                let dKreiranja = data.kreirano?.toDate ? data.kreirano.toDate() : new Date(data.kreirano || 0);
+                if (!isNaN(dKreiranja.getTime())) {
+                    const y = dKreiranja.getFullYear();
+                    const m = String(dKreiranja.getMonth() + 1).padStart(2, '0');
+                    const d = String(dKreiranja.getDate()).padStart(2, '0');
+                    const kljucDana = `${y}-${m}-${d}`;
+                    aktivniDaniMape[kljucDana] = (aktivniDaniMape[kljucDana] || 0) + 1;
+                    if (kljucDana === danasnjiDatumStr) danasEkipa++;
+                }
+            });
+
+            document.getElementById('statDanasAktivno').innerText = danasEkipa;
+            fp.redraw();
+            
+            trenutnaStranica = 1;
+            window.osveziTabeluTerena();
+
+            const ambasadoriSnap = await getDocs(collection(db, "ambasadori"));
+            sviAmbasadoriBaza = [];
+            ambasadoriSnap.forEach((docSnap) => sviAmbasadoriBaza.push({ id: docSnap.id, ...docSnap.data() }));
+            window.osveziTabeluB2B();
+            
+            const sefoviSnap = await getDocs(collection(db, "sefovi"));
+            let tbodySefovi = document.getElementById('tabelaSefovaTelo');
+            tbodySefovi.innerHTML = '';
+            sviSefoviEmailovi = []; 
+            vipEmailovi = []; 
+            let ukupnoSefova = 0;
+
+            if (sefoviSnap.empty) {
+                tbodySefovi.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:30px; font-weight:600;">Nijedan roditelj još uvek nije osigurao poene.</td></tr>`;
+                document.getElementById('statUkupnoSefova').innerText = '0';
+            } else {
+                sefoviSnap.forEach((docSnap) => {
+                    let data = docSnap.data();
+                    let email = docSnap.id;
+                    ukupnoSefova++;
+                    sviSefoviEmailovi.push(email); 
+                    
+                    let sefKovanice = parseInt(data.zlatnici) || 0;
+                    let stazeNiz = data.otkljucaneStaze || [];
+                    let stazeHtml = '';
+                    
+                    let imaTitulu = stazeNiz.some(sifra => String(sifra).toUpperCase() === 'TITULA') || 
+                                    (data.kupljeneNagrade && data.kupljeneNagrade.some(n => String(n).toUpperCase() === 'TITULA'));
+                    
+                    if (imaTitulu) vipEmailovi.push(email);
+                    
+                    if (stazeNiz.length === 0) {
+                        stazeHtml = `<span style="color:#64748b; font-style:italic; font-size:13px;">Samo besplatne</span>`;
+                    } else {
+                        stazeNiz.forEach(sifra => { stazeHtml += `<span class="staza-tag">✔️ ${String(sifra).toUpperCase()}</span>`; });
+                    }
+
+                    let vipOznaka = imaTitulu ? `<span title="VIP Korisnik" style="margin-left:8px; font-size:16px;">👑</span>` : '';
+                    let otisakUredjaja = data.registeredDeviceId || '';
+                    let otisakPrikaz = otisakUredjaja ? `<span style="color:#0284c7; font-family:monospace; font-size:12px; background:#f0f9ff; padding:2px 6px; border-radius:4px;">📱 Vlasnik</span>` : `<span style="color:#94a3b8; font-style:italic; font-size:12px;">Nije vezan</span>`;
+
+                    let red = document.createElement('tr');
+                    red.innerHTML = `
+                        <td style="font-family:monospace; font-size:14px; color:#0f172a; font-weight:bold;">${email} ${vipOznaka}</td>
+                        <td style="font-weight:900; color:#f59e0b; font-size:16px;">${sefKovanice} 🪙</td>
+                        <td>${stazeHtml}</td>
+                        <td>${otisakPrikaz}</td>
+                        <td style="display:flex; gap:8px; align-items:center;">
+                            <button onclick="window.resetujOtisakUredjaja('${email}')" title="Odveži Sef od telefona" style="background:#f1f5f9; color:#0f172a; border:1px solid #cbd5e1; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:11px;">
+                                🔓 Resetuj
+                            </button>
+                            <button class="brisi-btn" title="Obriši sef" onclick="window.obrisiSef('${email}')">✖</button>
+                        </td>
+                    `;
+                    tbodySefovi.appendChild(red);
+                });
+                document.getElementById('statUkupnoSefova').innerText = ukupnoSefova;
+            }
+
+            await window.proveriSistemskuBlokadu();
+
+        } catch(e) {
+            console.error(e);
+            alert("Došlo je do greške prilikom preuzimanja podataka.");
+        } finally {
+            btn.innerHTML = originalTekst;
+            btn.disabled = false;
+        }
+    };
+
+    window.osveziTabeluTerena = function() {
+        let izabranDatumStr = filterDatumInput.value; 
+        let izabranStatus = document.getElementById('filterTerenStatus')?.value || 'SVE';
+        let izabranaStaza = filterStazaSelect.value;
+        
+        filtriraneSesije = [];
+        let statistikaIgara = {};
+
+        let unikatneStazeZaDan = new Set();
+        sveSesijeBaza.forEach((data) => {
+            let dKreiranja = new Date(data.kreirano || 0);
+            let dMesec = '' + (dKreiranja.getMonth() + 1); let dDan = '' + dKreiranja.getDate();
+            if (dMesec.length < 2) dMesec = '0' + dMesec; if (dDan.length < 2) dDan = '0' + dDan;
+            let datumFormatiran = [dKreiranja.getFullYear(), dMesec, dDan].join('-');
+
+            if (!izabranDatumStr || datumFormatiran === izabranDatumStr) {
+                if (data.sifra) unikatneStazeZaDan.add(String(data.sifra).toUpperCase());
+            }
+        });
+
+        let staraVrednostStaze = filterStazaSelect.value;
+        filterStazaSelect.innerHTML = '<option value="SVE">Sve aktivne potrage</option>';
+        unikatneStazeZaDan.forEach(staza => {
+            let nazivRealni = potrageMap[staza.toLowerCase()]?.ime || 'Nepoznata staza';
+            filterStazaSelect.innerHTML += `<option value="${staza}">${nazivRealni} (${staza})</option>`;
+        });
+        
+        if (staraVrednostStaze && unikatneStazeZaDan.has(staraVrednostStaze)) {
+            filterStazaSelect.value = staraVrednostStaze;
+        } else { filterStazaSelect.value = "SVE"; }
+        
+        izabranaStaza = filterStazaSelect.value;
+        let trenutnoVreme = new Date().getTime();
+
+        sveSesijeBaza.forEach((data) => {
+            let prikazi = true;
+            let dKreiranja = new Date(data.kreirano || 0);
+            let dMesec = '' + (dKreiranja.getMonth() + 1); let dDan = '' + dKreiranja.getDate();
+            if (dMesec.length < 2) dMesec = '0' + dMesec; if (dDan.length < 2) dDan = '0' + dDan;
+            let datumFormatiran = [dKreiranja.getFullYear(), dMesec, dDan].join('-');
+            let sifraStaze = data.sifra ? String(data.sifra).toUpperCase() : 'N/A';
+
+            let istekloVreme = data.expiresAt && data.expiresAt < trenutnoVreme;
+
+            if (izabranDatumStr && datumFormatiran !== izabranDatumStr) prikazi = false;
+            if (izabranaStaza !== "SVE" && sifraStaze !== izabranaStaza) prikazi = false;
+            
+            if (izabranStatus === 'AKTIVNO' && (data.zavrsena || istekloVreme)) prikazi = false;
+            if (izabranStatus === 'ZAVRSENO' && !data.zavrsena) prikazi = false;
+            if (izabranStatus === 'ISTEKLO' && (data.zavrsena || !istekloVreme)) prikazi = false;
+
+            if (prikazi) {
+                filtriraneSesije.push(data);
+                let realniNazivStaze = potrageMap[sifraStaze.toLowerCase()]?.ime || `Šifra #${sifraStaze}`;
+                statistikaIgara[realniNazivStaze] = (statistikaIgara[realniNazivStaze] || 0) + 1;
+            }
+        });
+
+        document.getElementById('statUkupnoEkipa').innerText = filtriraneSesije.length;
+
+        let zastupljenostDiv = document.getElementById('zastupljenostIgaraLista');
+        zastupljenostDiv.innerHTML = '';
+        let sortiraneIgre = Object.entries(statistikaIgara).sort((a, b) => b[1] - a[1]);
+        if (sortiraneIgre.length === 0) {
+            zastupljenostDiv.innerHTML = '<span style="color:#64748b; font-style:italic;">Nema podataka.</span>';
+        } else {
+            sortiraneIgre.forEach(([ime, br]) => { zastupljenostDiv.innerHTML += `<li><b style="color:#0f172a;">${ime}</b>: odigrano <b>${br}</b> puta</li>`; });
+        }
+
+        let brojacPoDanimaSve = {};
+        sveSesijeBaza.forEach((data) => {
+            let dKreiranja = new Date(data.kreirano || 0);
+            if (!isNaN(dKreiranja.getTime())) {
+                let dMesec = '' + (dKreiranja.getMonth() + 1); let dDan = '' + dKreiranja.getDate();
+                if (dMesec.length < 2) dMesec = '0' + dMesec; if (dDan.length < 2) dDan = '0' + dDan;
+                let datumFormatiran = [dKreiranja.getFullYear(), dMesec, dDan].join('-');
+                let sifraStaze = data.sifra ? String(data.sifra).toUpperCase() : 'N/A';
+                
+                if (izabranaStaza === "SVE" || sifraStaze === izabranaStaza) {
+                    if (!brojacPoDanimaSve[datumFormatiran]) brojacPoDanimaSve[datumFormatiran] = { total: 0, labela: `${dDan}.${dMesec}.` };
+                    brojacPoDanimaSve[datumFormatiran].total++;
+                }
+            }
+        });
+
+        const sortiraniDaniSve = Object.keys(brojacPoDanimaSve).sort();
+        const labeleSve = sortiraniDaniSve.map(k => brojacPoDanimaSve[k].labela);
+        const vrednostiSve = sortiraniDaniSve.map(k => brojacPoDanimaSve[k].total);
+        const wrapperSve = document.getElementById('grafikWrapperSve');
+        wrapperSve.style.width = (sortiraniDaniSve.length * 40) > wrapperSve.parentElement.clientWidth ? (sortiraniDaniSve.length * 40) + 'px' : '100%';
+
+        if (window.grafikSveInstanca) window.grafikSveInstanca.destroy(); 
+        window.grafikSveInstanca = new Chart(document.getElementById('hronologijaChart').getContext('2d'), {
+            type: 'bar',
+            data: { labels: labeleSve, datasets: [{ label: 'Ukupno', data: vrednostiSve, backgroundColor: '#0ea5e9', borderRadius: 4 }] },
+            options: {
+                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 11 } } },
+                    y: { grid: { color: '#e2e8f0' }, ticks: { color: '#64748b', stepSize: 1 } }
+                }
+            }
+        });
+
+        const labeleDan = Object.keys(statistikaIgara);
+        const vrednostiDan = Object.values(statistikaIgara);
+        const wrapperDan = document.getElementById('grafikWrapperDan');
+        wrapperDan.style.width = (labeleDan.length * 60) > wrapperDan.parentElement.clientWidth ? (labeleDan.length * 60) + 'px' : '100%';
+
+        if (window.grafikDanInstanca) window.grafikDanInstanca.destroy(); 
+        window.grafikDanInstanca = new Chart(document.getElementById('igreDanasChart').getContext('2d'), {
+            type: 'bar',
+            data: { labels: labeleDan, datasets: [{ label: 'Odigrano', data: vrednostiDan, backgroundColor: '#10b981', borderRadius: 4 }] },
+            options: {
+                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#475569', font: { size: 11, weight: 'bold' } } },
+                    y: { grid: { color: '#e2e8f0' }, ticks: { color: '#64748b', stepSize: 1 } }
+                }
+            }
+        });
+
+        window.iscrtajTabeluTerena();
+    };
+
+    window.iscrtajTabeluTerena = function() {
+        let tbody = document.getElementById('tabelaSesijaTelo');
+        tbody.innerHTML = '';
+        
+        let pocetniIndeks = (trenutnaStranica - 1) * redovaPoStranici;
+        let krajnjiIndeks = pocetniIndeks + redovaPoStranici;
+        let sesijeZaPrikaz = filtriraneSesije.slice(pocetniIndeks, krajnjiIndeks);
+        let trenutnoVreme = new Date().getTime();
+
+        if (filtriraneSesije.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:30px; font-weight:600;">Nema rezultata za izabrani filter.</td></tr>`;
+        } else {
+            sesijeZaPrikaz.forEach((data) => {
+                let dKreiranjaObj = data.kreirano?.toDate ? data.kreirano.toDate() : new Date(data.kreirano || 0);
+                let dKreiranja = dKreiranjaObj.getTime();
+                let datumTekst = dKreiranjaObj.toLocaleDateString('sr-RS') + ' u ' + dKreiranjaObj.toLocaleTimeString('sr-RS', { hour: '2-digit', minute: '2-digit' });
+                
+                let sifraStaze = data.sifra ? String(data.sifra).toUpperCase() : 'N/A';
+                let potragaData = potrageMap[sifraStaze.toLowerCase()];
+                let realniNazivStaze = potragaData?.ime || `Šifra #${sifraStaze}`;
+                
+                // Računanje vremena u igri
+                let krajVremeZaPrikaz = data.vremeZavrsetka ? data.vremeZavrsetka : trenutnoVreme; 
+                let protekloMs = krajVremeZaPrikaz - dKreiranja;
+                let protekloSati = Math.floor(protekloMs / 3600000);
+                let protekloMinuti = Math.floor((protekloMs % 3600000) / 60000);
+                let vremeUIgriTekst = `${protekloSati}h ${protekloMinuti}m`;
+                
+                if (data.zavrsena && !data.vremeZavrsetka) {
+                    vremeUIgriTekst = "Završili";
+                }
+
+                // Prikaz kupljenog vremena
+                let originalnoTrajanjeMs = 3600000; 
+                if (potragaData && potragaData.trajanje) {
+                    let tr = String(potragaData.trajanje).toLowerCase();
+                    let broj = parseInt(tr.match(/\d+/) || 60);
+                    if (tr.includes('dan')) originalnoTrajanjeMs = broj * 86400000;
+                    else if (tr.includes('sat')) originalnoTrajanjeMs = broj * 3600000;
+                    else if (tr.includes('neograničen')) originalnoTrajanjeMs = 31536000000;
+                    else originalnoTrajanjeMs = broj * 60000;
+                }
+                
+                let pomocTekst = "";
+                let ocekivaniIstek = dKreiranja + originalnoTrajanjeMs;
+                if (data.expiresAt && data.expiresAt > (ocekivaniIstek + 60000)) { 
+                    let kupljenoMinuta = Math.round((data.expiresAt - ocekivaniIstek) / 60000);
+                    pomocTekst = `<br><span style="font-size:11px; color:#f59e0b; font-weight:900;">⏱️ Kupljeno +${kupljenoMinuta} min</span>`;
+                }
+                
+                let istekloVreme = data.expiresAt && data.expiresAt < trenutnoVreme;
+                let statusHtml = '';
+                if (data.zavrsena) {
+                    statusHtml = `<span style="color:#10b981; font-weight:bold;">🏆 ZAVRŠENO</span>`;
+                } else if (istekloVreme) {
+                    statusHtml = `<span style="color:#f59e0b; font-weight:bold;">⌛ ISTEKLO VREME</span>`;
+                } else {
+                    statusHtml = `<span style="color:#0284c7; font-weight:bold;">🏃 NA STAZI</span>`;
+                }
+
+                let galerijaHtml = '';
+                if (data.galerijaServer && data.galerijaServer.length > 0) {
+                galerijaHtml = `<button onclick="window.prikaziSlike('${data.id}')" style="background:#10b981; color:white; border:none; padding:6px 10px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:11px; box-shadow: 0 2px 4px rgba(16,185,129,0.3);">📸 PRIKAŽI (${data.galerijaServer.length})</button>`;
+                } else {
+                galerijaHtml = `<span style="color:#94a3b8; font-size:11px; font-weight:bold;">Nema slika</span>`;
+                }
+
+                let imeTrenutnogPina = "Nepoznata lokacija";
+                if (data.pinovi && data.pinovi[data.trenutniIndeks]) {
+                    imeTrenutnogPina = data.pinovi[data.trenutniIndeks].imeLokacije || "Lokacija " + (data.trenutniIndeks + 1);
+                }
+
+                let red = document.createElement('tr');
+                red.innerHTML = `
+                    <td style="color:#475569; font-size:13px;">
+                        ${datumTekst}<br>
+                        <span style="font-weight:900; color:#0f172a;">⏱️ ${vremeUIgriTekst}</span>
+                        ${pomocTekst}
+                    </td>
+                    <td><b style="color:#0f172a;">${realniNazivStaze}</b> <br><span style="font-size:11px; color:#64748b;">#${sifraStaze}</span></td>
+                    <td style="font-size:14px; font-weight:bold;">${data.imePrikaz || 'Ekipa'}</td>
+                    <td style="font-weight:600;">
+                        Tačka: ${data.trenutniIndeks + 1} / ${data.pinovi ? data.pinovi.length : '?'} <br>
+                        <span style="font-size:11px; color:#0284c7;">📍 ${imeTrenutnogPina}</span>
+                    </td>
+                    <td style="font-weight:bold; color:${data.zdravlje > 30 ? '#10b981' : '#ef4444'}">🍏 ${data.zdravlje || 0}%</td>
+                    <td>${statusHtml}</td>
+                    <td>${galerijaHtml}</td>
+                    <td><button class="brisi-btn" title="Obriši ekipu" onclick="window.obrisiSesiju('${data.id}')">✖</button></td>
+                `;
+                tbody.appendChild(red);
+            });
+        }
+        window.iscrtajPaginaciju();
+    };
+
+    window.iscrtajPaginaciju = function() {
+        let kontejner = document.getElementById('paginacijaKontrole');
+        if (!kontejner) return;
+        kontejner.innerHTML = '';
+        
+        let ukupnoStranica = Math.ceil(filtriraneSesije.length / redovaPoStranici);
+        
+        if (ukupnoStranica > 1) {
+            for (let i = 1; i <= ukupnoStranica; i++) {
+                let dugme = document.createElement('button');
+                dugme.innerText = i;
+                dugme.style.padding = '8px 14px';
+                dugme.style.border = '1px solid #cbd5e1';
+                dugme.style.borderRadius = '8px';
+                dugme.style.cursor = 'pointer';
+                dugme.style.fontWeight = 'bold';
+                dugme.style.fontSize = '14px';
+                dugme.style.background = (i === trenutnaStranica) ? '#0ea5e9' : '#f8fafc';
+                dugme.style.color = (i === trenutnaStranica) ? '#ffffff' : '#475569';
+                dugme.onclick = () => window.promeniStranicu(i);
+                kontejner.appendChild(dugme);
+            }
+        }
+    };
+
+    window.prikaziRezultateTrke = function() {
+    if (filtriraneSesije.length === 0) {
+        alert("Nema aktivnih ekipa na izabranoj stazi za odabrani dan.");
+        return;
+    }
+
+    let rangLista = [...filtriraneSesije];
+    let trenutnoVreme = new Date().getTime();
+
+    // Precizno računanje bodova sa faktorom brzine
+    rangLista.forEach(ekipa => {
+        let dKreiranjaObj = ekipa.kreirano?.toDate ? ekipa.kreirano.toDate() : new Date(ekipa.kreirano || 0);
+        let dKreiranja = dKreiranjaObj.getTime();
+        
+        // Određivanje realnog vremena aktivnosti
+        let krajAktivnosti = ekipa.vremeZavrsetka ? ekipa.vremeZavrsetka : (ekipa.expiresAt && ekipa.expiresAt < trenutnoVreme ? ekipa.expiresAt : trenutnoVreme);
+        let utrosenoMinuta = Math.max(1, Math.round((krajAktivnosti - dKreiranja) / 60000));
+        ekipa.utrosenoMinuta = utrosenoMinuta;
+
+        // 1. Bodovi za pređene tačke (100 po tački)
+        let bodoviTacke = (ekipa.trenutniIndeks || 0) * 100;
+        
+        // 2. Bodovi za sačuvanu energiju (20 po procentu)
+        let bodoviEnergija = (ekipa.zdravlje || 0) * 20;
+        
+        // 3. Fiksni bonus za uspešan dolazak na cilj
+        let bonusZavrseno = ekipa.zavrsena ? 3000 : 0; 
+        
+        // 4. Faktor brzine: Svaki minut proveden na stazi blago diferencira skor (2 boda po minutu)
+        let brzinskiOdbitak = utrosenoMinuta * 2;
+        
+        ekipa.ukupanSkor = Math.max(0, bodoviTacke + bodoviEnergija + bonusZavrseno - brzinskiOdbitak);
+    });
+
+    // Sortiranje: Prvo po skoru, zatim po energiji, a na kraju po brzini (manje minuta pobeđuje)
+    rangLista.sort((a, b) => {
+        if (b.ukupanSkor !== a.ukupanSkor) {
+            return b.ukupanSkor - a.ukupanSkor;
+        }
+        if (b.zdravlje !== a.zdravlje) {
+            return b.zdravlje - a.zdravlje;
+        }
+        return a.utrosenoMinuta - b.utrosenoMinuta;
+    });
+
+    let modalTelo = document.getElementById("izvestaj-modal-telo");
+    modalTelo.innerHTML = `<h3 style="color:#8b5cf6; text-align:center; margin-top:0;">🏆 TAKMIČARSKA TABELA USPEHA</h3>`;
+    
+    let listaHtml = '<div style="display:flex; flex-direction:column; gap:10px;">';
+    rangLista.forEach((ekipa, index) => {
+        let medalja = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `<span style="color:#64748b; font-size:16px;">${index + 1}.</span>`;
+        let bojaPozadine = index === 0 ? "#fef3c7" : index === 1 ? "#f1f5f9" : index === 2 ? "#ffedd5" : "#ffffff";
+        
+        let istekloVreme = ekipa.expiresAt && ekipa.expiresAt < trenutnoVreme;
+        let statusTekst = ekipa.zavrsena ? '🏆 ZAVRŠILI' : istekloVreme ? '⌛ ISTEKLO VREME' : '🏃 NA STAZI';
+        
+        let satiPrikaz = Math.floor(ekipa.utrosenoMinuta / 60);
+        let minutiPrikaz = ekipa.utrosenoMinuta % 60;
+        let vremeTekstPrikaz = satiPrikaz > 0 ? `${satiPrikaz}h ${minutiPrikaz}m` : `${minutiPrikaz}m`;
+
+        listaHtml += `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:${bojaPozadine}; border:1px solid #cbd5e1; border-radius:10px;">
+                <div style="font-size:24px; font-weight:900; width:40px; text-align:center;">${medalja}</div>
+                <div style="flex-grow:1; padding-left:10px;">
+                    <b style="color:#0f172a; font-size:16px;">${ekipa.imePrikaz || 'Ekipa'}</b><br>
+                    <span style="font-size:12px; color:#64748b; font-weight:bold;">${statusTekst}</span>
+                </div>
+                <div style="text-align:right; border-right: 2px solid #cbd5e1; padding-right: 15px; margin-right: 15px;">
+                    <div style="font-weight:900; color:#8b5cf6; font-size:18px;">${ekipa.ukupanSkor} pts</div>
+                    <span style="font-size:11px; color:#64748b; font-weight:bold;">⏱️ ${vremeTekstPrikaz}</span>
+                </div>
+                <div style="text-align:right; min-width: 80px;">
+                    <div style="font-weight:900; color:#0284c7; font-size:14px;">Tačka: ${ekipa.trenutniIndeks + 1}</div>
+                    <div style="font-weight:bold; color:#10b981; font-size:13px;">🍏 ${ekipa.zdravlje || 0}%</div>
+                </div>
+            </div>
+        `;
+    });
+    listaHtml += '</div>';
+    
+    modalTelo.innerHTML += listaHtml;
+    document.getElementById("izvestaj-modal").style.display = "flex";
+};
+
+    window.kopirajPromoLink = function(kod, pin) {
+        let gotovLink = `${window.PROMO_SAJT_URL}?kod=${kod}&pin=${pin}`;
+        navigator.clipboard.writeText(gotovLink).then(() => {
+            alert(`✅ BEZBEDNI LINK JE KOPIRAN U MEMORIJU!\n\n${gotovLink}\n\nSada ga možete zalepiti (Paste) i poslati partneru.`);
+        }).catch(() => {
+            prompt("Kopirajte ovaj bezbedni link za partnera:", gotovLink);
+        });
+    };
+
+    window.osveziTabeluB2B = function() {
+        let tbodyB2B = document.getElementById('tabelaB2BPartneriTelo');
+        let izabranFilter = document.getElementById('filterB2BStatus')?.value || 'SVE';
+        tbodyB2B.innerHTML = '';
+        
+        let prikazanoBroj = 0;
+
+        sviAmbasadoriBaza.forEach((data) => {
+            let kod = data.id;
+            let ukupnoUredjaja = data.registrovanUredjaji ? data.registrovanUredjaji.length : 0;
+            let maxUredjaja = data.maxUredjaja || 1;
+            let jePromo = (data.tipOgranicenja === 'promo' || data.tipVaucera === 'PROMO');
+            
+            let aktivan = data.aktivan !== false;
+            let punoKapaciteta = maxUredjaja !== 999 && ukupnoUredjaja >= maxUredjaja;
+            let jeOtvoreno = aktivan && !punoKapaciteta;
+
+            if (izabranFilter === 'AKTIVNO' && !jeOtvoreno) return;
+            if (izabranFilter === 'ZATVORENO' && jeOtvoreno) return;
+            if (izabranFilter === 'PROMO' && !jePromo) return;
+
+            prikazanoBroj++;
+            let prikazUredjaja = maxUredjaja === 999 ? `${ukupnoUredjaja} / ∞` : `${ukupnoUredjaja} / ${maxUredjaja}`;
+            
+            let pravilaTekst = "";
+            let bojaUredjaja = jeOtvoreno ? "#10b981" : "#ef4444"; 
+            
+            if (data.tipOgranicenja === 'datum') {
+                let fiksniDate = new Date(data.isticneFiksno);
+                pravilaTekst = `Ističe: <b style="color:#ef4444;">${fiksniDate.toLocaleDateString('sr-RS')} u ${fiksniDate.toLocaleTimeString('sr-RS', {hour:'2-digit', minute:'2-digit'})}</b>`;
+                pravilaTekst += `<br><span style="font-size:11px; color:#64748b;">Paket: ${maxUredjaja === 999 ? 'Neograničen' : maxUredjaja + ' tel.'}</span>`;
+            } else if (jePromo) {
+                pravilaTekst = `<span style="background:#f3e8ff; color:#6b21a8; padding:3px 8px; border-radius:4px; font-weight:bold; font-size:11px; border: 1px solid #c084fc;">🎁 PROMO KAMPANJA</span>`;
+                pravilaTekst += `<br><span style="font-size:11px; color:#64748b;">Ambasadorski paket (${data.trajanjeSati || 24}h po ulazu)</span>`;
+                bojaUredjaja = jeOtvoreno ? "#8b5cf6" : "#ef4444";
+            } else {
+                pravilaTekst = `Traje <b style="color:#0284c7;">${data.trajanjeSati || 24}h</b> po aktivaciji`;
+                pravilaTekst += `<br><span style="font-size:11px; color:#64748b;">Paket: ${maxUredjaja === 999 ? 'Neograničen' : maxUredjaja + ' tel.'}</span>`;
+            }
+
+            let statusHtml = '';
+            if (!jeOtvoreno) {
+                statusHtml = `<span style="background:#fee2e2; color:#b91c1c; border:1px solid #f87171; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:11px;">🔴 ZATVORENO</span>`;
+            } else {
+                statusHtml = `<span style="background:#d1fae5; color:#047857; border:1px solid #34d399; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:11px;">🟢 AKTIVNO</span>`;
+            }
+
+            let stazaKod = (data.stazaPoveznica || 'NEPOZNATO').toUpperCase();
+            let stazaIme = potrageMap[stazaKod.toLowerCase()]?.ime || 'Nepoznat naziv staze';
+            let statPin = data.statPin || "NEMA";
+
+            let red = document.createElement('tr');
+            red.innerHTML = `
+                <td style="font-weight:900; color:#0284c7; font-size:15px;">${kod}</td>
+                <td style="font-weight:600; color:#334155;">${data.naziv || 'Klijent'}</td>
+                <td>
+                    <b style="color:#0f172a;">${stazaIme}</b>
+                    <br><span style="font-size:11px; color:#0284c7; font-weight:900;">(#${stazaKod})</span>
+                </td>
+                <td style="font-size:13px;">${pravilaTekst}</td>
+                <td style="font-weight:bold; font-size:16px; color:${bojaUredjaja};">${prikazUredjaja}</td>
+                <td style="font-weight:900; color:#8b5cf6; font-family:monospace; font-size:15px;">${statPin}</td>
+                <td>${statusHtml}</td>
+                <td style="display:flex; gap:6px; align-items:center;">
+                    <button class="btn-link" title="Kopiraj tajni link za promotera" onclick="window.kopirajPromoLink('${kod}', '${statPin}')">🔗 Link</button>
+                    <button class="brisi-btn" title="Obriši vaučer" onclick="window.obrisiAmbasadora('${kod}')">✖</button>
+                </td>
+            `;
+            tbodyB2B.appendChild(red);
+        });
+
+        if (prikazanoBroj === 0) {
+            tbodyB2B.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#94a3b8; padding:20px; font-style:italic;">Nema rezultata za izabrani filter.</td></tr>`;
+        }
+    };
+
+    let btnKreiraj = document.getElementById('btnKreirajB2B');
+    btnKreiraj.onclick = async () => {
+        let kod = document.getElementById('b2bKod').value.trim().toUpperCase();
+        let staza = document.getElementById('b2bStaza').value.trim();
+        let naziv = document.getElementById('b2bNaziv').value.trim();
+        let bonus = parseInt(document.getElementById('b2bBonus').value) || 0;
+        
+        let paketUredjaja = parseInt(document.getElementById('b2bPaketUredjaja').value) || 1;
+        let tipVremena = document.getElementById('b2bTipVremena').value;
+        let trajanjeSati = parseInt(document.getElementById('b2bTrajanjeSati').value) || 24;
+        let krajnjiDatum = document.getElementById('b2bKrajnjiDatum').value;
+        let promoKvota = parseInt(document.getElementById('b2bPromoKvota').value) || 10;
+
+        if (!kod || !staza || !naziv) { 
+            alert("Morate uneti VIP/Promo Šifru, izabrati stazu iz menija i uneti ime kupca ili promotera!"); 
+            return; 
+        }
+
+        if (tipVremena === 'datum' && !krajnjiDatum) {
+            alert("Morate izabrati datum i vreme kada ističe fiksni događaj!");
+            return;
+        }
+
+        btnKreiraj.innerText = "⏳ ČUVAM...";
+        try {
+            const postojeciDoc = await getDoc(doc(db, "ambasadori", kod));
+            if (postojeciDoc.exists()) {
+                alert(`⚠️ GREŠKA: Šifra "${kod}" već postoji u bazi!\nUnesite drugu VIP/Promo šifru ili obrišite staru.`);
+                btnKreiraj.innerText = "💾 KREIRAJ PROPUSNICU";
+                return;
+            }
+
+            let maxKapacitet = (tipVremena === 'promo') ? promoKvota : paketUredjaja;
+            let automatskiPin = String(Math.floor(1000 + Math.random() * 9000));
+
+            let podaciZaBazu = {
+                aktivan: true,
+                naziv: naziv,
+                stazaPoveznica: staza,
+                bonus: bonus,
+                maxUredjaja: maxKapacitet,
+                registrovanUredjaji: [], 
+                upotrebljenoPuta: 0,
+                tipOgranicenja: tipVremena,
+                vremeAktivacije: null,
+                statPin: automatskiPin
+            };
+
+            if (tipVremena === 'sati') {
+                podaciZaBazu.trajanjeSati = trajanjeSati;
+            } else if (tipVremena === 'datum') {
+                podaciZaBazu.isticneFiksno = new Date(krajnjiDatum).getTime();
+            } else if (tipVremena === 'promo') {
+                podaciZaBazu.tipVaucera = 'PROMO';
+                podaciZaBazu.trajanjeSati = trajanjeSati;
+            }
+
+            await setDoc(doc(db, "ambasadori", kod), podaciZaBazu);
+            document.getElementById('b2bKod').value = ''; 
+            document.getElementById('b2bNaziv').value = ''; 
+            alert(`✅ Propusnica "${kod}" je uspešno kreirana!\n\nTajni PIN za evidenciju: ${automatskiPin}`);
+            window.osveziSvePodatke();
+        } catch (e) {
+            alert("Greška pri kreiranju koda: " + e.message);
+        } finally {
+            btnKreiraj.innerText = "💾 KREIRAJ PROPUSNICU";
+        }
+    };
+
+    window.obrisiAmbasadora = async function(kod) {
+        if (confirm(`Brisanjem koda "${kod}" trajno onemogućavate ulaz sa ovim vaučerom. Nastaviti?`)) {
+            await deleteDoc(doc(db, "ambasadori", kod));
+            window.osveziSvePodatke();
+        }
+    };
+
+    window.obrisiSesiju = async function(id) {
+        if (confirm("Da li ste sigurni da želite trajno da obrišete ovu ekipu sa terena?")) {
+            await deleteDoc(doc(db, "sesije", id));
+            window.osveziSvePodatke(); 
+        }
+    };
+
+    window.obrisiSef = async function(email) {
+        if (confirm(`Da li ste sigurni da želite trajno da obrišete sef za imejl "${email}"? Svi sakupljeni zlatnici i rute biće nepovratno uklonjeni.`)) {
+            await deleteDoc(doc(db, "sefovi", email));
+            window.osveziSvePodatke(); 
+        }
+    };
+
+    window.resetujOtisakUredjaja = async function(email) {
+        if (confirm(`Da li ste sigurni da želite da resetujete telefon za Sef "${email}"? Korisnik će moći da se prijavi na novom uređaju.`)) {
+            await setDoc(doc(db, "sefovi", email), { registeredDeviceId: "" }, { merge: true });
+            alert(`Sef je uspešno odvezan!`);
+            window.osveziSvePodatke();
+        }
+    };
+
+    window.proveriSistemskuBlokadu = async function() {
+        const docSnap = await getDoc(doc(db, "podesavanja", "sistem"));
+        let btn = document.getElementById('btnRucnaBlokada');
+        window.sistemskaBlokadaAktivna = docSnap.exists() && docSnap.data().blokadaAktivna === true;
+        
+        if (btn) {
+            btn.innerHTML = window.sistemskaBlokadaAktivna ? "🔓 OTKLJUČAJ ULAZE" : "🛑 ZAKLJUČAJ ULAZE";
+            btn.style.background = window.sistemskaBlokadaAktivna ? "#10b981" : "#ef4444";
+        }
+    };
+
+    window.promeniRucnuBlokadu = async function() {
+        let novaVrednost = !window.sistemskaBlokadaAktivna;
+        if (confirm(novaVrednost ? "Sigurno ZAKLJUČAVATE sve nove ulaze?" : "OTKLJUČAVATE ulaze za nove ekipe?")) {
+            await setDoc(doc(db, "podesavanja", "sistem"), { blokadaAktivna: novaVrednost }, { merge: true });
+            await window.proveriSistemskuBlokadu();
+        }
+    };
+
+    window.otvoriMesečniIzveštaj = function() {
+        let modalTelo = document.getElementById("izvestaj-modal-telo");
+        modalTelo.innerHTML = "";
+        let poMesecima = {};
+
+        sveSesijeBaza.forEach(data => {
+            let kreiranoDate = data.kreirano?.toDate ? data.kreirano.toDate() : new Date(data.kreirano);
+            if (isNaN(kreiranoDate.getTime())) return;
+
+            let nazivMesecaIGodina = kreiranoDate.toLocaleString('sr-RS', { month: 'long', year: 'numeric' });
+            if (!poMesecima[nazivMesecaIGodina]) poMesecima[nazivMesecaIGodina] = { ukupno: 0, uspesno: 0, staze: {} };
+
+            poMesecima[nazivMesecaIGodina].ukupno++;
+            if (data.zavrsena) poMesecima[nazivMesecaIGodina].uspesno++;
+
+            let sifraKljuč = String(data.sifra || "").trim().toUpperCase();
+            let nazivStaze = potrageMap[sifraKljuč.toLowerCase()]?.ime || `Šifra #${sifraKljuč}`;
+            poMesecima[nazivMesecaIGodina].staze[nazivStaze] = (poMesecima[nazivMesecaIGodina].staze[nazivStaze] || 0) + 1;
+        });
+
+        const stavkeMesečne = Object.entries(poMesecima);
+        if (stavkeMesečne.length === 0) {
+            modalTelo.innerHTML = "<p style='color:#64748b; text-align:center; font-weight:bold;'>Nema podataka.</p>";
+        } else {
+            stavkeMesečne.forEach(([mesec, info]) => {
+                let listaStazaHtml = Object.entries(info.staze).map(([ime, broj]) => `<li><b style="color:#0f172a;">${ime}</b>: ${broj} timova</li>`).join("");
+                let procenatUspesnosti = info.ukupno > 0 ? Math.round((info.uspesno / info.ukupno) * 100) : 0;
+
+                modalTelo.innerHTML += `
+                    <div class="mesec-blok">
+                        <div class="mesec-naslov">${mesec}</div>
+                        <p style="margin: 5px 0; font-size:14px; color:#475569; font-weight:500;">
+                            Pokrenutih igara: <b style="color:#0f172a;">${info.ukupno}</b> | Završeno: <b style="color:#10b981;">${info.uspesno}</b> (${procenatUspesnosti}% uspešnost)
+                        </p>
+                        <ul style="margin: 10px 0 0 0; padding-left:20px; font-size:13px; color:#64748b;">${listaStazaHtml}</ul>
+                    </div>
+                `;
+            });
+        }
+        document.getElementById("izvestaj-modal").style.display = "flex";
+    };
+
+    window.zatvoriMesečniIzveštaj = function() { document.getElementById("izvestaj-modal").style.display = "none"; };
+
+    // SLIKE SESIJE KOJE STIZU SA TERENA
+
+    window.prikaziSlike = function(id) {
+    let sesija = sveSesijeBaza.find(s => s.id === id);
+    if (!sesija || !sesija.galerijaServer || sesija.galerijaServer.length === 0) return;
+
+    let stariModal = document.getElementById('modalSlikePrew');
+    if (stariModal) stariModal.remove();
+
+    let modal = document.createElement('div');
+    modal.id = 'modalSlikePrew';
+    modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.85); display:flex; justify-content:center; align-items:center; z-index:99999; padding:20px; box-sizing:border-box; backdrop-filter:blur(4px);";
+    
+    let slikeHtml = sesija.galerijaServer.map(img => `<img src="${img}" style="width:100%; max-height:400px; object-fit:contain; border-radius:8px; margin-bottom:15px; border:2px solid #e2e8f0; background:#f8fafc;">`).join('');
+
+    modal.innerHTML = `
+        <div style="background:#fff; padding:25px; border-radius:16px; max-width:450px; width:100%; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.5); max-height:85vh; display:flex; flex-direction:column;">
+            <h3 style="color:#0f172a; margin-top:0; font-weight:900;">📸 Uspomene: ${sesija.imePrikaz || 'Ekipa'}</h3>
+            <div style="overflow-y:auto; flex-grow:1; padding-right:5px; margin-bottom:15px;">
+                ${slikeHtml}
+            </div>
+            <div style="display:flex; gap:10px; flex-shrink:0;">
+                <button onclick="window.obrisiSlikeSesije('${id}')" style="flex:1; background:#ef4444; color:white; border:none; padding:12px; border-radius:8px; font-weight:900; cursor:pointer;">🗑️ OBRIŠI SLIKE</button>
+                <button onclick="document.getElementById('modalSlikePrew').remove()" style="flex:1; background:#64748b; color:white; border:none; padding:12px; border-radius:8px; font-weight:900; cursor:pointer;">✖ ZATVORI</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+};
+
+window.obrisiSlikeSesije = async function(id) {
+    if (!confirm("Da li ste sigurni da želite trajno da obrišete ove slike iz baze kako biste oslobodili prostor?")) return;
+    
+    document.getElementById('modalSlikePrew').innerHTML = '<h3 style="color:white; text-align:center;">⏳ Brišem uspomene i oslobađam bazu...</h3>';
+    
+    try {
+        await setDoc(doc(db, "sesije", id), { galerijaServer: [] }, { merge: true });
+        document.getElementById('modalSlikePrew').remove();
+        window.osveziSvePodatke(); 
+    } catch (e) {
+        alert("Greška pri brisanju: " + e.message);
+    }
+};
+
+
+    window.onload = function() { 
+        window.osveziSvePodatke(); 
+        
+        // Živi sat: osvežava proteklo vreme na svakih 30 sekundi za aktivne ekipe
+        setInterval(() => {
+            if (typeof window.iscrtajTabeluTerena === 'function') {
+                window.iscrtajTabeluTerena();
+            }
+        }, 30000);
+    };
+</script>
+</body>
+</html>

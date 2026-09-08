@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Trezor Banke</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+        
+        body { 
+            background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .digital-font { font-family: 'Space Mono', monospace; }
+
+        .key-btn {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            box-shadow:  4px 4px 8px #080c16, -4px -4px 8px #16223e;
+            transition: all 0.1s ease;
+        }
+        
+        .key-btn:active {
+            box-shadow: inset 4px 4px 8px #080c16, inset -4px -4px 8px #16223e;
+        }
+
+        .screen-glow {
+            background-color: #0f2e1a;
+            box-shadow: inset 0 0 15px #021a0d, 0 0 10px rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+            text-shadow: 0 0 5px #4ade80;
+        }
+        
+        .screen-error {
+            background-color: #450a0a;
+            box-shadow: inset 0 0 15px #240505, 0 0 10px rgba(248, 113, 113, 0.2);
+            color: #f87171;
+            text-shadow: 0 0 5px #f87171;
+        }
+
+        .vault-door {
+            transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: left center;
+        }
+        
+        .vault-open .vault-door {
+            transform: perspective(1200px) rotateY(-105deg);
+        }
+
+        .vault-content {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 1s ease 0.5s;
+        }
+
+        .vault-open .vault-content {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .wheel { transition: transform 0.3s ease; }
+        
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+
+        .zasticena-slika {
+            pointer-events: none;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col items-center justify-center">
+
+    <div id="vault-container" class="relative w-full max-w-md h-[90vh] bg-slate-900 border-8 border-slate-700 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden flex items-center justify-center">
+        
+        <!-- Sadržaj UNUTAR trezora -->
+        <div id="reward-container" class="vault-content absolute inset-0 bg-slate-900 flex flex-col items-center justify-center p-8 text-center z-0">
+            <div class="w-24 h-24 bg-yellow-500/20 rounded-full flex items-center justify-center mb-6 border-2 border-yellow-600/50 shadow-[0_0_30px_rgba(234,179,8,0.3)]">
+                <i class="fa-solid fa-sack-dollar text-5xl text-yellow-500"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-white mb-2 uppercase tracking-wide">TREZOR OTVOREN</h2>
+            <p class="text-slate-400 mb-8 text-sm uppercase tracking-widest font-bold">Pristup Sredstvima Odobren</p>
+            
+            <div id="reward-image-box" class="hidden w-full mb-4">
+                <a id="reward-image-link" href="#" target="_blank" class="block transition transform hover:scale-105">
+                    <img id="reward-image" src="" alt="Sadržaj trezora" class="zasticena-slika w-full h-auto max-h-48 object-contain rounded-lg border-2 border-yellow-600/50 shadow-[0_0_20px_rgba(234,179,8,0.4)] cursor-pointer">
+                    <p id="reward-image-hint" class="hidden text-xs text-yellow-400 mt-3 font-bold uppercase animate-pulse"><i class="fa-solid fa-hand-pointer"></i> Klikni na sliku da otvoriš kapsulu</p>
+                </a>
+            </div>
+
+            <div id="reward-text-box" class="hidden w-full bg-slate-800 border-l-4 border-yellow-500 p-6 shadow-inner text-lg text-slate-200 rounded-r-lg text-left break-all"></div>
+            
+            <div id="reward-link-box" class="hidden w-full">
+                <p class="mb-6 text-slate-300">Bankovni transfer je spreman za izvršenje.</p>
+                <a id="reward-link-btn" href="#" target="_blank" class="inline-block w-full bg-blue-700 hover:bg-blue-600 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(29,78,216,0.4)] transition transform hover:scale-105 active:scale-95 uppercase tracking-wide border border-blue-500">
+                    <i class="fa-solid fa-money-bill-transfer mr-2"></i> Izvrši Transfer 
+                </a>
+            </div>
+        </div>
+
+        <!-- VRATA TREZORA -->
+        <div class="vault-door absolute inset-0 bg-slate-800 border-r-8 border-slate-600 z-10 flex flex-col items-center justify-between py-8 shadow-[20px_0_30px_rgba(0,0,0,0.8)]">
+            
+            <div class="w-full flex flex-col items-center justify-center mt-2">
+                <div class="text-yellow-500 text-sm tracking-widest uppercase font-bold mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-building-columns"></i> Centralna Banka
+                </div>
+
+                <div class="w-32 h-32 rounded-full border-4 border-slate-500 bg-slate-700 flex items-center justify-center shadow-lg relative wheel" id="vault-wheel">
+                    <div class="absolute w-full h-3 bg-slate-500"></div>
+                    <div class="absolute h-full w-3 bg-slate-500"></div>
+                    <div class="w-16 h-16 rounded-full border-4 border-slate-500 bg-slate-800 z-10 shadow-inner flex items-center justify-center">
+                        <i id="lock-icon" class="fa-solid fa-lock text-slate-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- UNOS KODA UMESNO DUGMIĆA -->
+            <div class="w-[85%] bg-slate-900 p-5 rounded-2xl border-2 border-slate-700 shadow-2xl mb-4 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-600 to-transparent"></div>
+                
+                <input type="text" id="sifra-unos" maxlength="15" class="w-full h-16 rounded-lg mb-5 flex items-center justify-center digital-font text-2xl tracking-widest screen-glow transition-colors duration-300 border border-slate-800 text-center uppercase focus:outline-none focus:border-yellow-500" placeholder="UNESI KOD">
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <button class="key-btn h-14 rounded-xl text-lg font-bold text-red-500" onclick="obrisiUnos()"><i class="fa-solid fa-xmark mr-1"></i> OBRIŠI</button>
+                    <button class="key-btn h-14 rounded-xl text-lg font-bold text-green-500" onclick="potvrdiUnos()"><i class="fa-solid fa-unlock mr-1"></i> OTKLJUČAJ</button>
+                </div>
+            </div>
+            
+            <div class="text-slate-500 text-[10px] tracking-widest uppercase font-mono">
+                Security Protocol v4.0
+            </div>
+        </div>
+
+        <div id="error-overlay" class="hidden absolute inset-0 bg-slate-900 z-50 flex flex-col items-center justify-center p-8 text-center border-t-4 border-red-600">
+            <i class="fa-solid fa-building-circle-xmark text-6xl text-red-600 mb-6 drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]"></i>
+            <h2 class="text-2xl font-bold text-white mb-2 uppercase tracking-wide">NEVAŽEĆI BANKOVNI NALOG</h2>
+            <p class="text-slate-400">Podaci o računu nedostaju ili su oštećeni. Molimo skenirajte QR kod ponovo.</p>
+        </div>
+
+    </div>
+
+    <script>
+        let ocekivanaSifra = "";
+        let vrstaNagrade = "";
+        let sadrzajNagrade = "";
+        let dodatnaSlika = "";
+        
+        const ekran = document.getElementById('sifra-unos');
+        const tocak = document.getElementById('vault-wheel');
+        let tocakRotacija = 0;
+
+        window.onload = function() {
+            izvuciPodatkeIzURL();
+        };
+
+        // Omogućava pritisak na "Enter" na tastaturi telefona
+        ekran.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                potvrdiUnos();
+            }
+        });
+
+        function izvuciPodatkeIzURL() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const kriptovano = urlParams.get('q');
+                
+                if (!kriptovano) {
+                    prikaziGreskuBaze();
+                    return;
+                }
+
+                const jsonString = decodeURIComponent(atob(kriptovano));
+                const podaci = JSON.parse(jsonString);
+
+                ocekivanaSifra = podaci.s;
+                vrstaNagrade = podaci.v;
+                sadrzajNagrade = podaci.n;
+                if(podaci.i) dodatnaSlika = podaci.i;
+
+            } catch (error) {
+                prikaziGreskuBaze();
+            }
+        }
+
+        function prikaziGreskuBaze() {
+            document.getElementById('error-overlay').classList.remove('hidden');
+        }
+
+        function obrisiUnos() {
+            ekran.value = "";
+            ekran.classList.remove('screen-error');
+            ekran.classList.add('screen-glow');
+            ekran.focus();
+        }
+
+        function potvrdiUnos() {
+            let trenutniUnos = ekran.value.trim().toUpperCase();
+            if (trenutniUnos === "") return;
+
+            tocakRotacija += 45;
+            tocak.style.transform = `rotate(${tocakRotacija}deg)`;
+
+            if (trenutniUnos === ocekivanaSifra) {
+                setTimeout(otvoriTrezor, 300);
+            } else {
+                setTimeout(prijaviGresku, 300);
+            }
+        }
+
+        function prijaviGresku() {
+            ekran.classList.remove('screen-glow');
+            ekran.classList.add('screen-error');
+            ekran.value = "DENIED";
+            
+            const kontejner = document.getElementById('vault-container');
+            kontejner.classList.add('shake');
+            
+            setTimeout(() => {
+                kontejner.classList.remove('shake');
+                setTimeout(() => {
+                    obrisiUnos();
+                }, 600);
+            }, 400);
+        }
+
+        function otvoriTrezor() {
+            ekran.value = "GRANTED";
+            ekran.style.color = "#4ade80"; 
+            ekran.style.textShadow = "0 0 10px #4ade80";
+            ekran.disabled = true;
+            
+            const lockIcon = document.getElementById('lock-icon');
+            lockIcon.classList.remove('fa-lock');
+            lockIcon.classList.add('fa-lock-open');
+            lockIcon.classList.add('text-green-500');
+            lockIcon.classList.remove('text-slate-400');
+
+            tocak.style.transform = `rotate(-90deg)`;
+            tocak.style.borderColor = "#eab308"; 
+
+            postaviNagradu();
+
+            setTimeout(() => {
+                document.getElementById('vault-container').classList.add('vault-open');
+            }, 800);
+        }
+
+function postaviNagradu() {
+            if (vrstaNagrade === 'tekst') {
+                document.getElementById('reward-text-box').classList.remove('hidden');
+                document.getElementById('reward-text-box').innerText = sadrzajNagrade;
+            } else if (vrstaNagrade === 'link') {
+                document.getElementById('reward-link-box').classList.remove('hidden');
+                document.getElementById('reward-link-btn').href = sadrzajNagrade;
+                document.getElementById('reward-link-btn').target = "_blank";
+                
+            } else if (vrstaNagrade === 'slika_tekst') {
+                document.getElementById('reward-image-box').classList.remove('hidden');
+                document.getElementById('reward-image').src = dodatnaSlika;
+                document.getElementById('reward-text-box').classList.remove('hidden');
+                
+                try {
+                    // Pokušava da dekoduje ako je spakovano u JSON (novi format sa odvojenim linkom preko slike)
+                    let podaci = JSON.parse(sadrzajNagrade);
+                    
+                    // Prikazuje samo običan tekst poruke dole
+                    document.getElementById('reward-text-box').innerText = podaci.poruka;
+                    
+                    // Slika postaje aktivan link ka kapsuli
+                    if (podaci.url) {
+                        document.getElementById('reward-image-link').href = podaci.url;
+                        document.getElementById('reward-image-hint').classList.remove('hidden');
+                    }
+                } catch (e) {
+                    // Stari format (ako je običan tekst)
+                    document.getElementById('reward-text-box').innerText = sadrzajNagrade;
+                    
+                    // Ako slučajno tekst počinje sa http, pretvori i sliku u link
+                    if (sadrzajNagrade.startsWith("http")) {
+                        document.getElementById('reward-image-link').href = sadrzajNagrade;
+                        document.getElementById('reward-image-hint').classList.remove('hidden');
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

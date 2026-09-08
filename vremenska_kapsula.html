@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vremenska Kapsula</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   
+   <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;600;800&display=swap');
+        
+        body { 
+            background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .mono-font { font-family: 'Space Mono', monospace; }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            transition: all 0.5s ease;
+        }
+
+        .glow-input {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .glow-input:focus {
+            outline: none;
+            transform: translateY(-2px);
+        }
+
+        .page-container { perspective: 1500px; width: 100%; }
+
+        .page-card {
+            transform-origin: left center;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s;
+        }
+
+        .page-flip-out { transform: rotateY(-95deg) scale(0.95); opacity: 0; }
+        .page-flip-in { animation: flipIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+        @keyframes flipIn {
+            0% { transform: rotateY(95deg) scale(0.95); opacity: 0; }
+            100% { transform: rotateY(0) scale(1); opacity: 1; }
+        }
+
+        .screen { display: none; animation: fadeInScale 0.7s cubic-bezier(0.4, 0, 0.2, 1); }
+        .screen.active { display: flex; }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95) translateY(15px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .floating { animation: float 4s ease-in-out infinite; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+    </style>
+    <style>
+    /* Bojenje ikonice kalendara u pretraživačima */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1) sepia(100%) saturate(500%) hue-rotate(5deg);
+        cursor: pointer;
+    }
+</style>
+</head>
+<body class="flex flex-col items-center justify-center p-4 relative">
+
+    <div id="stars-container" class="absolute inset-0 pointer-events-none overflow-hidden z-0"></div>
+
+    <!-- EKRAN 0: EMOTIVNA NAGRADA -->
+    <div id="screen-reward" class="screen active flex-col items-center w-full max-w-md z-10 text-center">
+        <div class="floating mb-6">
+            <i class="fa-solid fa-gem text-7xl text-yellow-500" style="filter: drop-shadow(0 0 20px rgba(234,179,8,0.6));"></i>
+        </div>
+        <h1 class="text-3xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-amber-200">Pravo Blago</h1>
+        <div class="glass-panel border border-yellow-500/30 w-full p-6 rounded-2xl mb-8">
+            <p class="text-slate-200 leading-relaxed mb-4">Vaše najveće bogatstvo su uspomene koje u sebi nose energiju kao zlatnu rezervu za budućnost. VAŠA nagrada je...</p>
+            <p class="text-amber-300 font-semibold leading-relaxed mb-4">Specijalno dizajnirana Vremenska Kapsula. Sačuvajte današnje osmehe, šale, tajne i želje pre nego što krenete svojim putem dalje.</p>
+            <div class="bg-slate-900/60 p-3 rounded-lg border border-red-500/30 text-left">
+                <p class="text-xs text-red-300"><i class="fa-solid fa-lock text-red-500 mr-1"></i> Sve što danas unesete biće <strong>trajno zapečaćeno, nepromenjivo i potpuno nevidljivo</strong> svima (pa i vama) dok ne stigne datum otvaranja!</p>
+            </div>
+        </div>
+        <button onclick="showScreen('screen-setup')" class="w-full bg-gradient-to-r from-yellow-600 to-amber-500 text-slate-900 font-extrabold py-4 rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.4)] transition transform hover:scale-105 active:scale-95 text-lg uppercase tracking-wide">
+            Otključaj Kapsulu <i class="fa-solid fa-key ml-2"></i>
+        </button>
+    </div>
+
+    <!-- EKRAN 1: PODEŠAVANJE -->
+    <div id="screen-setup" class="screen flex-col items-center w-full max-w-md z-10">
+        <i class="fa-solid fa-calendar-day text-5xl text-yellow-500 mb-4"></i>
+        <h2 class="text-2xl font-bold text-center mb-6">Podešavanje Kapsule</h2>
+        
+        <div class="glass-panel border border-yellow-500/30 w-full p-6 rounded-2xl space-y-6">
+            <div>
+                <label class="block text-sm font-semibold text-amber-300 mb-2 uppercase tracking-wide">Kog datuma se kapsula otvara?</label>
+                <div class="relative">
+                    <input type="date" id="setup-date" class="w-full glow-input rounded-xl p-4 text-white text-lg transition focus:border-yellow-500 appearance-none">
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-amber-300 mb-2 uppercase tracking-wide">Koliko vas ima u ekipi?</label>
+                <input type="number" id="setup-count" min="1" max="15" value="4" class="w-full glow-input rounded-xl p-4 text-white text-center text-2xl font-bold transition focus:border-yellow-500">
+            </div>
+            <button onclick="startWriting()" class="w-full bg-slate-800 border border-yellow-500/50 text-yellow-400 font-bold py-4 rounded-xl transition mt-4 hover:bg-slate-700">
+                Započni Krug <i class="fa-solid fa-users ml-2"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- EKRAN 2: UPISIVANJE (TEKST, AVATAR, BOJA) -->
+    <div id="screen-write" class="screen flex-col items-center w-full max-w-md z-10 page-container">
+        <div class="w-full flex justify-between items-center mb-4 px-2">
+            <h2 class="text-2xl font-bold text-white">Čuvar Uspomena</h2>
+            <div id="page-counter-badge" class="text-sm px-4 py-1.5 rounded-full border mono-font font-bold transition-colors duration-500">
+                <i class="fa-solid fa-user-pen mr-1"></i> <span id="current-member">1</span> / <span id="total-members">4</span>
+            </div>
+        </div>
+        
+        <div id="page-card" class="glass-panel page-card w-full p-6 rounded-2xl space-y-4 border-2">
+            
+            <div class="bg-red-900/30 border-l-4 border-red-500 p-3 rounded-r-lg mb-2">
+                <p class="text-xs text-slate-200"><i class="fa-solid fa-triangle-exclamation text-red-400 mr-1"></i> <span class="font-bold text-red-400">PAŽNJA:</span> Zapis postaje nepromenjiv. Niko ga neće moći pročitati do datuma otvaranja!</p>
+            </div>
+            
+            <div>
+                <label class="block text-xs font-bold text-slate-300 mb-1 uppercase tracking-wider">Tvoj potpis</label>
+                <input type="text" id="entry-name" placeholder="Kako te ekipa zove?" class="w-full glow-input rounded-lg p-3 text-white">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-300 mb-2 uppercase tracking-wider">Izaberi svoj Avatar</label>
+                <div class="flex justify-between bg-slate-800/80 p-2 rounded-lg border border-slate-600/50 mb-3">
+                    <button type="button" onclick="selectAvatar('fa-solid fa-user-astronaut', this)" class="avatar-btn bg-white/20 scale-125 text-white p-2 rounded-lg text-xl transition transform hover:scale-125"><i class="fa-solid fa-user-astronaut"></i></button>
+                    <button type="button" onclick="selectAvatar('fa-solid fa-user-ninja', this)" class="avatar-btn text-slate-400 p-2 rounded-lg text-xl transition transform hover:scale-125"><i class="fa-solid fa-user-ninja"></i></button>
+                    <button type="button" onclick="selectAvatar('fa-solid fa-dragon', this)" class="avatar-btn text-slate-400 p-2 rounded-lg text-xl transition transform hover:scale-125"><i class="fa-solid fa-dragon"></i></button>
+                    <button type="button" onclick="selectAvatar('fa-solid fa-ghost', this)" class="avatar-btn text-slate-400 p-2 rounded-lg text-xl transition transform hover:scale-125"><i class="fa-solid fa-ghost"></i></button>
+                    <button type="button" onclick="selectAvatar('fa-solid fa-face-smile', this)" class="avatar-btn text-slate-400 p-2 rounded-lg text-xl transition transform hover:scale-125"><i class="fa-solid fa-face-smile"></i></button>
+                </div>
+
+                <label class="block text-xs font-bold text-slate-300 mb-2 uppercase tracking-wider">Boja Avatara</label>
+                <div class="flex justify-between bg-slate-800/80 p-2 rounded-lg border border-slate-600/50">
+                    <button type="button" onclick="selectColor('bg-gradient-to-br from-yellow-400 to-amber-600', 'text-slate-900', this)" class="color-btn w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-amber-600 border-2 border-white scale-110 shadow-lg transition transform hover:scale-110"></button>
+                    <button type="button" onclick="selectColor('bg-gradient-to-br from-cyan-400 to-blue-600', 'text-white', this)" class="color-btn w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 border-2 border-transparent transition transform hover:scale-110"></button>
+                    <button type="button" onclick="selectColor('bg-gradient-to-br from-emerald-400 to-teal-600', 'text-white', this)" class="color-btn w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 border-2 border-transparent transition transform hover:scale-110"></button>
+                    <button type="button" onclick="selectColor('bg-gradient-to-br from-rose-400 to-pink-600', 'text-white', this)" class="color-btn w-8 h-8 rounded-full bg-gradient-to-br from-rose-400 to-pink-600 border-2 border-transparent transition transform hover:scale-110"></button>
+                    <button type="button" onclick="selectColor('bg-gradient-to-br from-purple-400 to-fuchsia-600', 'text-white', this)" class="color-btn w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-fuchsia-600 border-2 border-transparent transition transform hover:scale-110"></button>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-300 mb-1 uppercase tracking-wider">Poruka za budućnost</label>
+                <textarea id="entry-msg" rows="4" placeholder="Zapiši vašu internu šalu, tajnu ili želju..." class="w-full glow-input rounded-lg p-3 text-white resize-none"></textarea>
+            </div>
+            
+            <button id="submit-btn" onclick="saveEntry()" class="w-full font-bold py-4 rounded-xl shadow-lg transition transform active:scale-95 mt-2 text-lg">
+                Zapečati i prosledi telefon <i class="fa-solid fa-mobile-screen ml-2"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- EKRAN 3: ZAKLJUČANO -->
+    <div id="screen-locked" class="screen flex-col items-center w-full max-w-md text-center pt-8 z-10">
+        <i id="lock-icon" class="fa-solid fa-lock text-7xl text-yellow-500 mb-6" style="filter: drop-shadow(0 0 20px rgba(234,179,8,0.5));"></i>
+        <h2 class="text-3xl font-bold mb-2 tracking-wide">KAPSULA ZATVORENA</h2>
+        <p class="text-slate-300 mb-8 text-sm">Zapečaćeno i nevidljivo! Podaci će biti otkriveni tek kada stigne datum.</p>
+        
+        <div class="glass-panel border border-yellow-500/30 w-full p-6 rounded-2xl flex flex-col items-center mb-6">
+            <p class="text-xs uppercase tracking-widest text-amber-300 mb-2 font-bold">Vreme do susreta:</p>
+            <div id="countdown" class="mono-font text-3xl font-bold text-white tracking-widest bg-slate-900 px-4 py-3 rounded-lg border border-slate-700 w-full mb-4 shadow-inner">
+                --:--:--
+            </div>
+            <p class="text-sm text-slate-400">Datum otvaranja: <span id="locked-date-display" class="text-white font-bold"></span></p>
+        </div>
+
+        <div id="qr-section" class="hidden glass-panel border-yellow-500/50 border-2 w-full p-6 rounded-2xl flex-col items-center">
+            <h3 class="text-xl font-bold text-yellow-400 mb-3"><i class="fa-solid fa-camera-retro"></i> Slikajte ekran!</h3>
+            <p class="text-sm text-slate-200 mb-5">Ovaj QR kod je jedini ključ do vaših uspomena. Pošaljite ga u vašu zajedničku grupu.</p>
+            <div id="qrcode" class="p-4 bg-white rounded-xl shadow-[0_0_30px_rgba(255,255,255,0.2)]"></div>
+        </div>
+    </div>
+
+    <!-- EKRAN 4: OTVORENO -->
+    <div id="screen-unlocked" class="screen flex-col items-center w-full max-w-lg z-10">
+        <div class="text-center mb-8 mt-4 floating">
+            <i class="fa-solid fa-envelope-open-text text-6xl text-yellow-400 mb-4"></i>
+            <h2 class="text-3xl font-bold text-white">DOBRODOŠLI NAZAD</h2>
+            <p class="text-amber-200 text-sm mt-2 font-medium">Vreme je prošlo, ali uspomene su ostale iste.</p>
+        </div>
+        
+        <div id="memories-container" class="w-full space-y-6 pb-12">
+            <!-- Uspomene se generišu ovde -->
+        </div>
+    </div>
+
+    <script>
+        const pageThemes = [
+            { bgBtn: 'bg-gradient-to-r from-yellow-600 to-amber-500', textBtn: 'text-slate-900', border: 'border-yellow-500/50', badge: 'bg-yellow-900/40 text-yellow-300 border-yellow-500/40', inputGlow: 'rgba(234,179,8,0.4)' },
+            { bgBtn: 'bg-gradient-to-r from-cyan-600 to-blue-500', textBtn: 'text-white', border: 'border-cyan-500/50', badge: 'bg-cyan-900/40 text-cyan-300 border-cyan-500/40', inputGlow: 'rgba(6,182,212,0.4)' },
+            { bgBtn: 'bg-gradient-to-r from-emerald-600 to-teal-500', textBtn: 'text-white', border: 'border-emerald-500/50', badge: 'bg-emerald-900/40 text-emerald-300 border-emerald-500/40', inputGlow: 'rgba(16,185,129,0.4)' },
+            { bgBtn: 'bg-gradient-to-r from-rose-600 to-pink-500', textBtn: 'text-white', border: 'border-rose-500/50', badge: 'bg-rose-900/40 text-rose-300 border-rose-500/40', inputGlow: 'rgba(244,63,94,0.4)' },
+            { bgBtn: 'bg-gradient-to-r from-purple-600 to-fuchsia-500', textBtn: 'text-white', border: 'border-purple-500/50', badge: 'bg-purple-900/40 text-purple-300 border-purple-500/40', inputGlow: 'rgba(168,85,247,0.4)' }
+        ];
+
+        function createStars() {
+            const container = document.getElementById('stars-container');
+            for(let i=0; i<50; i++) {
+                let star = document.createElement('div');
+                star.className = 'star';
+                star.style.width = Math.random() * 3 + 'px';
+                star.style.height = star.style.width;
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                star.style.animationDelay = Math.random() * 2 + 's';
+                container.appendChild(star);
+            }
+        }
+        createStars();
+
+        let targetDate = '';
+        let membersCount = 0;
+        let currentMemberIndex = 1;
+        let memoriesData = [];
+        let countdownInterval;
+        
+        let currentAvatar = 'fa-solid fa-user-astronaut';
+        let currentColorBg = 'bg-gradient-to-br from-yellow-400 to-amber-600';
+        let currentColorText = 'text-slate-900';
+
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedData = urlParams.get('d');
+            
+            if (encodedData) {
+                loadCapsule(encodedData);
+            } else {
+                let tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                document.getElementById('setup-date').min = tomorrow.toISOString().split("T")[0];
+            }
+        };
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        function startWriting() {
+            targetDate = document.getElementById('setup-date').value;
+            membersCount = parseInt(document.getElementById('setup-count').value);
+            
+            if(!targetDate) { alert("Molimo izaberite datum kada se ponovo okupljate!"); return; }
+            
+            document.getElementById('total-members').innerText = membersCount;
+            applyTheme(); 
+            showScreen('screen-write');
+        }
+
+        function applyTheme() {
+            const theme = pageThemes[(currentMemberIndex - 1) % pageThemes.length];
+            const card = document.getElementById('page-card');
+            const btn = document.getElementById('submit-btn');
+            const badge = document.getElementById('page-counter-badge');
+            
+            card.className = `glass-panel page-card w-full p-6 rounded-2xl space-y-4 border-2 ${theme.border}`;
+            btn.className = `w-full font-bold py-4 rounded-xl shadow-lg transition transform active:scale-95 mt-2 text-lg ${theme.bgBtn} ${theme.textBtn}`;
+            badge.className = `text-sm px-4 py-1.5 rounded-full border mono-font font-bold transition-colors duration-500 ${theme.badge}`;
+            
+            const inputs = document.querySelectorAll('.glow-input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', () => {
+                    input.style.boxShadow = `0 0 20px ${theme.inputGlow}`;
+                    input.style.borderColor = theme.inputGlow.replace('0.4)', '1)');
+                });
+                input.addEventListener('blur', () => {
+                    input.style.boxShadow = 'none';
+                    input.style.borderColor = '';
+                });
+            });
+        }
+
+        function selectAvatar(icon, btnElement) {
+            currentAvatar = icon;
+            document.querySelectorAll('.avatar-btn').forEach(b => {
+                b.classList.remove('bg-white/20', 'scale-125', 'text-white');
+                b.classList.add('text-slate-400');
+            });
+            btnElement.classList.remove('text-slate-400');
+            btnElement.classList.add('bg-white/20', 'scale-125', 'text-white');
+        }
+
+        function selectColor(bgClass, textClass, btnElement) {
+            currentColorBg = bgClass;
+            currentColorText = textClass;
+            document.querySelectorAll('.color-btn').forEach(b => {
+                b.classList.remove('border-white', 'scale-110', 'shadow-lg');
+                b.classList.add('border-transparent');
+            });
+            btnElement.classList.remove('border-transparent');
+            btnElement.classList.add('border-white', 'scale-110', 'shadow-lg');
+        }
+
+        function updateMemberUI() {
+            document.getElementById('current-member').innerText = currentMemberIndex;
+            document.getElementById('entry-name').value = '';
+            document.getElementById('entry-msg').value = '';
+            
+            // Resetuj avatar i boju na prve opcije
+            const firstAvatarBtn = document.querySelectorAll('.avatar-btn')[0];
+            selectAvatar('fa-solid fa-user-astronaut', firstAvatarBtn);
+
+            const firstColorBtn = document.querySelectorAll('.color-btn')[0];
+            selectColor('bg-gradient-to-br from-yellow-400 to-amber-600', 'text-slate-900', firstColorBtn);
+
+            document.getElementById('entry-name').focus();
+        }
+
+        function saveEntry() {
+            const name = document.getElementById('entry-name').value.trim();
+            const msg = document.getElementById('entry-msg').value.trim();
+
+            if(!name || !msg) { alert("Ime i poruka su obavezni kako bi uspomena bila potpuna!"); return; }
+
+            // Snimanje izabranih parametara u memoriju
+            memoriesData.push({ 
+                n: name, 
+                m: msg, 
+                a: currentAvatar, 
+                c: currentColorBg, 
+                t: currentColorText 
+            });
+
+            if (currentMemberIndex < membersCount) {
+                const card = document.getElementById('page-card');
+                card.classList.add('page-flip-out');
+
+                setTimeout(() => {
+                    currentMemberIndex++;
+                    updateMemberUI();
+                    applyTheme();
+                    
+                    card.classList.remove('page-flip-out');
+                    card.classList.add('page-flip-in');
+                    
+                    setTimeout(() => card.classList.remove('page-flip-in'), 600);
+                }, 600);
+
+            } else {
+                sealCapsule();
+            }
+        }
+
+        function sealCapsule() {
+            const payload = { date: targetDate, memories: memoriesData };
+            const jsonString = JSON.stringify(payload);
+            const base64Data = btoa(encodeURIComponent(jsonString));
+            const finalURL = window.location.origin + window.location.pathname + "?d=" + base64Data;
+            
+            showScreen('screen-locked');
+            
+            try {
+                document.getElementById('qrcode').innerHTML = ""; 
+                new QRCode(document.getElementById('qrcode'), {
+                    text: finalURL,
+                    width: 220,
+                    height: 220,
+                    colorDark : "#0f172a",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.L
+                });
+                
+                setTimeout(() => {
+                    document.getElementById('qr-section').classList.remove('hidden');
+                    document.getElementById('qr-section').classList.add('flex');
+                }, 1000);
+            } catch (err) {
+                alert("Greška pri generisanju koda.");
+            }
+            
+            startCountdown(targetDate);
+        }
+
+        function loadCapsule(encodedData) {
+            try {
+                const jsonString = decodeURIComponent(atob(encodedData));
+                const payload = JSON.parse(jsonString);
+                const openDate = new Date(payload.date);
+                const now = new Date();
+
+                openDate.setHours(0,0,0,0);
+                now.setHours(0,0,0,0);
+
+                if (now < openDate) {
+                    showScreen('screen-locked');
+                    startCountdown(payload.date);
+                } else {
+                    showScreen('screen-unlocked');
+                    renderMemories(payload.memories);
+                }
+            } catch (e) {
+                alert("Ovaj zapis je oštećen ili nevažeći.");
+            }
+        }
+
+        function startCountdown(targetDateStr) {
+            document.getElementById('locked-date-display').innerText = targetDateStr.split('-').reverse().join('.');
+            const targetTime = new Date(targetDateStr).getTime();
+
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                const now = new Date().getTime();
+                const distance = targetTime - now;
+
+                if (distance < 0) {
+                    clearInterval(countdownInterval);
+                    document.getElementById('countdown').innerText = "VREME JE STIGLO";
+                    return;
+                }
+
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                
+                document.getElementById('countdown').innerText = `${days}d ${hours}h ${minutes}m`;
+            }, 1000);
+        }
+
+        function renderMemories(memories) {
+            const container = document.getElementById('memories-container');
+            container.innerHTML = '';
+
+            memories.forEach((mem, index) => {
+                const theme = pageThemes[index % pageThemes.length];
+                
+                // Povlačenje korisnikovih podešavanja ili fallback na staru temu ako ne postoji
+                const bgClass = mem.c || theme.bgBtn;
+                const textClass = mem.t || theme.textBtn;
+                const iconClass = mem.a || 'fa-solid fa-user-astronaut';
+
+                const card = `
+                    <div class="glass-panel p-6 rounded-2xl border-2 ${theme.border} transform transition hover:scale-[1.02]">
+                        <div class="flex items-center gap-4 mb-5 border-b border-slate-700/50 pb-4">
+                            <div class="w-14 h-14 rounded-full ${bgClass} flex items-center justify-center font-extrabold text-2xl ${textClass} shadow-lg">
+                                <i class="${iconClass}"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-white tracking-wide">${mem.n}</h3>
+                        </div>
+                        <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 relative">
+                            <i class="fa-solid fa-quote-left absolute top-3 left-3 text-2xl text-slate-600/30"></i>
+                            <p class="text-slate-200 italic leading-relaxed text-lg pl-6 pr-2 pt-2 whitespace-pre-wrap">${mem.m}</p>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+        }
+    </script>
+</body>
+</html>
