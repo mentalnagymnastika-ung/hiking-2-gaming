@@ -29,117 +29,168 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-      import { getFirestore, doc, getDoc, collection, query, where, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-      import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getFirestore, enableIndexedDbPersistence, doc, getDoc, collection, query, where, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getStorage, ref, uploadString } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
-      const firebaseConfig = {
-        apiKey: "AIzaSyB6cYBydkMN-PMMVu9zMxGUd-B8VdSPCEM",
-        authDomain: "zdrava-aktivnost.firebaseapp.com",
-        projectId: "zdrava-aktivnost",
-        storageBucket: "zdrava-aktivnost.firebasestorage.app",
-        messagingSenderId: "998592303349",
-        appId: "1:998592303349:web:af7f63de96b024ddf6b5bc"
-      };
+const firebaseConfig = {
+    apiKey: "AIzaSyB6cYBydkMN-PMMVu9zMxGUd-B8VdSPCEM",
+    authDomain: "zdrava-aktivnost.firebaseapp.com",
+    projectId: "zdrava-aktivnost",
+    storageBucket: "zdrava-aktivnost.firebasestorage.app",
+    messagingSenderId: "998592303349",
+    appId: "1:998592303349:web:af7f63de96b024ddf6b5bc"
+};
 
-      const app = initializeApp(firebaseConfig);
-      window.db = getFirestore(app);
-      window.doc = doc; window.getDoc = getDoc; window.setDoc = setDoc;
-      window.collection = collection; window.query = query; window.where = where; window.getDocs = getDocs;
+const app = initializeApp(firebaseConfig);
+window.db = getFirestore(app);
+window.storage = getStorage(app);
+window.ref = ref;
+window.uploadString = uploadString;
+
+
+
+// 1. Omogućavanje oflajn keširanja baze (IndexedDB)
+enableIndexedDbPersistence(window.db).catch((err) => {
+    console.warn("Oflajn keširanje nije uspelo:", err.code);
+});
+
+// 2. Povezivanje funkcija za bazu (Ovo je nedostajalo)
+window.doc = doc; window.getDoc = getDoc; window.setDoc = setDoc;
+window.collection = collection; window.query = query; window.where = where; window.getDocs = getDocs;
 
 const auth = getAuth(app);
-      signInAnonymously(auth)
-        .then(() => { 
-            console.log("✅ Sistem obezbeđen: Korisnik je tiho (anonimno) ulogovan."); 
-            
-            let sacuvanaSesijaId = localStorage.getItem('aktivna_sesija_id');
-            if (sacuvanaSesijaId) {
+
+// 3. Čitanje lokalnih podataka pre autentifikacije
+let sacuvanaSesijaId = localStorage.getItem('aktivna_sesija_id');
+let lokSes = sacuvanaSesijaId ? localStorage.getItem('offline_sesija_' + sacuvanaSesijaId) : null;
+let lokPot = sacuvanaSesijaId ? localStorage.getItem('offline_potraga_' + sacuvanaSesijaId) : null;
+
+// 4. Funkcija za oflajn oporavak
+// 4. Funkcija za oflajn oporavak
 const pokreniOporavak = (sData, potragaData) => {
-                    if (sData.expiresAt > new Date().getTime() && !sData.zavrsena) {
-                        window.odabranaPotraga = potragaData;
-                        window.timIdentifikator = sacuvanaSesijaId;
-                        window.sesijaPodaci = sData;
-                        window.tempImeTimaZaBazu = sData.imePrikaz;
-                        
-                        let stariPotvrdi = document.getElementById('dijalogPotvrdi').onclick;
-                        let stariRestart = document.getElementById('dijalogRestart').onclick;
-                        let stariOdustani = document.getElementById('dijalogOdustani').onclick;
-                        
-                        document.getElementById('dijalogPotvrdi').onclick = function() {
-                            document.getElementById('modalDijalog').style.display = 'none';
-                            window.nastaviUcitanuIgru();
-                            
-                            let sacuvanIzborSlika = localStorage.getItem('auto_sacuvaj_slike');
-                            let autoCheckbox = document.getElementById('chkAutoSacuvajSlike');
-                            if (autoCheckbox && sacuvanIzborSlika) autoCheckbox.checked = (sacuvanIzborSlika === 'da');
-                            
-                            // 🌟 OBRISANA LINIJA KOJA JE PRAVILA PROBLEM (Nema više vraćanja unazad)
-                            
-                            document.getElementById('dijalogPotvrdi').onclick = stariPotvrdi;
-                            document.getElementById('dijalogRestart').onclick = stariRestart;
-                            if(stariOdustani) document.getElementById('dijalogOdustani').onclick = stariOdustani;
-                        };
-                        
-                        document.getElementById('dijalogRestart').onclick = function() {
-                            localStorage.removeItem('aktivna_sesija_id');
-                            localStorage.removeItem('poslednji_ekran');
-                            localStorage.removeItem('offline_sesija_' + sacuvanaSesijaId);
-                            localStorage.removeItem('offline_potraga_' + sacuvanaSesijaId);
-                            document.getElementById('modalDijalog').style.display = 'none';
-                            
-                            document.getElementById('dijalogPotvrdi').onclick = stariPotvrdi;
-                            document.getElementById('dijalogRestart').onclick = stariRestart;
-                            if(stariOdustani) document.getElementById('dijalogOdustani').onclick = stariOdustani;
-                        };
-                        
-                        document.getElementById('dijalogOdustani').onclick = function() {
-                            document.getElementById('modalDijalog').style.display = 'none';
-                            document.getElementById('dijalogPotvrdi').onclick = stariPotvrdi;
-                            document.getElementById('dijalogRestart').onclick = stariRestart;
-                            if(stariOdustani) document.getElementById('dijalogOdustani').onclick = stariOdustani;
-                        };
-                        
-                        document.getElementById('modalDijalog').style.display = 'flex';
-                    } else {
-                        localStorage.removeItem('aktivna_sesija_id');
-                    }
-                };
-
-                let lokSes = localStorage.getItem('offline_sesija_' + sacuvanaSesijaId);
-                let lokPot = localStorage.getItem('offline_potraga_' + sacuvanaSesijaId);
-
-                // ⚡ OFFLINE LOGIKA: Ako nema neta ili je pukao pretraživač, povuci iz lokalnog sefa!
-                if (!navigator.onLine && lokSes && lokPot) {
-                    console.log("⚡ OFFLINE OPORAVAK AKTIVAN!");
-                    pokreniOporavak(JSON.parse(lokSes), JSON.parse(lokPot));
-                } else {
-                    // Mrežni pokušaj
-                    getDoc(doc(window.db, "sesije", sacuvanaSesijaId)).then(async (sesijaSnap) => {
-                        if (sesijaSnap.exists()) {
-                            let sData = sesijaSnap.data();
-                            try {
-                                let potragaSnap = await getDoc(doc(window.db, "potrage", sData.sifra));
-                                if (!potragaSnap.exists()) potragaSnap = await getDoc(doc(window.db, "potrage", String(sData.sifra).toUpperCase()));
-                                
-                                if (potragaSnap.exists()) {
-                                    pokreniOporavak(sData, potragaSnap.data());
-                                }
-                            } catch(err) {
-                                // Ako pukne mreža u sred povlačenja
-                                if(lokSes && lokPot) pokreniOporavak(JSON.parse(lokSes), JSON.parse(lokPot));
-                            }
-                        }
-                    }).catch(e => {
-                        // Ako pukne mreža skroz
-                        if(lokSes && lokPot) pokreniOporavak(JSON.parse(lokSes), JSON.parse(lokPot));
-                    });
-                }
-            }
-        })
-        .catch((error) => { console.error("❌ Greška pri tihoj autorizaciji:", error); });
+    if (sData.expiresAt > new Date().getTime() && !sData.zavrsena) {
+        window.odabranaPotraga = potragaData;
+        window.timIdentifikator = sacuvanaSesijaId;
+        window.sesijaPodaci = sData;
+        window.tempImeTimaZaBazu = sData.imePrikaz;
         
-    </script>
+        let stariPotvrdi = document.getElementById('dijalogPotvrdi').onclick;
+        let stariRestart = document.getElementById('dijalogRestart').onclick;
+        let stariOdustani = document.getElementById('dijalogOdustani').onclick;
+        
+        document.getElementById('dijalogPotvrdi').onclick = function() {
+            document.getElementById('modalDijalog').style.display = 'none';
+            window.nastaviUcitanuIgru();
+            
+            let sacuvanIzborSlika = localStorage.getItem('auto_sacuvaj_slike');
+            let autoCheckbox = document.getElementById('chkAutoSacuvajSlike');
+            if (autoCheckbox && sacuvanIzborSlika) autoCheckbox.checked = (sacuvanIzborSlika === 'da');
+            
+            document.getElementById('dijalogPotvrdi').onclick = stariPotvrdi;
+            document.getElementById('dijalogRestart').onclick = stariRestart;
+            if(stariOdustani) document.getElementById('dijalogOdustani').onclick = stariOdustani;
+        };
+        
+        document.getElementById('dijalogRestart').onclick = function() {
+            localStorage.removeItem('aktivna_sesija_id');
+            localStorage.removeItem('poslednji_ekran');
+            localStorage.removeItem('offline_sesija_' + sacuvanaSesijaId);
+            localStorage.removeItem('offline_potraga_' + sacuvanaSesijaId);
+            document.getElementById('modalDijalog').style.display = 'none';
+            
+            document.getElementById('dijalogPotvrdi').onclick = stariPotvrdi;
+            document.getElementById('dijalogRestart').onclick = stariRestart;
+            if(stariOdustani) document.getElementById('dijalogOdustani').onclick = stariOdustani;
+        };
+        
+        document.getElementById('dijalogOdustani').onclick = function() {
+            document.getElementById('modalDijalog').style.display = 'none';
+            document.getElementById('dijalogPotvrdi').onclick = stariPotvrdi;
+            document.getElementById('dijalogRestart').onclick = stariRestart;
+            if(stariOdustani) document.getElementById('dijalogOdustani').onclick = stariOdustani;
+        };
+
+        // PAMETNO SAKRIVANJE DUGMIĆA U OFLAJN MODU
+        let btnRestart = document.getElementById('dijalogRestart');
+        let btnOdustani = document.getElementById('dijalogOdustani');
+        let txtDijalog = document.getElementById('dijalogTekst');
+
+        if (!navigator.onLine) {
+            if(btnRestart) btnRestart.style.display = 'none';
+            if(btnOdustani) btnOdustani.style.display = 'none';
+            if(txtDijalog) txtDijalog.innerText = "Nema internet signala. Vaša igra je bezbedno sačuvana i možete samo nastaviti potragu.";
+        } else {
+            if(btnRestart) btnRestart.style.display = 'inline-block';
+            if(btnOdustani) btnOdustani.style.display = 'inline-block';
+            if(txtDijalog) txtDijalog.innerText = "Vaš tim već ima započetu potragu na ovom terenu. Kako želite da nastavite?";
+        }
+        
+        document.getElementById('modalDijalog').style.display = 'flex';
+    } else {
+        localStorage.removeItem('aktivna_sesija_id');
+    }
+};
+
+// 5. Glavna logika za oflajn ili onlajn režim
+if (!navigator.onLine && sacuvanaSesijaId && lokSes && lokPot) {
+    console.log("⚡ OFFLINE OPORAVAK AKTIVAN ODMAH PRE AUTENTIFIKACIJE!");
+    pokreniOporavak(JSON.parse(lokSes), JSON.parse(lokPot));
+} else {
+    signInAnonymously(auth)
+    .then(() => { 
+        console.log("✅ Sistem obezbeđen: Korisnik je tiho (anonimno) ulogovan."); 
+        
+        if (sacuvanaSesijaId) {
+            getDoc(doc(window.db, "sesije", sacuvanaSesijaId)).then(async (sesijaSnap) => {
+                if (sesijaSnap.exists()) {
+                    let sData = sesijaSnap.data();
+                    try {
+                        let potragaSnap = await getDoc(doc(window.db, "potrage", sData.sifra));
+                        if (!potragaSnap.exists()) potragaSnap = await getDoc(doc(window.db, "potrage", String(sData.sifra).toUpperCase()));
+                        
+                        if (potragaSnap.exists()) {
+                            pokreniOporavak(sData, potragaSnap.data());
+                        }
+                    } catch(err) {
+                        if(lokSes && lokPot) pokreniOporavak(JSON.parse(lokSes), JSON.parse(lokPot));
+                    }
+                }
+            }).catch(e => {
+                if(lokSes && lokPot) pokreniOporavak(JSON.parse(lokSes), JSON.parse(lokPot));
+            });
+        }
+    })
+    .catch((error) => { 
+        console.error("❌ Greška pri tihoj autorizaciji:", error);
+        if(sacuvanaSesijaId && lokSes && lokPot) {
+            console.log("⚡ Aktiviranje oflajn oporavka zbog greške u mreži.");
+            pokreniOporavak(JSON.parse(lokSes), JSON.parse(lokPot));
+        }
+    });
+}
+
+// 6. Zaštita od slučajnog povratka nazad na telefonu
+window.addEventListener('load', function() {
+    history.pushState(null, null, location.href);
+    window.onpopstate = function() {
+        history.pushState(null, null, location.href);
+        if (localStorage.getItem('aktivna_sesija_id')) {
+            alert("Upozorenje: Aktivna potraga je u toku! Ukoliko ugasite prozor, možete prekinuti napredak vašeg tima.");
+        }
+    };
+});
+
+// 7. Standardna zaštita za zatvaranje taba na računarima
+window.addEventListener('beforeunload', function (e) {
+    if (localStorage.getItem('aktivna_sesija_id')) {
+        e.preventDefault();
+        e.returnValue = ''; 
+    }
+});
+</script>
 
 <style>
         html, body { width: 100%; height: 100%; margin: 0; padding: 0; background: #f5f5f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; overflow: hidden; display: flex; justify-content: center; align-items: center; }
@@ -447,12 +498,12 @@ const pokreniOporavak = (sData, potragaData) => {
 
         <div id="listaPotraga"></div>
 
-<div class="brend-podnozje">
-<span class="brend-ime prevod-futer-centar">Centar Mentalne Gimnastike</span><br>
-<span class="brend-ime prevod-futer-udruzenje">Udruženje Mentalna Gimnastika</span><br>
-<span style="font-size: 10px; color: #ccc; font-weight: bold;" class="prevod-futer-verzija">Verzija 40.0</span>
-</div>
-    </div>
+            <div class="brend-podnozje">
+             <span class="brend-ime prevod-futer-centar" onclick="window.otvoriQRModal()" style="cursor: pointer;">Centar Mentalne Gimnastike</span><br>
+             <span class="brend-ime prevod-futer-udruzenje" onclick="window.otvoriQRModal()" style="cursor: pointer;">Udruženje Mentalna Gimnastika</span><br>
+             <span style="font-size: 10px; color: #ccc; font-weight: bold;" class="prevod-futer-verzija">Verzija 40.0</span>
+            </div>
+        </div>
 
  <div id="ekranPrijava" class="ekran">
         <div style="display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; flex-shrink: 0;">
@@ -609,6 +660,25 @@ const pokreniOporavak = (sData, potragaData) => {
             </div>
         </div>
     </div>
+
+
+<!-- Ažurirani Modal za QR pristup -->
+<div id="qrPristupModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 999999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(5px);">
+    <div style="background: #000000; padding: 30px 20px; border-radius: 20px; text-align: center; max-width: 380px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.6); border: 4px solid #347C17;">
+        
+        <h2 style="color: #ffffff; margin-top: 0; font-size: 24px; font-weight: 900; line-height: 1.3;">Dobrodošli u svet mentalne gimnastike</h2>
+        
+        <!-- Povećana slika sa animacijom zumiranja na klik -->
+        <img src="QRcode_HIT.jpg" alt="QR kod" onclick="this.style.transform = this.style.transform === 'scale(1.5)' ? 'scale(1)' : 'scale(1.5)';" style="width: 260px; height: 260px; margin: 20px auto 10px auto; display: block; border-radius: 10px; border: none; object-fit: contain; cursor: zoom-in; transition: transform 0.3s ease; position: relative; z-index: 10;">
+        
+        <!-- Tekst premešten ispod slike -->
+        <p style="font-size: 16px; color: #cbd5e1; font-weight: 600; line-height: 1.5; margin: 15px 0 25px 0;">Za pristup aplikaciji molim vas da skenirate ovaj QR kod.</p>
+        
+        <button onclick="window.zatvoriQRModal()" style="background: #1e293b; color: white; border: 2px solid #334155; padding: 14px; border-radius: 12px; font-weight: 900; font-size: 16px; cursor: pointer; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-transform: uppercase;">Zatvori</button>
+        
+    </div>
+</div>
+
 
     <!-- ========================================== -->
     <!-- MODAL 2: INFORMACIJE O STAZI              -->
@@ -874,6 +944,11 @@ const pokreniOporavak = (sData, potragaData) => {
                 <div style="margin-top: 15px; font-size: 14px; color: #64748b; font-style: italic; background: #f8fafc; padding: 10px; border-radius: 8px;">
                     Napravite snimak ekrana (skrinšot) i podelite vaše avanture sa prijateljima! 💛
                 </div>
+
+                <button id="btnPosaljiSlike" onclick="window.posaljiSlikeNaServer()" style="width: 100%; background: #10b981; color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 900; font-size: 16px; margin-top: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
+                POŠALJI FOTOGRAFIJE NA PROVERU
+                </button>
+                <div id="porukaSlanjeSlika" style="display: none; margin-top: 15px; font-size: 15px; font-weight: bold; color: #047857; background: #d1fae5; padding: 12px; border-radius: 8px; border: 1px solid #34d399; text-align: center;"></div>
             </div>
 
             <div id="rangKontejner" style="display:none; background:#ffe082; padding:15px; border-radius:10px; margin-top: 20px; color:#e65100; font-weight:bold; font-size: 20px;">
@@ -1011,6 +1086,8 @@ window.proveriDozvoluZaUlaz = async function() {
     window.vecPresaoNaSledecu = false;
     window.napravljeneSlike = [];
     window.slikaSlikanaSada = false;
+    window.slikaSlikanaKreativni = false;
+    window.slikaSlikanaPronadji = false;
     window.potragaPodaci = null; 
     window.odabranaPotraga = null; 
     window.timIdentifikator = ""; 
@@ -1027,6 +1104,7 @@ window.proveriDozvoluZaUlaz = async function() {
     window.tajmerInterval = null;
     window.trenutniJezik = "sr";
     window.gpsUkljucen = false;
+    window.vremePocetkaTacke = 0; // ⏱️ Dodato za merenje prolaznog vremena
 
 window.recnik = {
         "sr": {
@@ -3019,6 +3097,10 @@ window.nadjiSledecuValidnuTacku = function(startIndeks) {
         } finally {
             window.prikaziEkran('ekranZadatak');
             window.vecPresaoNaSledecu = true;
+            
+            // ⏱️ POKREĆE ŠTOPERICU ZA OVU TAČKU
+            window.vremePocetkaTacke = Date.now(); 
+            
             let dugme = document.getElementById('btnSledecaLogika');
             if(dugme) dugme.innerHTML = "VRATI SE NA ZADATAK ➡️";
 
@@ -3200,6 +3282,8 @@ window.prikaziZadatak = function() {
             
 
             window.slikaSlikanaSada = false;
+            window.slikaSlikanaKreativni = false;
+            window.slikaSlikanaPronadji = false;
             window.multiZlatnikSakupljen = false; 
             window.G2H_trenutniStatusIgreUspeh = false; // Resetovanje statusa igre
             document.getElementById('kvizUI').style.display = 'none';
@@ -3219,22 +3303,31 @@ window.prikaziZadatak = function() {
             let pin = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
             let tip = pin.zadatak?.tip || 'zagonetka';
             
-            // =====================================================================
-            // 🌟 NOVO: AUTOMATSKO PRESKAKANJE (Ako nema pravog zadatka na lokaciji)
-            // =====================================================================
-            let prazanTekst = !pin.zadatak?.tekst_zadatka || pin.zadatak.tekst_zadatka.trim() === '';
-            // Preskačemo ekran zadatka ako je tip čisto 'zlatnik', ili ako si ostavio zagonetku skroz praznu!
-            let nemaPravogZadatka = (tip === 'zlatnik') || (prazanTekst && (tip === 'zagonetka' || tip === 'info'));
+// =====================================================================
+// 🌟 NOVO: AUTOMATSKO PRESKAKANJE (Ako nema pravog zadatka na lokaciji)
+// =====================================================================
+let prazanTekst = !pin.zadatak?.tekst_zadatka || pin.zadatak.tekst_zadatka.trim() === '';
+// Preskačemo ekran zadatka ako je tip čisto 'zlatnik', ili ako si ostavio zagonetku skroz praznu!
+let nemaPravogZadatka = (tip === 'zlatnik') || (prazanTekst && (tip === 'zagonetka' || tip === 'info'));
 
-            if (nemaPravogZadatka) {
-                // Sakrivamo kontejner da ne blinka prazan UI dok se animacija završava
-                document.getElementById('zadatakKontejner').style.display = 'none';
-                
-                // Automatski proglašavamo zadatak uspešnim (upisuje zlatnik i baca na ekran "Kuda dalje")
-                window.uspehZadatka();
-                return; 
-            }
-            // =====================================================================
+if (nemaPravogZadatka) {
+    // Sakrivamo kontejner da ne blinka prazan UI dok se animacija završava
+    document.getElementById('zadatakKontejner').style.display = 'none';
+    
+    // Proveravamo da li je u pitanju zlatnik kako bismo pustili animaciju
+    if (tip === 'zlatnik' && typeof window.pokaziZlatnikAnimaciju === 'function') {
+        window.pokaziZlatnikAnimaciju();
+        // Čekamo da se animacija završi (1.2s) pre nego što prikažemo Bravo ekran
+        setTimeout(() => {
+            window.uspehZadatka();
+        }, 1200);
+    } else {
+        // Za ostale prazne zadatke prelazimo odmah
+        window.uspehZadatka();
+    }
+    return; 
+}
+// =====================================================================
 
             let slikaUI = document.getElementById('slikaZadatkaUUI');
             
@@ -3344,12 +3437,15 @@ window.prikaziZadatak = function() {
                     </div>`;
                 }
                 
-                    if (elovi.includes('igrica')) {
+                if (elovi.includes('igrica')) {
+                    // DODATO DATA-SifRA Atribut i postavljen Prikaz.
+                    let kodIgre = pin.zadatak?.igrica_kod || 'memorija1';
+
                     tekstZaPrikaz += `
                     <div style="background:#eff6ff; border: 2px solid #2563eb; padding:15px; border-radius:12px; margin-bottom:12px; text-align:center;">
                         <div style="font-size:35px; margin-bottom:5px;">🎮</div>
                         <b style="font-size:18px; color:#2563eb; display:block; margin-bottom:5px;">Logički izazov aktiviran!</b>
-                        <button id="btn_multi_g2h_pokreni" data-reseno="ne" onclick="window.otvoriG2HIgruUPunomEkranu()" style="background:#ff9800; color:white; font-weight:900; border:none; padding:12px 15px; border-radius:8px; font-size:18px; cursor:pointer; width:100%; box-shadow:0 4px 6px rgba(255,152,0,0.2);">🚀 POKRENI IGRU PREKO CELOG EKRANA</button>
+                        <button id="btn_multi_g2h_pokreni" data-reseno="ne" data-sifra="${kodIgre}" onclick="window.otvoriG2HIgruUPunomEkranu()" style="background:#ff9800; color:white; font-weight:900; border:none; padding:12px 15px; border-radius:8px; font-size:18px; cursor:pointer; width:100%; box-shadow:0 4px 6px rgba(255,152,0,0.2);">🚀 POKRENI IGRU PREKO CELOG EKRANA</button>
                     </div>
                     <div id="g2h_multi_puni_ekran" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#ffffff; z-index:99999; padding:15px; box-sizing:border-box; overflow-y:auto;">
                         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #e2e8f0; padding-bottom:10px; margin-bottom:15px;">
@@ -3363,25 +3459,25 @@ window.prikaziZadatak = function() {
                 if (elovi.includes('kreativni')) {
                     let kreTekst = pin.zadatak?.kre_uputstvo ? pin.zadatak.kre_uputstvo : "Napravite fotografiju.";
                     tekstZaPrikaz += `
-                    <div style="background:#f8fafc; border: 2px solid #cbd5e1; border-top:5px solid #10b981; padding:15px; margin-bottom:12px; border-radius:12px; text-align:center;">
+                    <div id="multi_kreativni_kontejner" style="background:#f8fafc; border: 2px solid #cbd5e1; border-top:5px solid #10b981; padding:15px; margin-bottom:12px; border-radius:12px; text-align:center; transition: all 0.3s ease;">
                         <b style="font-size:18px; color:#1e293b; font-weight:900; display:block; margin-bottom:5px;">Kreativni zadatak ili izazov:</b>
                         <p style="font-size:16px; font-weight:600; color:#334155; margin-bottom:10px;">${kreTekst}</p>
-                        <button id="dinamicki_btn_kamera" class="btn-kamera" style="width:100%; background:#ff9800; color:white; font-weight:900; padding:12px; border:none; border-radius:8px; font-size:16px; cursor:pointer;" onclick="document.getElementById('skrivenaKamera').click()">📸 ${window.recnik[window.trenutniJezik].btnKamera}</button>
-                        <div id="multi_foto_preview_box" style="display:none; margin-top:10px; text-align:center;"><img id="multi_foto_preview" src="" style="max-width:100%; max-height:140px; border-radius:8px; border:3px solid #10b981;"></div>
+                        <button id="dinamicki_btn_kamera_kreativni" class="btn-kamera" style="width:100%; background:#ff9800; color:white; font-weight:900; padding:12px; border:none; border-radius:8px; font-size:16px; cursor:pointer;" onclick="window.aktivanFotoMod='kreativni'; document.getElementById('skrivenaKamera').click()">📸 ${window.recnik[window.trenutniJezik].btnKamera}</button>
+                        <div id="multi_foto_preview_box_kreativni" style="display:none; margin-top:10px; text-align:center;"><img id="multi_foto_preview_kreativni" src="" style="max-width:100%; max-height:140px; border-radius:8px; border:3px solid #10b981; object-fit:contain; background:#fff;"></div>
                     </div>`;
                 }
-                
+
                 if (elovi.includes('pronadji')) {
                     let proTekst = pin.zadatak?.pronadji_opis ? pin.zadatak.pronadji_opis : "Pronađite skriveni motiv.";
                     let slikaProHtml = pin.zadatak?.slika ? `<img src="${pin.zadatak.slika}" style="width:100%; max-height:220px; object-fit:contain; border-radius:8px; margin-bottom:10px; border: 2px solid #0ea5e9; cursor:zoom-in;" onclick="window.uvecajSlikuZadatka(this.src)">` : '';
 
                     tekstZaPrikaz += `
-                    <div style="background:#f8fafc; border: 2px solid #cbd5e1; border-top:5px solid #0ea5e9; padding:15px; margin-bottom:12px; border-radius:12px; text-align:center;">
+                    <div id="multi_pronadji_kontejner" style="background:#f8fafc; border: 2px solid #cbd5e1; border-top:5px solid #0ea5e9; padding:15px; margin-bottom:12px; border-radius:12px; text-align:center; transition: all 0.3s ease;">
                         <b style="font-size:18px; color:#1e293b; font-weight:900; display:block; margin-bottom:5px;">🔍 Pronađi skriveni motiv:</b>
                         ${slikaProHtml}
                         <p style="font-size:16px; font-weight:600; color:#334155; margin-bottom:10px;">${proTekst}</p>
-                        <button id="dinamicki_btn_kamera" class="btn-kamera" style="width:100%; background:#ff9800; color:white; font-weight:900; padding:12px; border:none; border-radius:8px; font-size:16px; cursor:pointer;" onclick="document.getElementById('skrivenaKamera').click()">📸 ${window.recnik[window.trenutniJezik].btnKamera}</button>
-                        <div id="multi_foto_preview_box" style="display:none; margin-top:10px; text-align:center;"><img id="multi_foto_preview" src="" style="max-width:100%; max-height:140px; border-radius:8px; border:3px solid #0ea5e9;"></div>
+                        <button id="dinamicki_btn_kamera_pronadji" class="btn-kamera" style="width:100%; background:#ff9800; color:white; font-weight:900; padding:12px; border:none; border-radius:8px; font-size:16px; cursor:pointer;" onclick="window.aktivanFotoMod='pronadji'; document.getElementById('skrivenaKamera').click()">📸 ${window.recnik[window.trenutniJezik].btnKamera}</button>
+                        <div id="multi_foto_preview_box_pronadji" style="display:none; margin-top:10px; text-align:center;"><img id="multi_foto_preview_pronadji" src="" style="max-width:100%; max-height:140px; border-radius:8px; border:3px solid #10b981; object-fit:contain; background:#fff;"></div>
                     </div>`;
                 }
 
@@ -3453,7 +3549,7 @@ window.prikaziZadatak = function() {
 
             if (tip === 'kreativni' || tip === 'pronadji') {
                 document.getElementById('tekstZadatkaUUI').innerHTML = (pin.zadatak?.tekst_zadatka || "") + `
-                <button id="dinamicki_btn_kamera" class="btn-kamera" style="width:100%; margin-top:20px; background:#ff9800; color:white; font-weight:bold; padding:15px; border:none; border-radius:10px; font-size:16px; cursor:pointer;" onclick="document.getElementById('skrivenaKamera').click()">📸 ${window.recnik[window.trenutniJezik].btnKamera}</button>`;            
+                <button id="dinamicki_btn_kamera" class="btn-kamera" style="width:100%; margin-top:20px; background:#ff9800; color:white; font-weight:bold; padding:15px; border:none; border-radius:10px; font-size:16px; cursor:pointer;" onclick="window.aktivanFotoMod='solo'; document.getElementById('skrivenaKamera').click()">📸 ${window.recnik[window.trenutniJezik].btnKamera}</button>`;            
                 document.getElementById('txtNapomena').innerText = (tip === 'kreativni') ? window.recnik[window.trenutniJezik].napomenaKreativni : window.recnik[window.trenutniJezik].napomenaPronadji;
                 document.getElementById('txtNapomena').style.display = 'block';
                 if(tip === 'pronadji') document.getElementById('btnProveri').innerText = window.recnik[window.trenutniJezik].btnZavrsiPronadji || "PRONAŠAO SAM ✔️";
@@ -3475,7 +3571,7 @@ window.prikaziZadatak = function() {
                     document.getElementById('txtNapomena').style.display = 'block';
                 }
             }
-} catch(err) {
+        } catch(err) {
             console.error(err);
             if(document.getElementById('btnProveri')) document.getElementById('btnProveri').style.display = 'none'; 
             
@@ -3520,7 +3616,7 @@ window.generisiKvizUI = function(kvizData) {
         });
     };        
 
-    window.slikaNapravljena = function() {
+window.slikaNapravljena = function() {
         let input = document.getElementById('skrivenaKamera');
         if (input.files && input.files[0]) {
             let reader = new FileReader();
@@ -3578,22 +3674,31 @@ window.generisiKvizUI = function(kvizData) {
                                 document.body.removeChild(link);
                             }
                             
-                            let dBtn = document.getElementById('dinamicki_btn_kamera');
-                            if(dBtn) {
-                                dBtn.style.background = '#10b981';
-                                dBtn.innerText = "📸 FOTOGRAFIJA SAČUVANA ✔️";
-                            }
-                            
-                            let mPreview = document.getElementById('multi_foto_preview');
-                            let mPreviewBox = document.getElementById('multi_foto_preview_box');
-                            if(mPreview && mPreviewBox) {
-                                mPreview.src = finalnaSlika;
-                                mPreviewBox.style.display = 'block';
+                            if (window.aktivanFotoMod === 'pronadji') {
+                                let dBtnPro = document.getElementById('dinamicki_btn_kamera_pronadji');
+                                let proKontejner = document.getElementById('multi_pronadji_kontejner');
+                                if(dBtnPro) { dBtnPro.style.background = '#10b981'; dBtnPro.innerText = "📸 FOTOGRAFIJA SAČUVANA ✔️"; }
+                                if(proKontejner) { proKontejner.style.background = '#dcfce7'; proKontejner.style.borderColor = '#22c55e'; proKontejner.style.borderTop = '5px solid #22c55e'; }
+                                let mPreviewPro = document.getElementById('multi_foto_preview_pronadji');
+                                let mBoxPro = document.getElementById('multi_foto_preview_box_pronadji');
+                                if(mPreviewPro && mBoxPro) { mPreviewPro.src = finalnaSlika; mBoxPro.style.display = 'block'; }
+                                window.slikaSlikanaPronadji = true; 
+                            } else if (window.aktivanFotoMod === 'kreativni') {
+                                let dBtnKre = document.getElementById('dinamicki_btn_kamera_kreativni');
+                                let kreKontejner = document.getElementById('multi_kreativni_kontejner');
+                                if(dBtnKre) { dBtnKre.style.background = '#10b981'; dBtnKre.innerText = "📸 FOTOGRAFIJA SAČUVANA ✔️"; }
+                                if(kreKontejner) { kreKontejner.style.background = '#dcfce7'; kreKontejner.style.borderColor = '#22c55e'; kreKontejner.style.borderTop = '5px solid #22c55e'; }
+                                let mPreviewKre = document.getElementById('multi_foto_preview_kreativni');
+                                let mBoxKre = document.getElementById('multi_foto_preview_box_kreativni');
+                                if(mPreviewKre && mBoxKre) { mPreviewKre.src = finalnaSlika; mBoxKre.style.display = 'block'; }
+                                window.slikaSlikanaKreativni = true; 
+                            } else {
+                                let dBtn = document.getElementById('dinamicki_btn_kamera');
+                                if(dBtn) { dBtn.style.background = '#10b981'; dBtn.innerText = "📸 FOTOGRAFIJA SAČUVANA ✔️"; }
+                                window.slikaSlikanaSada = true; 
                             }
 
-                            if (window.trenutanTipZadatka === 'multi') { 
-                                window.slikaSlikanaSada = true; 
-                            } else { 
+                            if (window.trenutanTipZadatka !== 'multi') { 
                                 setTimeout(() => { window.uspehZadatka(); }, 1200); 
                             }
                         };
@@ -3665,7 +3770,7 @@ window.generisiKvizUI = function(kvizData) {
         }
     };
 
-    window.proveriOdgovor = function() {
+window.proveriOdgovor = function() {
         let pin = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
         let tip = pin.zadatak?.tip || 'zagonetka';
 
@@ -3747,11 +3852,17 @@ window.generisiKvizUI = function(kvizData) {
                 }
             }
             
-            // 5. Provera fotografije
-            if (sveTacno && (elovi.includes('kreativni') || elovi.includes('pronadji'))) {
-                if (!window.slikaSlikanaSada) {
+            // 5. Provera fotografije (Odvojeno za kreativni i pronadji)
+            if (sveTacno && elovi.includes('kreativni')) {
+                if (!window.slikaSlikanaKreativni) {
                     sveTacno = false;
-                    porukaGreske = window.trenutniJezik === 'sr' ? "Niste napravili fotografiju lokacije!" : "You haven't taken a photo!";
+                    porukaGreske = window.trenutniJezik === 'sr' ? "Niste napravili kreativnu fotografiju!" : "You haven't taken a creative photo!";
+                }
+            }
+            if (sveTacno && elovi.includes('pronadji')) {
+                if (!window.slikaSlikanaPronadji) {
+                    sveTacno = false;
+                    porukaGreske = window.trenutniJezik === 'sr' ? "Niste fotografisali skriveni motiv!" : "You haven't photographed the motif!";
                 }
             }
             
@@ -4063,6 +4174,31 @@ let preostaleMinute = Math.floor(window.preostaloSekundi / 60);
             kontejnerIzvestaja.insertBefore(preskocenoDiv, bonusKontejner);
         }
 
+        // ⏱️ PRIKAZ PROLAZNIH VREMENA
+        let staroVreme = document.getElementById('statProlaznaVremena');
+        if (staroVreme) staroVreme.remove();
+        
+        if (window.potragaPodaci && window.potragaPodaci.merenjeVremena && window.sesijaPodaci.prolaznaVremena && window.sesijaPodaci.prolaznaVremena.length > 0) {
+            let ispisVremena = `<div id="statProlaznaVremena" style="margin-top:15px; margin-bottom:15px; text-align:left; background:#f8fafc; padding:15px; border-radius:12px; border:2px solid #cbd5e1;">
+                <b style="color:#0f172a; font-size:16px;">⏱️ Vreme rešavanja po lokacijama:</b><div style="margin-top:10px; font-size:14px; color:#475569;">`;
+            
+            window.sesijaPodaci.prolaznaVremena.forEach(v => {
+                let m = Math.floor(v.vreme / 60);
+                let s = v.vreme % 60;
+                let textVreme = m > 0 ? `${m} min ${s} sek` : `${s} sek`;
+                ispisVremena += `<div style="border-bottom:1px dashed #cbd5e1; padding:6px 0;">📍 Lokacija ${v.lok}: <b style="color:#1d4ed8; float:right;">${textVreme}</b></div>`;
+            });
+            ispisVremena += `</div></div>`;
+            
+            let kontejnerIzvestaja = document.getElementById('txtStatPresli').parentNode;
+            let bonusKontejner = document.getElementById('bonusVremeKontejner');
+            let vremeDiv = document.createElement('div');
+            vremeDiv.innerHTML = ispisVremena;
+            kontejnerIzvestaja.insertBefore(vremeDiv, bonusKontejner);
+        }
+
+            // ⏱️ kraj
+
         if (window.potragaPodaci.isGrupna) {
             document.getElementById('rangKontejner').style.display = "block";
             document.getElementById('statRang').innerText = "1"; 
@@ -4122,6 +4258,16 @@ let preostaleMinute = Math.floor(window.preostaloSekundi / 60);
             alert("Kopiranje nije uspelo, molimo prepišite račun: " + racunText);
         });
     }
+
+       // --- 1. modal link reklama prema aplikaciji---
+    window.otvoriQRModal = function() {
+             document.getElementById('qrPristupModal').style.display = 'flex';
+            }
+
+    window.zatvoriQRModal = function() {
+              document.getElementById('qrPristupModal').style.display = 'none';
+            }      
+    
 
 window.pokreniTajmer = function() {
         if(window.tajmerInterval) clearInterval(window.tajmerInterval);
@@ -4694,17 +4840,28 @@ window.iscrtajSpisakTacaka = function() {
         }
     };
 
-    // FUNKCIJA KOJA PAMTI KADA JE NEŠTO STVARNO REŠENO
-  let staraUspehZadatka = window.uspehZadatka;
+// FUNKCIJA KOJA PAMTI KADA JE NEŠTO STVARNO REŠENO
+    let staraUspehZadatka = window.uspehZadatka;
     window.uspehZadatka = function() {
         if (!window.sesijaPodaci.zavrseneTacke) window.sesijaPodaci.zavrseneTacke = [];
         if (!window.sesijaPodaci.zavrseniPinovi) window.sesijaPodaci.zavrseniPinovi = [];
 
         if (!window.sesijaPodaci.zavrseneTacke.includes(window.trenutnaTackaIndeks)) {
             window.sesijaPodaci.zavrseneTacke.push(window.trenutnaTackaIndeks);
+            
+            // ⏱️ BELEŽENJE VREMENA REŠAVANJA ZADATKA
+            if (window.potragaPodaci && window.potragaPodaci.merenjeVremena && window.vremePocetkaTacke) {
+                if (!window.sesijaPodaci.prolaznaVremena) window.sesijaPodaci.prolaznaVremena = [];
+                let sekunde = Math.round((Date.now() - window.vremePocetkaTacke) / 1000);
+                window.sesijaPodaci.prolaznaVremena.push({
+                    lok: window.trenutnaTackaIndeks + 1,
+                    vreme: sekunde
+                });
+            }
         }
 
         let trenPin = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
+
         if (trenPin && trenPin.id && !window.sesijaPodaci.zavrseniPinovi.includes(trenPin.id)) {
             window.sesijaPodaci.zavrseniPinovi.push(trenPin.id);
         }
@@ -7719,6 +7876,69 @@ window.otvoriNoviModalDonacije = function() {
         </div>
     `;
     document.body.appendChild(modal);
+};
+// POTPUNO NOVO, SLANJE SLIKA NA SERVER
+window.posaljiSlikeNaServer = async function() {
+    let btn = document.getElementById('btnPosaljiSlike');
+    let poruka = document.getElementById('porukaSlanjeSlika');
+    
+    if (!navigator.onLine) {
+        alert("Trenutno nemate internet signal. Pokušajte ponovo kada izađete iz prirode!");
+        return;
+    }
+
+    btn.innerText = "⏳ Slike se pakuju i šalju...";
+    btn.disabled = true;
+    btn.style.opacity = "0.7";
+
+    try {
+        let kompresovaneSlike = [];
+
+        for (let i = 0; i < window.napravljeneSlike.length; i++) {
+            let base64Slika = window.napravljeneSlike[i];
+            
+            let malaSlika = await new Promise((resolve) => {
+                let img = new Image();
+                img.src = base64Slika;
+                img.onload = function() {
+                    let canvas = document.createElement('canvas');
+                    let maxDim = 400; // Kompresuje sliku da ne opterećuje bazu
+                    let w = img.width;
+                    let h = img.height;
+                    
+                    if (w > h) { if (w > maxDim) { h *= maxDim / w; w = maxDim; } } 
+                    else { if (h > maxDim) { w *= maxDim / h; h = maxDim; } }
+                    
+                    canvas.width = w;
+                    canvas.height = h;
+                    let ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    
+                    resolve(canvas.toDataURL('image/jpeg', 0.7)); // JPG niske rezolucije
+                };
+            });
+            
+            kompresovaneSlike.push(malaSlika);
+        }
+
+        // Upis slika direktno u postojeću sesiju na Firebase-u
+        await window.setDoc(window.doc(window.db, "sesije", window.timIdentifikator), {
+            galerijaServer: kompresovaneSlike
+        }, { merge: true });
+
+        btn.style.display = 'none';
+        if(poruka) {
+            poruka.innerText = `✅ Uspešno poslato ${kompresovaneSlike.length} uspomena! Hvala vam! 💛`;
+            poruka.style.display = 'block';
+        }
+        
+    } catch (error) {
+        console.error("Greška pri slanju:", error);
+        btn.innerText = "POKUŠAJ PONOVO";
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        alert("Došlo je do greške pri slanju. Proverite internet konekciju.");
+    }
 };
 
 </script>
