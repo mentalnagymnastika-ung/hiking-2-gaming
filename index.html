@@ -782,19 +782,32 @@ window.addEventListener('beforeunload', function (e) {
             </button>
             <div id="kompasPolje" class="poruka" style="background:#fff3e0; color:#e65100; border: 1px solid #ffe0b2; margin-top: 0; margin-bottom: 15px; padding: 12px; display: none; width: 100%; border-radius: 10px; font-weight: bold; box-sizing: border-box;"></div>
              
-             <!-- PASIVNI HIBRIDNI KOMPAS PANEL (CENTRIRAN) -->
+             <!-- PASIVNI HIBRIDNI KOMPAS PANEL (CENTRIRAN SA SVG STRELICOM) -->
             <div id="hibridniKompasPanel" style="display: none; background: #f8fafc; border: 3px solid #0284c7; border-radius: 16px; padding: 10px 20px; margin-bottom: 15px; box-shadow: 0 6px 15px rgba(2, 132, 199, 0.2); position: relative; align-items: center; justify-content: center; min-height: 85px;">
 
-              <!-- Kompas tačno na sredini -->
-             <div id="hibridStrelicaKrug" style="width: 70px; height: 70px; background: #e0f2fe; border: 3px solid #0284c7; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
-                  <div id="hibridStrelicaIkona" style="font-size: 38px; line-height: 1; transition: transform 0.2s ease-out; transform-origin: center center; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));">🧭</div>
-            </div>
-
-              <!-- Udaljenost fiksirana na desnoj strani -->
-             <div style="position: absolute; right: 20px; text-align: right;">
-                  <span id="hibridUdaljenostTekst" style="font-size: 26px; font-weight: 900; color: #0f172a;">--- m</span>
-             </div>
+              <!-- Kompas na sredini sa SVG pravom strelicom -->
+             <div id="hibridStrelicaKrug" style="width: 70px; height: 70px; background: #e0f2fe; border: 3px solid #0284c7; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 3px 5px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.15);">
+        
+            <!-- Dodata CSS "opruga" (cubic-bezier) da prelazak između 12 polja bude elegantan -->
+        <div id="hibridStrelicaIkona" style="width: 50px; height: 50px; transition: transform 0.4s cubic-bezier(0.25, 1.5, 0.5, 1); transform-origin: center center; display: flex; justify-content: center; align-items: center;">
+             <svg viewBox="0 0 100 100" width="100%" height="100%">
+                <!-- Senka strelice za 3D efekat -->
+                <path d="M50 5 L90 85 L50 70 L10 85 Z" fill="rgba(0,0,0,0.2)" transform="translate(0, 4)"></path>
+                <!-- Glavna crvena izviđačka strelica -->
+                <path d="M50 5 L90 85 L50 70 L10 85 Z" fill="#ef4444" stroke="#7f1d1d" stroke-width="3" stroke-linejoin="round"></path>
+                <!-- Centar strelice u boji pozadine (#e0f2fe) -->
+                <circle cx="50" cy="65" r="10" fill="#e0f2fe" stroke="#7f1d1d" stroke-width="3"></circle>
+            </svg>
         </div>
+
+    </div>
+
+    <!-- Udaljenost -->
+    <div style="position: absolute; right: 20px; text-align: right;">
+        <span id="hibridUdaljenostTekst" style="font-size: 26px; font-weight: 900; color: #0f172a;">--- m</span>
+    </div>
+
+</div>
             
             <div id="prikazOpisaLokacije" style="font-size: 16px; color: #475569; margin-bottom: 10px; font-weight: 600; display: none; line-height: 1.4;"></div>
             <img id="slikaLokacijeIgrac" src="" style="width:100%; max-height:220px; object-fit:contain; border-radius:12px; margin-bottom:15px; display:none; border: 2px solid #347C17; background:#e0e0e0; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
@@ -4605,18 +4618,36 @@ window.pokreniHibridniKompas = function() {
     window.addEventListener("deviceorientation", window.azurirajHibridnuStrelicu, true);
 };
 
+ window.trenutniVizuelniUgao = 0; // Dodajemo pamćenje prethodnog ugla
+
+window.trenutniVizuelniUgao = 0;
+window.poslednjiAzuriranVreme = 0;
+
 window.azurirajHibridnuStrelicu = function(e) {
     let ikona = document.getElementById('hibridStrelicaIkona');
     if (!ikona) return;
 
     let kompasSmer = e.webkitCompassHeading || (e.absolute ? 360 - e.alpha : null);
+    
     if (kompasSmer !== null) {
-        let relativniUgao = (window.hibridCiljUgao - kompasSmer + 360) % 360;
-        ikona.innerText = "⬆️";
-        ikona.style.transform = `rotate(${relativniUgao}deg)`;
-    } else {
-        ikona.innerText = "🧭";
-        ikona.style.transform = "none";
+        let sada = Date.now();
+        // Zadrška od 250ms - potpuno eliminiše sitno drhtanje ruku
+        if (sada - window.poslednjiAzuriranVreme < 250) return;
+        window.poslednjiAzuriranVreme = sada;
+
+        let siroviUgao = (window.hibridCiljUgao - kompasSmer + 360) % 360;
+        
+        // Tvoja ideja primenjena: Deljenje kruga na tačno 12 delova (koraci po 30 stepeni)
+        let stabilanUgao = Math.round(siroviUgao / 30) * 30;
+        
+        let razlika = stabilanUgao - (window.trenutniVizuelniUgao % 360);
+        if (razlika > 180) razlika -= 360;
+        if (razlika < -180) razlika += 360;
+        
+        window.trenutniVizuelniUgao += razlika;
+
+        // JS sada samo rotira kontejner, više ne prepisuje prelepi SVG unutra
+        ikona.style.transform = `rotate(${window.trenutniVizuelniUgao}deg)`;
     }
 };
 
