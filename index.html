@@ -573,10 +573,11 @@ window.addEventListener('beforeunload', function (e) {
     </label>
 </div>
 
-              <!-- IZBOR VRSTE IGRE -->
+
+<!-- IZBOR VRSTE IGRE (Bez prevremenog iskačućeg prozora) -->
 <div id="kontejnerVrstaIgre" style="margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 12px; border: 2px dashed #cbd5e1; text-align: center;">
     <label style="font-size: 14px; font-weight: 900; color: #334155; display: block; margin-bottom: 10px; text-transform: uppercase;">Izaberite vrstu igre</label>
-    <select id="unosVrstaIgre" onchange="window.promenaRezimaIgre()" style="font-weight: bold; color: #0f172a; font-size: 16px; border-color: #94a3b8; background: #ffffff; width: 100%; padding: 12px; border-radius: 8px; outline: none;">
+    <select id="unosVrstaIgre" style="font-weight: bold; color: #0f172a; font-size: 16px; border-color: #94a3b8; background: #ffffff; width: 100%; padding: 12px; border-radius: 8px; outline: none;">
         <option value="klasicna" selected>📱 Klasična digitalna potraga</option>
         <option value="hibridna">🧭 Igra pomoću kompasa (Uz papirnu mapu)</option>
     </select>
@@ -584,8 +585,11 @@ window.addEventListener('beforeunload', function (e) {
 
 <!-- DUGMAD ZA START U DVA KORAKA -->
 <div id="kontrolePocetka" style="margin-top: 25px; margin-bottom: 20px;">
+    <!-- Korak 1: Učitavanje (zadržano staro ime funkcije) -->
     <button class="btn-glavno" style="background: #3b82f6; width: 100%; margin-bottom: 10px;" onclick="window.zapocniIgru()" id="btnUcitaj">📥 UČITAJ IGRU U MEMORIJU</button>
-    <button class="btn-glavno" style="background: #10b981; width: 100%; display: none;" onclick="window.potvrdiStartNaTerenu()" id="btnKreniNaTerenu">🚀 ZAPOČNI IGRU NA LOKACIJI</button>
+    
+    <!-- Korak 2: Skriveno dugme koje se pali tek nakon uspešnog učitavanja -->
+    <button class="btn-glavno" style="background: #0f172a; color: #10b981; border: 2px solid #10b981; width: 100%; display: none;" onclick="window.prikaziModalZaStart()" id="btnKreni">🚀 ZAPOČNI AVANTURU</button>
 </div>
         </div>
         
@@ -595,8 +599,7 @@ window.addEventListener('beforeunload', function (e) {
 </div>
     </div>
 
-<div id="ekranIntro" class="ekran" style="display: flex !important; flex-direction: column !important; height: 100% !important; max-height: 100% !important; overflow: hidden !important; padding: 15px; box-sizing: border-box; position: relative;">
-    
+<div id="ekranIntro" class="ekran" style="display: flex !important; flex-direction: column !important; height: 100% !important; max-height: 100% !important; overflow: hidden !important; padding: 15px; box-sizing: border-box; position: relative;">   
     <!-- 1. GORNJI DEO (Fiksiran) -->
     <div style="flex-shrink: 0; background: white;">
         <!-- Gornja traka -->
@@ -778,33 +781,46 @@ window.addEventListener('beforeunload', function (e) {
         <div id="lokacijaKontejner" style="text-align: center; margin-top: 10px; flex-grow: 1; overflow-y: auto;">
             
             <button id="btnTrag" class="btn-trag" style="margin-top: 0; margin-bottom: 10px; padding: 16px; font-weight: 900; font-size: 16px; border-radius: 12px; width: 100%; background: linear-gradient(135deg, #ff9800, #0fdaf5); color: white; border: none; box-shadow: 0 4px 12px rgba(245, 124, 0, 0.35); text-transform: uppercase; letter-spacing: 0.5px;" onclick="window.zatraziTrag()">
-                🔵 <span id="txtDugmeTrag">Aktiviraj SONAR (max preciznost)</span>
+                🍏 <span id="txtDugmeTrag">Aktiviraj SONAR (max preciznost)</span>
             </button>
             <div id="kompasPolje" class="poruka" style="background:#fff3e0; color:#e65100; border: 1px solid #ffe0b2; margin-top: 0; margin-bottom: 15px; padding: 12px; display: none; width: 100%; border-radius: 10px; font-weight: bold; box-sizing: border-box;"></div>
              
              <!-- PASIVNI HIBRIDNI KOMPAS PANEL (CENTRIRAN SA SVG STRELICOM) -->
-            <div id="hibridniKompasPanel" style="display: none; background: #f8fafc; border: 3px solid #0284c7; border-radius: 16px; padding: 10px 20px; margin-bottom: 15px; box-shadow: 0 6px 15px rgba(2, 132, 199, 0.2); position: relative; align-items: center; justify-content: center; min-height: 85px;">
+               <!-- PASIVNI HIBRIDNI KOMPAS PANEL (BALANSIRAN DIZAJN) -->
+              <div id="hibridniKompasPanel" style="display: none; background: #525864; border: 3px solid #0284c7; border-radius: 16px; padding: 10px 20px; margin-bottom: 15px; box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); position: relative; align-items: center; justify-content: center; min-height: 85px;">
 
-              <!-- Kompas na sredini sa SVG pravom strelicom -->
-             <div id="hibridStrelicaKrug" style="width: 70px; height: 70px; background: #e0f2fe; border: 3px solid #0284c7; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 3px 5px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.15);">
+              <!-- Levi tekst: G2H -->
+             <div style="position: absolute; left: 20px; text-align: left;">
+                 <span style="font-size: 28px; font-weight: 900; color: #97e21f; letter-spacing: 1px; text-shadow: 1px 1px 2px rgba(0,0,0,0.4);">G2H</span>
+             </div>
+
+             <!-- Kompas na sredini -->
+                <div style="position: relative; display: flex; justify-content: center; align-items: center; margin: 0 auto;">
         
-            <!-- Dodata CSS "opruga" (cubic-bezier) da prelazak između 12 polja bude elegantan -->
-        <div id="hibridStrelicaIkona" style="width: 50px; height: 50px; transition: transform 0.4s cubic-bezier(0.25, 1.5, 0.5, 1); transform-origin: center center; display: flex; justify-content: center; align-items: center;">
-             <svg viewBox="0 0 100 100" width="100%" height="100%">
-                <!-- Senka strelice za 3D efekat -->
-                <path d="M50 5 L90 85 L50 70 L10 85 Z" fill="rgba(0,0,0,0.2)" transform="translate(0, 4)"></path>
-                <!-- Glavna crvena izviđačka strelica -->
-                <path d="M50 5 L90 85 L50 70 L10 85 Z" fill="#ef4444" stroke="#7f1d1d" stroke-width="3" stroke-linejoin="round"></path>
-                <!-- Centar strelice u boji pozadine (#e0f2fe) -->
-                <circle cx="50" cy="65" r="10" fill="#e0f2fe" stroke="#7f1d1d" stroke-width="3"></circle>
-            </svg>
-        </div>
+             <!-- Oznaka za napred (krstić iznad kompasa) -->
+             <div style="position: absolute; top: -14px; color: #ffee03; font-size: 20px; font-weight: 900; z-index: 2;">+</div>
+        
+            <!-- Krug kompasa -->
+             <div id="hibridStrelicaKrug" style="width: 70px; height: 70px; background: #ffffff; border: 3px solid #0284c7; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 3px 5px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.4);">
+            
+            <!-- Strelica sa oprugom -->
+            <div id="hibridStrelicaIkona" style="width: 50px; height: 50px; transition: transform 0.4s cubic-bezier(0.25, 1.5, 0.5, 1); transform-origin: center center; display: flex; justify-content: center; align-items: center;">
+                <svg viewBox="0 0 100 100" width="100%" height="100%">
+                    <!-- Senka strelice -->
+                    <path d="M50 10 L85 85 L50 70 L15 85 Z" fill="rgba(0,0,0,0.2)" transform="translate(0, 3)"></path>
+                    <!-- Glavna strelica -->
+                    <path d="M50 10 L85 85 L50 70 L15 85 Z" fill="#ef4444" stroke="#7f1d1d" stroke-width="3" stroke-linejoin="round"></path>
+                    <!-- Istaknuta tačka na sredini rotacije -->
+                    <circle cx="50" cy="58" r="8" fill="#fde047" stroke="#7f1d1d" stroke-width="3"></circle>
+                </svg>
+            </div>
 
+        </div>
     </div>
 
-    <!-- Udaljenost -->
+    <!-- Desni tekst: Udaljenost -->
     <div style="position: absolute; right: 20px; text-align: right;">
-        <span id="hibridUdaljenostTekst" style="font-size: 26px; font-weight: 900; color: #0f172a;">--- m</span>
+        <span id="hibridUdaljenostTekst" style="font-size: 26px; font-weight: 900; color: #fde047; text-shadow: 1px 1px 2px rgba(0,0,0,0.4);">--- m</span>
     </div>
 
 </div>
@@ -2380,20 +2396,25 @@ window.idiNaPrijavu = function() {
     };
 
 window.zapocniIgru = async function() {
-        
-   // 🛑 1. PRAVNA BLOKADA: Apsolutni prioritet pre bilo kakvog drugog koda
-       let chkPravna = document.getElementById('chkPravnaOdgovornost');
+    // 🛑 1. PRAVNA BLOKADA: Apsolutni prioritet pre bilo kakvog drugog koda
+    let chkPravna = document.getElementById('chkPravnaOdgovornost');
     if (chkPravna && !chkPravna.checked) {
+        window.prikaziObavestenjeSredina("Pravna Saglasnost", "Morate označiti polje kojim potvrđujete uslove korišćenja.", "⚖️", "#e11d48");
+        return;
+    }
+
+    // 🛑 PROVERA CENTRALE: Proverava blokadu iz admina i limit od 399 ekipa
+    let dozvola = await window.proveriDozvoluZaUlaz();
+    if (!dozvola.dozvoljeno) {
         if (typeof window.prikaziObavestenjeSredina === 'function') {
-            window.prikaziObavestenjeSredina("Pravna Saglasnost", "Morate označiti polje kojim potvrđujete uslove korišćenja.", "⚖️", "#e11d48");
+            window.prikaziObavestenjeSredina("Ulaz Onemogućen", dozvola.poruka, "🛑", "#ef4444");
         } else {
-            alert("Morate potvrditi saglasnost sa pravnim uslovima!");
+            alert(dozvola.poruka);
         }
         return;
     }
 
-        // 🛑 PROVERA CENTRALE: Proverava blokadu iz admina i limit od 399 ekipa
-        let chkAuto = document.getElementById('chkAutoSacuvajSlike');
+    let chkAuto = document.getElementById('chkAutoSacuvajSlike');
     if (chkAuto) localStorage.setItem('auto_sacuvaj_slike', chkAuto.checked ? 'da' : 'ne');
 
     let uneseniTekst = document.getElementById('unosSifra').value.trim().toLowerCase();
@@ -2454,8 +2475,13 @@ window.zapocniIgru = async function() {
         window.tempImeTimaZaBazu = boja + " tim" + (timDodatak ? " - " + timDodatak : "");
     }
     
+    // CILJAMO DUGME 'btnUcitaj' (plavo) JER ONO POKREĆE OVU FUNKCIJU
     let btnUcitaj = document.getElementById('btnUcitaj');
-    if (btnUcitaj) btnUcitaj.innerText = "⏳ UČITAVAM...";
+    let originalniTekst = btnUcitaj ? btnUcitaj.innerText : "UČITAJ IGRU U MEMORIJU";
+    if (btnUcitaj) {
+        btnUcitaj.innerText = "⏳ PROVERAVAM...";
+        btnUcitaj.disabled = true;
+    }
     
     try {
         const sesijaRef = window.doc(window.db, "sesije", window.timIdentifikator);
@@ -2469,70 +2495,49 @@ window.zapocniIgru = async function() {
                 if (podaci.deviceId === mojOtisak) {
                     window.sesijaPodaci = podaci;
                     document.getElementById('modalDijalog').style.display = 'flex'; 
-                    if (btnUcitaj) btnUcitaj.innerText = "📥 UČITAJ IGRU U MEMORIJU"; 
+                    if (btnUcitaj) { btnUcitaj.innerText = originalniTekst; btnUcitaj.disabled = false; }
+                    return;
                 } else {
                     window.prikaziObavestenjeSredina("Tim je zauzet", "Ovaj tim je već u igri na terenu. Molimo izaberite drugi!", "🛑", "#ef4444");
-                    if (btnUcitaj) btnUcitaj.innerText = "📥 UČITAJ IGRU U MEMORIJU"; 
+                    if (btnUcitaj) { btnUcitaj.innerText = originalniTekst; btnUcitaj.disabled = false; }
                     return;
                 }
-            } else {
-                window.aktivirajDugmeZaTeren();
             }
-        } else { 
-            window.aktivirajDugmeZaTeren();
-        }
+        } 
+        
+        // SVE JE U REDU -> SKRIVAMO PLAVO, PALIMO CRNO DUGME
+        if (btnUcitaj) { btnUcitaj.innerText = originalniTekst; btnUcitaj.disabled = false; }
+        window.aktivirajZavrsnoDugme();
+
     } catch(e) { 
-        window.aktivirajDugmeZaTeren();
+        if (btnUcitaj) { btnUcitaj.innerText = originalniTekst; btnUcitaj.disabled = false; }
+        window.prikaziObavestenjeSredina("Sistemska Greška", e.message, "🛠️", "#ef4444");
     }
 };
 
-window.aktivirajDugmeZaTeren = function() {
+// Pali crno dugme za teren
+window.aktivirajZavrsnoDugme = function() {
     let btnUcitaj = document.getElementById('btnUcitaj');
-    let btnKreniNaTerenu = document.getElementById('btnKreniNaTerenu');
+    let btnKreni = document.getElementById('btnKreni');
+    
     if (btnUcitaj) btnUcitaj.style.display = 'none';
-    if (btnKreniNaTerenu) btnKreniNaTerenu.style.display = 'block';
-
-    if (typeof window.prikaziObavestenjeSredina === 'function') {
-        window.prikaziObavestenjeSredina(
-            "Igra je učitana!", 
-            "Podaci su bezbedno u memoriji telefona. Kada stignete na lokaciju i pripremite se, pritisnite zeleno dugme za početak!", 
-            "📲", 
-            "#10b981"
-        );
-    }
+    if (btnKreni) btnKreni.style.display = 'block';
+    
+    window.prikaziObavestenjeSredina(
+        "Igra je učitana!", 
+        "Podaci su bezbedno u memoriji telefona. Spremite se i krenite na lokaciju. Pritisnite 'ZAPOČNI AVANTURU' kada stignete!", 
+        "📥", 
+        "#10b981"
+    );
 };
 
-window.potvrdiStartNaTerenu = function() {
-    if (confirm("Da li ste fizički stigli na startnu poziciju? Tek sada počinje merenje vremena!")) {
-        window.napraviNovuSesiju();
-    }
-};
-
-window.promenaRezimaIgre = function() {
-    let izbor = document.getElementById('unosVrstaIgre').value;
-    if (izbor === 'hibridna') {
-        let img = document.getElementById('slikaAutoraHibrid');
-        if (window.odabranaPotraga && window.odabranaPotraga.autorSlika && window.odabranaPotraga.autorSlika.length > 10) {
-            img.src = window.odabranaPotraga.autorSlika;
-        }
+// Prikazuje modal kada se klikne crno dugme
+window.prikaziModalZaStart = function() {
+    let vrsta = document.getElementById('unosVrstaIgre') ? document.getElementById('unosVrstaIgre').value : 'klasicna';
+    if (vrsta === 'hibridna') {
         document.getElementById('modalHibridniRezim').style.display = 'flex';
-    }
-};
-
-window.potvrdiHibridni = function() {
-    document.getElementById('modalHibridniRezim').style.display = 'none';
-};
-
-window.odustaniOdHibridnog = function() {
-    document.getElementById('modalHibridniRezim').style.display = 'none';
-    document.getElementById('unosVrstaIgre').value = 'klasicna';
-    if (typeof window.prikaziObavestenjeSredina === 'function') {
-        window.prikaziObavestenjeSredina(
-            "Nema problema!", 
-            "Vraćeni ste na klasičnu digitalnu igru. Uskoro ćete ovde moći direktno da preuzmete i odštampate svesku.", 
-            "📱", 
-            "#3b82f6"
-        );
+    } else {
+        document.getElementById('modalPotvrdaLokacije').style.display = 'flex';
     }
 };
      
@@ -4664,17 +4669,26 @@ window.zaustaviHibridniKompas = function() {
 };
 
 window.zatraziTrag = function() {
-        if (window.zdravlje <= window.KAZNA_TRAG) {
-            alert(window.recnik[window.trenutniJezik].porukaNemaTraga || "Nemate dovoljno energije za pomoć!");
-            return;
-        }
-        let kontejner = document.getElementById('kompasPolje');
-        kontejner.style.display = 'block';
-        
-        // 🌟 POPRAVKA: Dodato skidanje energije (azurirajZdravlje) direktno na klik dugmeta!
-        kontejner.innerHTML = `<button onclick="window.azurirajZdravlje(-window.KAZNA_TRAG); window.pokreniSonarTrag()" class="btn-glavno" style="background:#0d47a1; margin: 10px 0; font-size:16px;">📡 AKTIVIRAJ SONAR (-${window.KAZNA_TRAG} 🍏)</button>`;
-    };
+    let kontejner = document.getElementById('kompasPolje');
 
+    // 1. Ako je polje već otvoreno, klikom na glavno dugme ga zatvaramo (Toggle)
+    if (kontejner.style.display === 'block') {
+        kontejner.style.display = 'none';
+        kontejner.innerHTML = '';
+        return;
+    }
+
+    // 2. Ako je zatvoreno, standardno proveravamo energiju i otvaramo ga
+    if (window.zdravlje <= window.KAZNA_TRAG) {
+        alert(window.recnik[window.trenutniJezik].porukaNemaTraga || "Nemate dovoljno energije za pomoć!");
+        return;
+    }
+
+    kontejner.style.display = 'block';
+    
+    // Unutrašnje dugme koje zapravo skida jabuke i pali veliki sonar
+    kontejner.innerHTML = `<button onclick="window.azurirajZdravlje(-window.KAZNA_TRAG); window.pokreniSonarTrag()" class="btn-glavno" style="background:#0d47a1; margin: 10px 0; font-size:16px;">📡 AKTIVIRAJ SONAR (-${window.KAZNA_TRAG} 🍏)</button>`;
+};
 // ===================================================================
 
 window.pokreniSonarTrag = function() {
@@ -8151,22 +8165,43 @@ window.posaljiSlikeNaServer = async function() {
     <iframe src="sef.html" style="width: 100%; flex-grow: 1; border: none;"></iframe>
 </div>
 
-<!-- STRIPOVSKI MODAL: PROVERA PAPIRNOG MATERIJALA -->
+<!-- 1. POBOLJŠAN HIBRIDNI MODAL (Za papirnu igru - Jak kontrast) -->
 <div id="modalHibridniRezim" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 100000; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; backdrop-filter: blur(5px);">
     <div style="background: white; border-radius: 20px; max-width: 400px; width: 100%; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 4px solid #f59e0b;">
-        <div style="display: flex; padding: 20px; background: #fffbeb; align-items: center; gap: 15px;">
-            <img id="slikaAutoraHibrid" src="logo.png" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #f59e0b; flex-shrink: 0; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <div style="position: relative; background: white; padding: 14px; border-radius: 14px; border: 2px solid #fcd34d; font-size: 14px; font-weight: 700; color: #78350f; line-height: 1.4;">
-                <div style="position: absolute; left: -9px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-right: 8px solid #fcd34d;"></div>
-                Za ovu avanturu biće ti neophodna moja knjiga staze i mapa! Da li ih imaš kod sebe?
+        <div style="padding: 25px 20px; background: #fffbeb; text-align: center; border-bottom: 2px solid #fde68a;">
+            <div style="font-size: 55px; margin-bottom: 10px; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.1));">🧭</div>
+            <h2 style="margin: 0 0 10px 0; color: #92400e; font-size: 22px; font-weight: 900; text-transform: uppercase;">Papirna staza</h2>
+            <div style="font-size: 16px; font-weight: 700; color: #78350f; line-height: 1.4;">
+                Za ovu avanturu biće ti neophodna naša papirna knjiga staze i mapa!<br><br>Da li ih imaš kod sebe i da li ste stigli na startnu lokaciju?
             </div>
         </div>
-        <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px; background: white;">
-            <button onclick="window.potvrdiHibridni()" style="background: #10b981; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 900; font-size: 15px; cursor: pointer;">
-                IMAMO SPREMNO! 🗺️
+        <div style="padding: 20px; display: flex; flex-direction: column; gap: 12px; background: white;">
+            <button onclick="document.getElementById('modalHibridniRezim').style.display='none'; window.napraviNovuSesiju();" style="background: #10b981; color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 900; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(16,185,129,0.3);">
+                IMAMO SPREMNO, KRENI! 🚀
             </button>
-            <button onclick="window.odustaniOdHibridnog()" style="background: #f1f5f9; color: #475569; border: 2px solid #cbd5e1; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer;">
-                Nemamo papire ❌
+            <button onclick="document.getElementById('modalHibridniRezim').style.display='none';" style="background: #f8fafc; color: #64748b; border: 2px solid #cbd5e1; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 15px; cursor: pointer;">
+                Vrati me nazad ✖
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 2. CUSTOM MODAL ZA POTVRDU LOKACIJE (Menja onaj ružni browser alert za običnu igru) -->
+<div id="modalPotvrdaLokacije" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 100000; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; backdrop-filter: blur(5px);">
+    <div style="background: white; border-radius: 20px; max-width: 400px; width: 100%; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 4px solid #3b82f6;">
+        <div style="padding: 30px 20px; text-align: center; background: #eff6ff; border-bottom: 2px solid #bfdbfe;">
+            <div style="font-size: 55px; margin-bottom: 10px; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.1));">📍</div>
+            <h2 style="margin: 0; color: #1e3a8a; font-size: 22px; font-weight: 900; text-transform: uppercase;">Startna pozicija</h2>
+            <p style="font-size: 16px; color: #1e40af; font-weight: 600; line-height: 1.4; margin-top: 10px;">
+                Da li ste fizički stigli na startnu poziciju?<br><br>Tek kada potvrdite, počeće merenje vremena!
+            </p>
+        </div>
+        <div style="padding: 20px; display: flex; flex-direction: column; gap: 12px; background: white;">
+            <button onclick="document.getElementById('modalPotvrdaLokacije').style.display='none'; window.napraviNovuSesiju();" style="background: #3b82f6; color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 900; font-size: 16px; cursor: pointer; box-shadow: 0 4px 6px rgba(59,130,246,0.3);">
+                TU SMO, ZAPOČNI IGRU! 🚀
+            </button>
+            <button onclick="document.getElementById('modalPotvrdaLokacije').style.display='none';" style="background: #f8fafc; color: #64748b; border: 2px solid #cbd5e1; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 15px; cursor: pointer;">
+                Nismo još stigli ✖
             </button>
         </div>
     </div>
