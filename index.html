@@ -832,11 +832,6 @@ window.addEventListener('beforeunload', function (e) {
             <button class="btn-glavno" onclick="window.proveriOdgovor()" id="btnProveri">PROVERI ODGOVOR</button>
         </div>
 
-        <div id="slikaZadatkaModal" onclick="this.style.display='none'" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100000; justify-content: center; align-items: center; cursor: zoom-out; overflow: auto; padding: 10px; box-sizing: border-box;">
-            <img id="velikaSlikaZadatka" src="" style="width: 100%; max-width: 100%; height: auto; max-height: 90vh; border-radius: 8px; box-shadow: 0 4px 25px rgba(255,255,255,0.25); object-fit: contain;">
-            <div style="position: absolute; top: 20px; right: 20px; color: white; font-size: 35px; font-weight: bold; cursor: pointer; text-shadow: 0 2px 10px rgba(0,0,0,0.5); z-index: 100001;">✕</div>
-        </div>
-
         <div id="ambasadorKodModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 200000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(5px);">
             <div style="background: white; padding: 25px; border-radius: 20px; text-align: center; max-width: 400px; width: 100%; border: 4px solid #fbbf24; box-shadow: 0 10px 30px rgba(0,0,0,0.5); box-sizing: border-box;">
                 <div style="font-size: 65px; margin-bottom: 10px;">🪙🎁</div>
@@ -872,26 +867,30 @@ window.addEventListener('beforeunload', function (e) {
             <img src="https://i.ibb.co/PzNK4KPS/ZDRAVA-igra01.png" class="animacija-kovceg" alt="Nagrada" onerror="this.style.display='none'; document.getElementById('kovceg-fallback').style.display='block';">
         
         <div id="zavrsniMeni" style="display: block;">
-            <div class="zadatak-box" style="background: #e0f2f1; border-color: #1abc9c; color: #00796b; padding: 15px; font-size: 20px; margin-top:15px;" id="txtTacanOdgovor">
+            <div class="zadatak-box" style="background: #f9fafa; border-color: #2febc5; color: #00796b; padding: 15px; font-size: 20px; margin-top:15px;" id="txtTacanOdgovor">
                 BRAVO! Spremni ste za dalje.
             </div>
             
-        <div id="nagradniDeoKontejner" style="display:none; background: #fffbeb; border: 2px dashed #f59e0b; padding: 15px; border-radius: 12px; margin-top: 15px; text-align: center; box-shadow: 0 4px 10px rgba(245,158,11,0.2);">
-        <div style="color: #206b10; font-weight: bold; font-size: 26px; text-transform: uppercase;">🧩 Vaš deo slagalice!</div>
-        <div id="txtNagradniDeo" style="font-size: 24px; font-weight: 900; color: #000; margin-top: 5px;"></div>
-        <img id="slikaNagradniDeo" src="" style="display:none; width:100%; max-height:220px; object-fit:contain; margin-top:15px; border-radius:8px; border:2px solid #fcd34d;">
-        </div>
-
-            <div style="background: #e3f2fd; border: 2px solid #90caf9; padding: 15px; border-radius: 12px; margin-top: 15px; text-align: center;">
-                <span style="color: #1565c0; font-size: 24px;">Uspešno ste rešili lokaciju <b id="prikazReseneTacke">1</b>!</span><br>
-                <div style="margin-top: 8px; font-size: 20px; color: #333;">Sledeća lokacija donosi izazov:<br><b style="color:#000; font-size: 18px;" id="prikazSledecegTipa">ZAGONETKA</b></div>
+        <div id="nagradniDeoKontejner" style="display:none; background: #f7f6f2; border: 2px dashed #f59e0b; padding: 10px; border-radius: 12px; margin-top: 10px; text-align: center; box-shadow: 0 4px 10px rgba(124, 119, 110, 0.15);">
+            <div style="color: #206b10; font-weight: 900; font-size: 17px; text-transform: uppercase;">🧩 Vaš deo slagalice!</div>
+            <div id="txtNagradniDeo" style="font-size: 14px; font-weight: 700; color: #1e293b; margin-top: 5px; line-height: 1.35;"></div>
+            
+            <div style="display:flex; flex-direction: column; align-items:center; margin-top: 8px;">
+                <img id="slikaNagradniDeo" src="" onclick="window.uvecajSlikuZadatka(this.src)" style="display:none; width: 110px; height: 110px; object-fit: contain; background: #ffffff; border-radius: 8px; border: 2px solid #fcfbf9; padding: 4px; cursor: zoom-in; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                <span style="font-size: 11px; color: #4b127a; font-weight: bold; margin-top: 4px;">🔍 Dodirni sliku za uvećanje</span>
             </div>
 
-            <h3 style="text-align: center; color: #f50505; font-size: 20px; margin-top: 15px;">
+            <div style="background: #f6f7f8; border: 2px solid #90caf9; padding: 8px 12px; border-radius: 10px; margin-top: 10px; text-align: center;">
+                <span style="color: #1565c0; font-size: 16px; font-weight: bold;">Uspešno ste rešili lokaciju <b id="prikazReseneTacke">1</b>!</span><br>
+                <div style="margin-top: 4px; font-size: 14px; color: #333;">Sledeća lokacija donosi izazov: <b style="color:#000; font-size: 14px;" id="prikazSledecegTipa">ZAGONETKA</b></div>
+            </div>
+        </div>
+
+            <h3 style="text-align: center; color: #1ac3c9; font-size: 20px; margin-top: 15px;">
                 <span id="txtPreostalo">Preostala💛🍏energija tima:</span> <span id="konacnoZdravlje">100</span>%
             </h3>
             
-            <div class="zadatak-box" style="background: #fff3e0; border-color: #ffb300; color: #e65100; font-size: 18px; margin-top: 15px; display: none;" id="smernicaKontejner">
+            <div class="zadatak-box" style="background: #f5f1ec; border-color: #ffb300; color: #e65100; font-size: 18px; margin-top: 15px; display: none;" id="smernicaKontejner">
                 <b style="font-size: 16px;">🔘 Kuda dalje:</b><br>
                 <span id="txtSmernica" style="font-size: 22px; font-weight: 800; color: #000;"></span>
             </div>
@@ -998,7 +997,14 @@ window.addEventListener('beforeunload', function (e) {
         </div>
     </div> 
 </div>
-            
+       
+<!-- MODAL ZA sliku uvecanje qa koda -->
+
+<div id="slikaZadatkaModal" onclick="this.style.display='none'" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.92); z-index: 999999; flex-direction: column; justify-content: center; align-items: center; cursor: zoom-out; padding: 15px; box-sizing: border-box; backdrop-filter: blur(4px);">
+    <div style="position: absolute; top: 15px; right: 20px; color: white; font-size: 32px; font-weight: bold; cursor: pointer; text-shadow: 0 2px 8px rgba(0,0,0,0.6);">✕</div>
+    <img id="velikaSlikaZadatka" src="" style="width: 85vw; max-width: 380px; height: auto; max-height: 80vh; object-fit: contain; border-radius: 12px; background: #ffffff; padding: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.6);">
+</div>
+
 <!-- MODAL ZA INSTALACIJU (A2HS) -->
 <div id="modalInstalacija" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 999999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(5px);">
     <div style="background: white; padding: 25px; border-radius: 20px; text-align: center; max-width: 400px; width: 100%; border: 4px solid #10b981; box-shadow: 0 10px 40px rgba(0,0,0,0.4);">
@@ -2137,8 +2143,11 @@ window.izaberiPotraguPoSifri = function(sifra) {
 window.izaberiPotragu = function(podaci) {
         
         // 🌟 PAMETNO OKRETANJE LINIJSKE STAZE ZAVISNO OD LOKACIJE IGRAČA
-        if (window.zadnjaGeoPozicija && podaci.pinovi && podaci.pinovi.length > 1) {
-            let userLat = window.zadnjaGeoPozicija.lat;
+
+            let jeStriktniPesak = podaci.striktniRedosled && (podaci.tip === 'Pešak' || !podaci.tip);
+            if (!jeStriktniPesak && window.zadnjaGeoPozicija && podaci.pinovi && podaci.pinovi.length > 1) {
+                let userLat = window.zadnjaGeoPozicija.lat;
+
             let userLng = window.zadnjaGeoPozicija.lng;
             
             let prvaTacka = podaci.pinovi[0];
@@ -2505,14 +2514,16 @@ window.napraviNovuSesiju = async function() {
 
         let jeKruzna = razmakStartCilj <= 80;
 
-        if (jeKruzna) {
+            if (jeKruzna) {
             // ==========================================
             // SCENARIO 1: KRUŽNA STAZA (Multi-entry krug)
             // ==========================================
             let sviPinovi = [...window.potragaPodaci.pinovi];
             let krajnjiPinIndeks = sviPinovi.findIndex(p => p.zadatak && p.zadatak.isKrajnjaPoruka === true);
 
-            if (krajnjiPinIndeks !== -1) {
+            let jeStriktniPesak = window.potragaPodaci.striktniRedosled && tipKretanja === 'Pešak';
+
+            if (krajnjiPinIndeks !== -1 && !jeStriktniPesak) {
                 let krajnjiPin = sviPinovi[krajnjiPinIndeks];
                 let obicniPinovi = sviPinovi.filter((_, idx) => idx !== krajnjiPinIndeks);
 
@@ -2540,10 +2551,10 @@ window.napraviNovuSesiju = async function() {
             if (tipKretanja === 'Pešak') {
                 // A) PEŠACI: Nema blokade ulaska! Sistem sam odlučuje smer 
                 // ako su bliži cilju, inače ih mehanika čeka na proveri lokacije zadatka 1.
-                let okreniStazu = distCilj < distStart;
+                let okreniStazu = window.potragaPodaci.striktniRedosled ? false : (distCilj < distStart);
                 window.zavrsiKreiranjeSesije(okreniStazu);
                 
-        } else {
+              } else {
                 // B) AUTO/BICIKL: Super-pametni modal koji prepoznaje gde se igrač nalazi!
                 let imePocetka = prvaTacka.imeLokacije || "Start";
                 let imeCilja = poslednjaTacka.imeLokacije || "Kraj staze";
@@ -3424,7 +3435,7 @@ if (nemaPravogZadatka) {
                     let zagTekst = pin.zadatak?.zag_tekst ? pin.zadatak.zag_tekst : "Rešite zagonetku:";
                     
                     // 🌟 OVO JE KLJUČNA PROMENA: Tražimo sliku u novom polju (zag_slika) ali i u STAROM polju (slika)
-                    let izvorSlike = pin.zadatak?.zag_slika || pin.zadatak?.slika || "";
+                    let izvorSlike = pin.zadatak?.zag_slika || "";
                     
                     let slikaZagHtml = izvorSlike ? `<img src="${izvorSlike}" style="width:100%; max-height:220px; object-fit:contain; border-radius:8px; margin-bottom:10px; border: 2px solid #3b82f6; cursor:zoom-in;" onclick="window.uvecajSlikuZadatka(this.src)">` : '';
 
@@ -7541,27 +7552,6 @@ window.uvecajSlikuZadatka = function(src) {
     }
 };
 
-// Automatski hvatamo klik na BILO KOJU sliku unutar zadataka ili kviza
-document.addEventListener("click", function(e) {
-    if (e.target && e.target.tagName === 'IMG' && 
-       (e.target.closest('#zadatakKontejner') || e.target.closest('#kvizUI'))) {
-        
-        // Preskačemo ikonice ako postoje da ih deca slučajno ne uvećaju
-        if (e.target.src && !e.target.src.includes('kovcezic') && e.target.id !== 'multi_zlatnik_ikona') {
-            window.uvecajSlikuZadatka(e.target.src);
-        }
-    }
-});
-
-// Menjamo izgled kursora u lupu (zoom-in) kada deca pređu preko slike
-document.addEventListener("mouseover", function(e) {
-    if (e.target && e.target.tagName === 'IMG' && 
-       (e.target.closest('#zadatakKontejner') || e.target.closest('#kvizUI'))) {
-        if (e.target.src && !e.target.src.includes('kovcezic') && e.target.id !== 'multi_zlatnik_ikona') {
-            e.target.style.cursor = 'zoom-in';
-        }
-    }
-});
 
 // MOZAK ZA VIP/B2B (Obrada, provera i otključavanje)
 window.procesuirajVIPKod = async function(unetiKod, ocekivanaStaza = null) {
