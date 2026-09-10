@@ -573,8 +573,10 @@ window.addEventListener('beforeunload', function (e) {
     </label>
 </div>
 
-            <button class="btn-glavno" style="margin-top: 30px; margin-bottom: 20px;" onclick="window.zapocniIgru()" id="btnKreni">ZAPOČNI AVANTURU</button>
-        </div>
+<div id="kontrolePocetka" style="margin-top: 30px; margin-bottom: 20px;">
+    <button class="btn-glavno" style="background: #3b82f6; width: 100%; margin-bottom: 10px;" onclick="window.zapocniIgru()" id="btnUcitaj">📥 UČITAJ IGRU U MEMORIJU</button>
+    <button class="btn-glavno" style="background: #10b981; width: 100%; display: none; margin-top: 10px;" onclick="window.potvrdiStartNaTerenu()" id="btnKreniNaTerenu">🚀 ZAPOČNI IGRU NA LOKACIJI</button>
+</div>
         
 <div class="brend-podnozje" style="padding: 5px 10px; margin-top: 5px; line-height: 1.2; text-align: center;">
     <span class="brend-ime prevod-futer-kombinovano" style="font-size: 11px; font-weight: bold; color: #64748b;">Centar Mentalne Gimnastike, Udruženje Mentalna Gimnastika</span>
@@ -2340,142 +2342,123 @@ window.idiNaPrijavu = function() {
     };
 
 window.zapocniIgru = async function() {
-        
-   // 🛑 1. PRAVNA BLOKADA: Apsolutni prioritet pre bilo kakvog drugog koda
+    // 🛑 1. PRAVNA BLOKADA
     let chkPravna = document.getElementById('chkPravnaOdgovornost');
     if (chkPravna && !chkPravna.checked) {
-        if (typeof window.prikaziObavestenjeSredina === 'function') {
-            window.prikaziObavestenjeSredina(
-                "Pravna Saglasnost", 
-                "Da biste započeli igru, morate označiti polje kojim potvrđujete da prihvatate uslove korišćenja i da učestvujete na sopstvenu odgovornost.", 
-                "⚖️", 
-                "#e11d48"
-            );
-        } else {
-            alert("Morate potvrditi saglasnost sa pravnim uslovima igre pre početka!");
-        }
-        return; // Blokira dalje izvršavanje funkcije i ulazak u igru
+        if (typeof window.prikaziObavestenjeSredina === 'function') window.prikaziObavestenjeSredina("Pravna Saglasnost", "Da biste započeli igru, morate označiti polje kojim potvrđujete da prihvatate uslove korišćenja.", "⚖️", "#e11d48");
+        else alert("Morate potvrditi saglasnost sa pravnim uslovima!");
+        return;
     }
 
-        // 🛑 PROVERA CENTRALE: Proverava blokadu iz admina i limit od 399 ekipa
+    // 🛑 PROVERA CENTRALE I KAPACITETA
     let dozvola = await window.proveriDozvoluZaUlaz();
     if (!dozvola.dozvoljeno) {
-        if (typeof window.prikaziObavestenjeSredina === 'function') {
-            window.prikaziObavestenjeSredina("Ulaz Onemogućen", dozvola.poruka, "🛑", "#ef4444");
-        } else {
-            alert(dozvola.poruka);
-        }
-        return; // Prekida se pokretanje i ne kreira se sesija
+        if (typeof window.prikaziObavestenjeSredina === 'function') window.prikaziObavestenjeSredina("Ulaz Onemogućen", dozvola.poruka, "🛑", "#ef4444");
+        else alert(dozvola.poruka);
+        return;
     }
 
     let chkAuto = document.getElementById('chkAutoSacuvajSlike');
-    if (chkAuto) {
-        localStorage.setItem('auto_sacuvaj_slike', chkAuto.checked ? 'da' : 'ne');
+    if (chkAuto) localStorage.setItem('auto_sacuvaj_slike', chkAuto.checked ? 'da' : 'ne');
+
+    let uneseniTekst = document.getElementById('unosSifra').value.trim().toLowerCase();
+    let timDodatak = document.getElementById('unosTim').value.trim();
+    let pravaSifraMape = String(window.odabranaPotraga.sifra).toLowerCase();
+    
+    if (!uneseniTekst) { 
+        if (typeof window.prikaziObavestenjeSredina === 'function') window.prikaziObavestenjeSredina("Nedostaju podaci", window.recnik[window.trenutniJezik].upozorenjeUnos || "Unesite šifru i izaberite boju.", "🛑", "#ef4444"); 
+        return; 
     }
 
-        let sifra = document.getElementById('unosSifra').value.trim().toLowerCase();
-        let timDodatak = document.getElementById('unosTim').value.trim();
-        let uneseniTekst = document.getElementById('unosSifra').value.trim().toLowerCase();
-        let pravaSifraMape = String(window.odabranaPotraga.sifra).toLowerCase();
-        
-        if (!uneseniTekst) { 
-            window.prikaziObavestenjeSredina("Nedostaju podaci", window.recnik[window.trenutniJezik].upozorenjeUnos, "🛑", "#ef4444"); 
+    window.trenutniAmbasador = ""; 
+    let sifra = uneseniTekst;
+
+    if (uneseniTekst === pravaSifraMape) {
+        sifra = pravaSifraMape; 
+    } else {
+        try {
+            let unetoVelikimSlovima = uneseniTekst.toUpperCase();
+            const partnerSnap = await window.getDoc(window.doc(window.db, "ambasadori", unetoVelikimSlovima));
+            if (partnerSnap.exists() && partnerSnap.data().aktivan === true && String(partnerSnap.data().stazaPoveznica || "").toLowerCase() === pravaSifraMape) {
+                window.trenutniAmbasador = unetoVelikimSlovima; 
+                sifra = pravaSifraMape;
+                let bonusZlatnici = partnerSnap.data().bonus || 50;
+                localStorage.setItem('lokalni_zlatnici', (parseInt(localStorage.getItem('lokalni_zlatnici')) || 0) + bonusZlatnici);
+            } else {
+                if (typeof window.prikaziObavestenjeSredina === 'function') window.prikaziObavestenjeSredina("Greška", "Nevažeći VIP kod ili pogrešna šifra.", "🛑", "#ef4444"); 
+                return; 
+            }
+        } catch (err) { 
+            if (typeof window.prikaziObavestenjeSredina === 'function') window.prikaziObavestenjeSredina("Sistemska Greška", "Došlo je do greške pri čitanju baze.", "🛠️", "#ef4444");
             return; 
         }
-
-        window.trenutniAmbasador = ""; 
-        sifra = uneseniTekst;
-
-        if (uneseniTekst === pravaSifraMape) {
-            sifra = pravaSifraMape; 
-        } else {
-            try {
-                let unetoVelikimSlovima = uneseniTekst.toUpperCase();
-                const partnerSnap = await window.getDoc(window.doc(window.db, "ambasadori", unetoVelikimSlovima));
-                
-                if (partnerSnap.exists() && partnerSnap.data().aktivan === true) {
-                    let vezanaStaza = String(partnerSnap.data().stazaPoveznica || "").toLowerCase();
-                    
-                    if (vezanaStaza === pravaSifraMape) {
-                        window.trenutniAmbasador = unetoVelikimSlovima; 
-                        sifra = pravaSifraMape;
-                        
-                        let bonusZlatnici = partnerSnap.data().bonus || 50;
-                        let trenutniNovcanik = parseInt(localStorage.getItem('lokalni_zlatnici')) || 0;
-                        localStorage.setItem('lokalni_zlatnici', trenutniNovcanik + bonusZlatnici);
-                        
-                        let imePartneraPrikaz = partnerSnap.data().naziv || unetoVelikimSlovima;
-                        window.prikaziObavestenjeSredina(
-                            "Tajni kod prepoznat!",
-                            `<b>${imePartneraPrikaz}</b> vam poklanja <b>${bonusZlatnici} BONUS ZLATNIKA</b> za otključavanje skrivenih zadataka!`,
-                            "🌟",
-                            "#f59e0b"
-                        );
-                    } else {
-                        window.prikaziObavestenjeSredina("Nevažeći kod", `Ovaj VIP kod ne otključava ovu konkretnu stazu.`, "🛑", "#ef4444"); 
-                        return; 
-                    }
+    }
+    
+    if (window.odabranaPotraga.isGrupna) {
+        let brojTima = document.getElementById('unosBrojTima').value;
+        if(!brojTima) { if (typeof window.prikaziObavestenjeSredina === 'function') window.prikaziObavestenjeSredina("Greška", "Izaberite broj tima!", "🛑", "#ef4444"); return; }
+        window.timIdentifikator = sifra + "_Tim" + brojTima + (timDodatak ? "_" + timDodatak : "");
+        window.tempImeTimaZaBazu = "Tim " + brojTima + (timDodatak ? " - " + timDodatak : "");
+    } else {
+        let boja = document.getElementById('unosBojaTima').value;
+        if(!boja) { if (typeof window.prikaziObavestenjeSredina === 'function') window.prikaziObavestenjeSredina("Greška", "Izaberite boju tima!", "🛑", "#ef4444"); return; }
+        window.timIdentifikator = sifra + "_" + boja + (timDodatak ? "_" + timDodatak : "");
+        window.tempImeTimaZaBazu = boja + " tim" + (timDodatak ? " - " + timDodatak : "");
+    }
+    
+    let btnUcitaj = document.getElementById('btnUcitaj');
+    if (btnUcitaj) btnUcitaj.innerText = "⏳ OBRADA...";
+    
+    try {
+        const sesijaRef = window.doc(window.db, "sesije", window.timIdentifikator);
+        const sesijaSnap = await window.getDoc(sesijaRef);
+        
+        if(sesijaSnap.exists()) {
+            let podaci = sesijaSnap.data();
+            if (!podaci.zavrsena && podaci.expiresAt > new Date().getTime()) {
+                if (podaci.deviceId === window.dajOtisakUredjaja()) {
+                    window.sesijaPodaci = podaci;
+                    document.getElementById('modalDijalog').style.display = 'flex'; 
+                    if (btnUcitaj) btnUcitaj.innerText = "📥 UČITAJ IGRU U MEMORIJU"; 
                 } else {
-                    window.prikaziObavestenjeSredina("Pogrešna šifra", window.recnik[window.trenutniJezik].pogresnaSifra, "🛑", "#ef4444"); 
-                    return; 
+                    if (typeof window.prikaziObavestenjeSredina === 'function') window.prikaziObavestenjeSredina("Tim je zauzet", "Ovaj tim je već u igri na terenu. Molimo izaberite drugi!", "🛑", "#ef4444");
+                    if (btnUcitaj) btnUcitaj.innerText = "📥 UČITAJ IGRU U MEMORIJU"; 
+                    return;
                 }
-            } catch (err) {
-                console.error("Greška pri B2B verifikaciji:", err);
-                window.prikaziObavestenjeSredina("Sistemska Greška", "Došlo je do greške pri čitanju baze.", "🛠️", "#ef4444");
-                return;
+            } else {
+                window.aktivirajDugmeZaTeren();
             }
+        } else { 
+            window.aktivirajDugmeZaTeren();
         }
-        
-        if (window.odabranaPotraga.isGrupna) {
-            let brojTima = document.getElementById('unosBrojTima').value;
-            if(!brojTima) { 
-                window.prikaziObavestenjeSredina("Greška", window.trenutniJezik === 'sr' ? "Izaberite broj tima!" : "Choose team number!", "🛑", "#ef4444"); 
-                return; 
-            }
-            window.timIdentifikator = sifra + "_Tim" + brojTima + (timDodatak ? "_" + timDodatak : "");
-            window.tempImeTimaZaBazu = "Tim " + brojTima + (timDodatak ? " - " + timDodatak : "");
-        } else {
-            let boja = document.getElementById('unosBojaTima').value;
-            if(!boja) { 
-                window.prikaziObavestenjeSredina("Greška", window.recnik[window.trenutniJezik].upozorenjeUnos, "🛑", "#ef4444"); 
-                return; 
-            }
-            window.timIdentifikator = sifra + "_" + boja + (timDodatak ? "_" + timDodatak : "");
-            window.tempImeTimaZaBazu = boja + " tim" + (timDodatak ? " - " + timDodatak : "");
-        }
-        
-        let btnKreni = document.getElementById('btnKreni');
-        btnKreni.innerText = "⏳...";
-        
-        try {
-            const sesijaRef = window.doc(window.db, "sesije", window.timIdentifikator);
-            const sesijaSnap = await window.getDoc(sesijaRef);
-            
-            if(sesijaSnap.exists()) {
-                let podaci = sesijaSnap.data();
-                let mojOtisak = window.dajOtisakUredjaja();
-                
-                if (!podaci.zavrsena && podaci.expiresAt > new Date().getTime()) {
-                    if (podaci.deviceId === mojOtisak) {
-                        window.sesijaPodaci = podaci;
-                        document.getElementById('modalDijalog').style.display = 'flex'; 
-                        btnKreni.innerText = window.recnik[window.trenutniJezik].btnKreni; 
-                    } else {
-                        window.prikaziObavestenjeSredina("Tim je zauzet", window.recnik[window.trenutniJezik].porukaZauzeto || "Ovaj tim je već u igri na terenu. Molimo izaberite drugi!", "🛑", "#ef4444");
-                        btnKreni.innerText = window.recnik[window.trenutniJezik].btnKreni; 
-                        return;
-                    }
-                } else {
-                    window.napraviNovuSesiju();
-                }
-            } else { 
-                window.napraviNovuSesiju();
-            }
-        } catch(e) { 
-            window.prikaziObavestenjeSredina("Sistemska Greška", e.message, "🛠️", "#ef4444");
-            btnKreni.innerText = window.recnik[window.trenutniJezik].btnKreni; 
-        }
-    };
+    } catch(e) { 
+        if (typeof window.prikaziObavestenjeSredina === 'function') window.prikaziObavestenjeSredina("Sistemska Greška", e.message, "🛠️", "#ef4444");
+        if (btnUcitaj) btnUcitaj.innerText = "📥 UČITAJ IGRU U MEMORIJU";
+    }
+};
+
+window.aktivirajDugmeZaTeren = function() {
+    let btnUcitaj = document.getElementById('btnUcitaj');
+    let btnKreniNaTerenu = document.getElementById('btnKreniNaTerenu');
+    
+    if (btnUcitaj) btnUcitaj.style.display = 'none';
+    if (btnKreniNaTerenu) btnKreniNaTerenu.style.display = 'block';
+    
+    if (typeof window.prikaziObavestenjeSredina === 'function') {
+        window.prikaziObavestenjeSredina(
+            "Igra je učitana!", 
+            "Podaci su bezbedno sačuvani u telefonu. Ugasite internet i prošetajte do startne pozicije. Pritisnite zeleno dugme tek kada budete fizički na lokaciji, jer se tada pokreće tajmer!", 
+            "📲", 
+            "#10b981"
+        );
+    }
+};
+
+window.potvrdiStartNaTerenu = function() {
+    if (confirm("Da li ste fizički stigli na lokaciju i spremni ste za početak? Tek sada se pokreće vreme!")) {
+        window.napraviNovuSesiju();
+    }
+};
 
 window.racunajTrajanjeUMs = function(trajanjeString) {
         if (!trajanjeString) return 3600000; // Osnova 1 sat ako fali podatak
