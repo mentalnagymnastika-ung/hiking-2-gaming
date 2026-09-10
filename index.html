@@ -573,7 +573,20 @@ window.addEventListener('beforeunload', function (e) {
     </label>
 </div>
 
-            <button class="btn-glavno" style="margin-top: 30px; margin-bottom: 20px;" onclick="window.zapocniIgru()" id="btnKreni">ZAPOČNI AVANTURU</button>
+              <!-- IZBOR VRSTE IGRE -->
+<div id="kontejnerVrstaIgre" style="margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 12px; border: 2px dashed #cbd5e1; text-align: center;">
+    <label style="font-size: 14px; font-weight: 900; color: #334155; display: block; margin-bottom: 10px; text-transform: uppercase;">Izaberite vrstu igre</label>
+    <select id="unosVrstaIgre" onchange="window.promenaRezimaIgre()" style="font-weight: bold; color: #0f172a; font-size: 16px; border-color: #94a3b8; background: #ffffff; width: 100%; padding: 12px; border-radius: 8px; outline: none;">
+        <option value="klasicna" selected>📱 Klasična digitalna potraga</option>
+        <option value="hibridna">🧭 Igra pomoću kompasa (Uz papirnu mapu)</option>
+    </select>
+</div>
+
+<!-- DUGMAD ZA START U DVA KORAKA -->
+<div id="kontrolePocetka" style="margin-top: 25px; margin-bottom: 20px;">
+    <button class="btn-glavno" style="background: #3b82f6; width: 100%; margin-bottom: 10px;" onclick="window.zapocniIgru()" id="btnUcitaj">📥 UČITAJ IGRU U MEMORIJU</button>
+    <button class="btn-glavno" style="background: #10b981; width: 100%; display: none;" onclick="window.potvrdiStartNaTerenu()" id="btnKreniNaTerenu">🚀 ZAPOČNI IGRU NA LOKACIJI</button>
+</div>
         </div>
         
 <div class="brend-podnozje" style="padding: 5px 10px; margin-top: 5px; line-height: 1.2; text-align: center;">
@@ -762,13 +775,27 @@ window.addEventListener('beforeunload', function (e) {
             TIP IGRE: ZAGONETKA
         </div>
         
-<div id="lokacijaKontejner" style="text-align: center; margin-top: 10px; flex-grow: 1; overflow-y: auto;">
+        <div id="lokacijaKontejner" style="text-align: center; margin-top: 10px; flex-grow: 1; overflow-y: auto;">
             
             <button id="btnTrag" class="btn-trag" style="margin-top: 0; margin-bottom: 10px; padding: 16px; font-weight: 900; font-size: 16px; border-radius: 12px; width: 100%; background: linear-gradient(135deg, #ff9800, #0fdaf5); color: white; border: none; box-shadow: 0 4px 12px rgba(245, 124, 0, 0.35); text-transform: uppercase; letter-spacing: 0.5px;" onclick="window.zatraziTrag()">
-                👣 <span id="txtDugmeTrag">Aktiviraj sonar (košta energije)</span>
+                🔵 <span id="txtDugmeTrag">Aktiviraj SONAR (max preciznost)</span>
             </button>
             <div id="kompasPolje" class="poruka" style="background:#fff3e0; color:#e65100; border: 1px solid #ffe0b2; margin-top: 0; margin-bottom: 15px; padding: 12px; display: none; width: 100%; border-radius: 10px; font-weight: bold; box-sizing: border-box;"></div>
+             
+             <!-- PASIVNI HIBRIDNI KOMPAS PANEL (CENTRIRAN) -->
+            <div id="hibridniKompasPanel" style="display: none; background: #f8fafc; border: 3px solid #0284c7; border-radius: 16px; padding: 10px 20px; margin-bottom: 15px; box-shadow: 0 6px 15px rgba(2, 132, 199, 0.2); position: relative; align-items: center; justify-content: center; min-height: 85px;">
 
+              <!-- Kompas tačno na sredini -->
+             <div id="hibridStrelicaKrug" style="width: 70px; height: 70px; background: #e0f2fe; border: 3px solid #0284c7; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+                  <div id="hibridStrelicaIkona" style="font-size: 38px; line-height: 1; transition: transform 0.2s ease-out; transform-origin: center center; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));">🧭</div>
+            </div>
+
+              <!-- Udaljenost fiksirana na desnoj strani -->
+             <div style="position: absolute; right: 20px; text-align: right;">
+                  <span id="hibridUdaljenostTekst" style="font-size: 26px; font-weight: 900; color: #0f172a;">--- m</span>
+             </div>
+        </div>
+            
             <div id="prikazOpisaLokacije" style="font-size: 16px; color: #475569; margin-bottom: 10px; font-weight: 600; display: none; line-height: 1.4;"></div>
             <img id="slikaLokacijeIgrac" src="" style="width:100%; max-height:220px; object-fit:contain; border-radius:12px; margin-bottom:15px; display:none; border: 2px solid #347C17; background:#e0e0e0; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
 
@@ -2342,141 +2369,160 @@ window.idiNaPrijavu = function() {
 window.zapocniIgru = async function() {
         
    // 🛑 1. PRAVNA BLOKADA: Apsolutni prioritet pre bilo kakvog drugog koda
-    let chkPravna = document.getElementById('chkPravnaOdgovornost');
+       let chkPravna = document.getElementById('chkPravnaOdgovornost');
     if (chkPravna && !chkPravna.checked) {
         if (typeof window.prikaziObavestenjeSredina === 'function') {
-            window.prikaziObavestenjeSredina(
-                "Pravna Saglasnost", 
-                "Da biste započeli igru, morate označiti polje kojim potvrđujete da prihvatate uslove korišćenja i da učestvujete na sopstvenu odgovornost.", 
-                "⚖️", 
-                "#e11d48"
-            );
+            window.prikaziObavestenjeSredina("Pravna Saglasnost", "Morate označiti polje kojim potvrđujete uslove korišćenja.", "⚖️", "#e11d48");
         } else {
-            alert("Morate potvrditi saglasnost sa pravnim uslovima igre pre početka!");
+            alert("Morate potvrditi saglasnost sa pravnim uslovima!");
         }
-        return; // Blokira dalje izvršavanje funkcije i ulazak u igru
+        return;
     }
 
         // 🛑 PROVERA CENTRALE: Proverava blokadu iz admina i limit od 399 ekipa
-    let dozvola = await window.proveriDozvoluZaUlaz();
-    if (!dozvola.dozvoljeno) {
-        if (typeof window.prikaziObavestenjeSredina === 'function') {
-            window.prikaziObavestenjeSredina("Ulaz Onemogućen", dozvola.poruka, "🛑", "#ef4444");
-        } else {
-            alert(dozvola.poruka);
-        }
-        return; // Prekida se pokretanje i ne kreira se sesija
+        let chkAuto = document.getElementById('chkAutoSacuvajSlike');
+    if (chkAuto) localStorage.setItem('auto_sacuvaj_slike', chkAuto.checked ? 'da' : 'ne');
+
+    let uneseniTekst = document.getElementById('unosSifra').value.trim().toLowerCase();
+    let timDodatak = document.getElementById('unosTim').value.trim();
+    let pravaSifraMape = String(window.odabranaPotraga.sifra).toLowerCase();
+    
+    if (!uneseniTekst) { 
+        window.prikaziObavestenjeSredina("Nedostaju podaci", window.recnik[window.trenutniJezik].upozorenjeUnos, "🛑", "#ef4444"); 
+        return; 
     }
 
-    let chkAuto = document.getElementById('chkAutoSacuvajSlike');
-    if (chkAuto) {
-        localStorage.setItem('auto_sacuvaj_slike', chkAuto.checked ? 'da' : 'ne');
-    }
+    window.trenutniAmbasador = ""; 
+    let sifra = uneseniTekst;
 
-        let sifra = document.getElementById('unosSifra').value.trim().toLowerCase();
-        let timDodatak = document.getElementById('unosTim').value.trim();
-        let uneseniTekst = document.getElementById('unosSifra').value.trim().toLowerCase();
-        let pravaSifraMape = String(window.odabranaPotraga.sifra).toLowerCase();
-        
-        if (!uneseniTekst) { 
-            window.prikaziObavestenjeSredina("Nedostaju podaci", window.recnik[window.trenutniJezik].upozorenjeUnos, "🛑", "#ef4444"); 
-            return; 
-        }
-
-        window.trenutniAmbasador = ""; 
-        sifra = uneseniTekst;
-
-        if (uneseniTekst === pravaSifraMape) {
-            sifra = pravaSifraMape; 
-        } else {
-            try {
-                let unetoVelikimSlovima = uneseniTekst.toUpperCase();
-                const partnerSnap = await window.getDoc(window.doc(window.db, "ambasadori", unetoVelikimSlovima));
-                
-                if (partnerSnap.exists() && partnerSnap.data().aktivan === true) {
-                    let vezanaStaza = String(partnerSnap.data().stazaPoveznica || "").toLowerCase();
-                    
-                    if (vezanaStaza === pravaSifraMape) {
-                        window.trenutniAmbasador = unetoVelikimSlovima; 
-                        sifra = pravaSifraMape;
-                        
-                        let bonusZlatnici = partnerSnap.data().bonus || 50;
-                        let trenutniNovcanik = parseInt(localStorage.getItem('lokalni_zlatnici')) || 0;
-                        localStorage.setItem('lokalni_zlatnici', trenutniNovcanik + bonusZlatnici);
-                        
-                        let imePartneraPrikaz = partnerSnap.data().naziv || unetoVelikimSlovima;
-                        window.prikaziObavestenjeSredina(
-                            "Tajni kod prepoznat!",
-                            `<b>${imePartneraPrikaz}</b> vam poklanja <b>${bonusZlatnici} BONUS ZLATNIKA</b> za otključavanje skrivenih zadataka!`,
-                            "🌟",
-                            "#f59e0b"
-                        );
-                    } else {
-                        window.prikaziObavestenjeSredina("Nevažeći kod", `Ovaj VIP kod ne otključava ovu konkretnu stazu.`, "🛑", "#ef4444"); 
-                        return; 
-                    }
+    if (uneseniTekst === pravaSifraMape) {
+        sifra = pravaSifraMape; 
+    } else {
+        try {
+            let unetoVelikimSlovima = uneseniTekst.toUpperCase();
+            const partnerSnap = await window.getDoc(window.doc(window.db, "ambasadori", unetoVelikimSlovima));
+            if (partnerSnap.exists() && partnerSnap.data().aktivan === true) {
+                let vezanaStaza = String(partnerSnap.data().stazaPoveznica || "").toLowerCase();
+                if (vezanaStaza === pravaSifraMape) {
+                    window.trenutniAmbasador = unetoVelikimSlovima; 
+                    sifra = pravaSifraMape;
+                    let bonusZlatnici = partnerSnap.data().bonus || 50;
+                    let trenutniNovcanik = parseInt(localStorage.getItem('lokalni_zlatnici')) || 0;
+                    localStorage.setItem('lokalni_zlatnici', trenutniNovcanik + bonusZlatnici);
                 } else {
-                    window.prikaziObavestenjeSredina("Pogrešna šifra", window.recnik[window.trenutniJezik].pogresnaSifra, "🛑", "#ef4444"); 
+                    window.prikaziObavestenjeSredina("Nevažeći kod", "Ovaj VIP kod ne otključava ovu konkretnu stazu.", "🛑", "#ef4444"); 
                     return; 
                 }
-            } catch (err) {
-                console.error("Greška pri B2B verifikaciji:", err);
-                window.prikaziObavestenjeSredina("Sistemska Greška", "Došlo je do greške pri čitanju baze.", "🛠️", "#ef4444");
-                return;
-            }
-        }
-        
-        if (window.odabranaPotraga.isGrupna) {
-            let brojTima = document.getElementById('unosBrojTima').value;
-            if(!brojTima) { 
-                window.prikaziObavestenjeSredina("Greška", window.trenutniJezik === 'sr' ? "Izaberite broj tima!" : "Choose team number!", "🛑", "#ef4444"); 
+            } else {
+                window.prikaziObavestenjeSredina("Pogrešna šifra", window.recnik[window.trenutniJezik].pogresnaSifra, "🛑", "#ef4444"); 
                 return; 
             }
-            window.timIdentifikator = sifra + "_Tim" + brojTima + (timDodatak ? "_" + timDodatak : "");
-            window.tempImeTimaZaBazu = "Tim " + brojTima + (timDodatak ? " - " + timDodatak : "");
-        } else {
-            let boja = document.getElementById('unosBojaTima').value;
-            if(!boja) { 
-                window.prikaziObavestenjeSredina("Greška", window.recnik[window.trenutniJezik].upozorenjeUnos, "🛑", "#ef4444"); 
-                return; 
-            }
-            window.timIdentifikator = sifra + "_" + boja + (timDodatak ? "_" + timDodatak : "");
-            window.tempImeTimaZaBazu = boja + " tim" + (timDodatak ? " - " + timDodatak : "");
+        } catch (err) {
+            window.prikaziObavestenjeSredina("Sistemska Greška", "Došlo je do greške pri čitanju baze.", "🛠️", "#ef4444");
+            return;
         }
+    }
+    
+    if (window.odabranaPotraga.isGrupna) {
+        let brojTima = document.getElementById('unosBrojTima').value;
+        if(!brojTima) { 
+            window.prikaziObavestenjeSredina("Greška", "Izaberite broj tima!", "🛑", "#ef4444"); 
+            return; 
+        }
+        window.timIdentifikator = sifra + "_Tim" + brojTima + (timDodatak ? "_" + timDodatak : "");
+        window.tempImeTimaZaBazu = "Tim " + brojTima + (timDodatak ? " - " + timDodatak : "");
+    } else {
+        let boja = document.getElementById('unosBojaTima').value;
+        if(!boja) { 
+            window.prikaziObavestenjeSredina("Greška", "Izaberite boju tima!", "🛑", "#ef4444"); 
+            return; 
+        }
+        window.timIdentifikator = sifra + "_" + boja + (timDodatak ? "_" + timDodatak : "");
+        window.tempImeTimaZaBazu = boja + " tim" + (timDodatak ? " - " + timDodatak : "");
+    }
+    
+    let btnUcitaj = document.getElementById('btnUcitaj');
+    if (btnUcitaj) btnUcitaj.innerText = "⏳ UČITAVAM...";
+    
+    try {
+        const sesijaRef = window.doc(window.db, "sesije", window.timIdentifikator);
+        const sesijaSnap = await window.getDoc(sesijaRef);
         
-        let btnKreni = document.getElementById('btnKreni');
-        btnKreni.innerText = "⏳...";
-        
-        try {
-            const sesijaRef = window.doc(window.db, "sesije", window.timIdentifikator);
-            const sesijaSnap = await window.getDoc(sesijaRef);
+        if(sesijaSnap.exists()) {
+            let podaci = sesijaSnap.data();
+            let mojOtisak = window.dajOtisakUredjaja();
             
-            if(sesijaSnap.exists()) {
-                let podaci = sesijaSnap.data();
-                let mojOtisak = window.dajOtisakUredjaja();
-                
-                if (!podaci.zavrsena && podaci.expiresAt > new Date().getTime()) {
-                    if (podaci.deviceId === mojOtisak) {
-                        window.sesijaPodaci = podaci;
-                        document.getElementById('modalDijalog').style.display = 'flex'; 
-                        btnKreni.innerText = window.recnik[window.trenutniJezik].btnKreni; 
-                    } else {
-                        window.prikaziObavestenjeSredina("Tim je zauzet", window.recnik[window.trenutniJezik].porukaZauzeto || "Ovaj tim je već u igri na terenu. Molimo izaberite drugi!", "🛑", "#ef4444");
-                        btnKreni.innerText = window.recnik[window.trenutniJezik].btnKreni; 
-                        return;
-                    }
+            if (!podaci.zavrsena && podaci.expiresAt > new Date().getTime()) {
+                if (podaci.deviceId === mojOtisak) {
+                    window.sesijaPodaci = podaci;
+                    document.getElementById('modalDijalog').style.display = 'flex'; 
+                    if (btnUcitaj) btnUcitaj.innerText = "📥 UČITAJ IGRU U MEMORIJU"; 
                 } else {
-                    window.napraviNovuSesiju();
+                    window.prikaziObavestenjeSredina("Tim je zauzet", "Ovaj tim je već u igri na terenu. Molimo izaberite drugi!", "🛑", "#ef4444");
+                    if (btnUcitaj) btnUcitaj.innerText = "📥 UČITAJ IGRU U MEMORIJU"; 
+                    return;
                 }
-            } else { 
-                window.napraviNovuSesiju();
+            } else {
+                window.aktivirajDugmeZaTeren();
             }
-        } catch(e) { 
-            window.prikaziObavestenjeSredina("Sistemska Greška", e.message, "🛠️", "#ef4444");
-            btnKreni.innerText = window.recnik[window.trenutniJezik].btnKreni; 
+        } else { 
+            window.aktivirajDugmeZaTeren();
         }
-    };
+    } catch(e) { 
+        window.aktivirajDugmeZaTeren();
+    }
+};
 
+window.aktivirajDugmeZaTeren = function() {
+    let btnUcitaj = document.getElementById('btnUcitaj');
+    let btnKreniNaTerenu = document.getElementById('btnKreniNaTerenu');
+    if (btnUcitaj) btnUcitaj.style.display = 'none';
+    if (btnKreniNaTerenu) btnKreniNaTerenu.style.display = 'block';
+
+    if (typeof window.prikaziObavestenjeSredina === 'function') {
+        window.prikaziObavestenjeSredina(
+            "Igra je učitana!", 
+            "Podaci su bezbedno u memoriji telefona. Kada stignete na lokaciju i pripremite se, pritisnite zeleno dugme za početak!", 
+            "📲", 
+            "#10b981"
+        );
+    }
+};
+
+window.potvrdiStartNaTerenu = function() {
+    if (confirm("Da li ste fizički stigli na startnu poziciju? Tek sada počinje merenje vremena!")) {
+        window.napraviNovuSesiju();
+    }
+};
+
+window.promenaRezimaIgre = function() {
+    let izbor = document.getElementById('unosVrstaIgre').value;
+    if (izbor === 'hibridna') {
+        let img = document.getElementById('slikaAutoraHibrid');
+        if (window.odabranaPotraga && window.odabranaPotraga.autorSlika && window.odabranaPotraga.autorSlika.length > 10) {
+            img.src = window.odabranaPotraga.autorSlika;
+        }
+        document.getElementById('modalHibridniRezim').style.display = 'flex';
+    }
+};
+
+window.potvrdiHibridni = function() {
+    document.getElementById('modalHibridniRezim').style.display = 'none';
+};
+
+window.odustaniOdHibridnog = function() {
+    document.getElementById('modalHibridniRezim').style.display = 'none';
+    document.getElementById('unosVrstaIgre').value = 'klasicna';
+    if (typeof window.prikaziObavestenjeSredina === 'function') {
+        window.prikaziObavestenjeSredina(
+            "Nema problema!", 
+            "Vraćeni ste na klasičnu digitalnu igru. Uskoro ćete ovde moći direktno da preuzmete i odštampate svesku.", 
+            "📱", 
+            "#3b82f6"
+        );
+    }
+};
+     
 window.racunajTrajanjeUMs = function(trajanjeString) {
         if (!trajanjeString) return 3600000; // Osnova 1 sat ako fali podatak
 
@@ -2793,7 +2839,9 @@ window.zavrsiKreiranjeSesije = async function(okreniStazu) {
         zavrseneTacke: [],
         preskoceneTacke: 0,
         stazaRotirana: okreniStazu,
-        deviceId: window.dajOtisakUredjaja() // Obezbeđen pečat uređaja
+        deviceId: window.dajOtisakUredjaja(),
+        // DODATA LINIJA KOJA PAMTI IZBOR REŽIMA:
+        hibridniMod: (document.getElementById('unosVrstaIgre') && document.getElementById('unosVrstaIgre').value === 'hibridna')
     };
     
     try {
@@ -3094,13 +3142,21 @@ window.nadjiSledecuValidnuTacku = function(startIndeks) {
                 document.getElementById('lokacijaKontejner').insertBefore(radarKontejner, document.getElementById('velikaNajavaZadatka'));
                 
                 window.pokreniAutoRadar(originalniPin.rad || 30, tipKretanja);
-            } else {
+                
+                } else {
                 if(navMeni) navMeni.style.display = 'none';
                 document.getElementById('btnOtkljucaj').style.display = 'block';
                 document.getElementById('txtProveraMesta').style.display = 'block';
                 document.getElementById('txtNemaSignal').style.display = 'block';
                 document.getElementById('btnPokreniQR').style.display = 'block';
                 document.getElementById('btnTrag').style.display = 'block';
+                
+                // 🧭 PALJENJE KOMPASA SAMO NA PEŠAČKIM STAZAMA AKO JE HIBRIDNI MOD
+                if (window.sesijaPodaci && window.sesijaPodaci.hibridniMod) {
+                    window.pokreniHibridniKompas();
+                } else {
+                    window.zaustaviHibridniKompas();
+                }
             }
 
         } catch(e) {
@@ -3337,6 +3393,34 @@ if (nemaPravogZadatka) {
         window.uspehZadatka();
     }
     return; 
+}
+
+// 🧭 HIBRIDNI REŽIM: Ako igraju uz papirnu brošuru, preskačemo digitalne zadatke
+if (window.sesijaPodaci && window.sesijaPodaci.hibridniMod) {
+    let pinLok = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
+    let imeLok = pinLok.imeLokacije || ("Lokacija " + (window.trenutnaTackaIndeks + 1));
+    
+    document.getElementById('tekstZadatkaUUI').style.display = 'block';
+    document.getElementById('tekstZadatkaUUI').innerHTML = `
+        <div style="padding: 10px; text-align: center;">
+            <div style="font-size: 50px; margin-bottom: 10px;">🗺️</div>
+            <b style="color: #15803d; font-size: 20px; display: block; margin-bottom: 10px;">Stigli ste: ${imeLok}</b>
+            <p style="font-size: 16px; color: #334155; font-weight: bold; line-height: 1.5;">
+                Otvorite vašu papirnu mapu i rešite zadatak predviđen za ovu lokaciju!
+            </p>
+        </div>
+    `;
+    
+    let btnProveriHibrid = document.getElementById('btnProveri');
+    if (btnProveriHibrid) {
+        btnProveriHibrid.style.display = 'block';
+        btnProveriHibrid.style.background = '#10b981';
+        btnProveriHibrid.innerText = "✅ REŠILI SMO ZADATAK NA PAPIRU";
+        btnProveriHibrid.onclick = function() {
+            window.uspehZadatka();
+        };
+    }
+    return;
 }
 // =====================================================================
 
@@ -4470,6 +4554,84 @@ window.pokreniOtkljucavanje = function() {
         document.getElementById('zavesaProvere').style.display = 'none';
     }
 
+
+// ===================================================================
+// 🧭 PASIVNI HIBRIDNI KOMPAS (Za igru uz papirnu mapu)
+// ===================================================================
+window.hibridGpsId = null;
+window.hibridCiljUgao = 0;
+
+window.pokreniHibridniKompas = function() {
+    window.zaustaviHibridniKompas();
+
+    let panel = document.getElementById('hibridniKompasPanel');
+    if (!panel) return;
+    panel.style.display = 'flex';
+
+    if (!navigator.geolocation) {
+        let txtEl = document.getElementById('hibridUdaljenostTekst');
+        if (txtEl) txtEl.innerText = "GPS nedostupan";
+        return;
+    }
+
+    // 1. Očitavanje satelita i računanje udaljenosti i smera do cilja
+    window.hibridGpsId = navigator.geolocation.watchPosition(
+        function(pos) {
+            let uLat = pos.coords.latitude;
+            let uLng = pos.coords.longitude;
+            window.zadnjaGeoPozicija = { lat: uLat, lng: uLng };
+
+            let dist = Math.round(window.izracunajUdaljenost(uLat, uLng, window.CILJ_LAT, window.CILJ_LNG));
+            let distPrikaz = dist > 1000 ? (dist / 1000).toFixed(1) + " km" : dist + " m";
+
+            let txtEl = document.getElementById('hibridUdaljenostTekst');
+            if (txtEl) txtEl.innerText = distPrikaz;
+
+            // Računanje smera ka portalu (ugao u stepenima)
+            let y = Math.sin((window.CILJ_LNG - uLng) * Math.PI / 180) * Math.cos(window.CILJ_LAT * Math.PI / 180);
+            let x = Math.cos(uLat * Math.PI / 180) * Math.sin(window.CILJ_LAT * Math.PI / 180) -
+                    Math.sin(uLat * Math.PI / 180) * Math.cos(window.CILJ_LAT * Math.PI / 180) * Math.cos((window.CILJ_LNG - uLng) * Math.PI / 180);
+            window.hibridCiljUgao = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+        },
+        function(err) {
+            let txtEl = document.getElementById('hibridUdaljenostTekst');
+            if (txtEl) txtEl.innerText = "Tražim satelite...";
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 3000 }
+    );
+
+    // 2. Senzor rotacije telefona
+    window.addEventListener("deviceorientationabsolute", window.azurirajHibridnuStrelicu, true);
+    window.addEventListener("deviceorientation", window.azurirajHibridnuStrelicu, true);
+};
+
+window.azurirajHibridnuStrelicu = function(e) {
+    let ikona = document.getElementById('hibridStrelicaIkona');
+    if (!ikona) return;
+
+    let kompasSmer = e.webkitCompassHeading || (e.absolute ? 360 - e.alpha : null);
+    if (kompasSmer !== null) {
+        let relativniUgao = (window.hibridCiljUgao - kompasSmer + 360) % 360;
+        ikona.innerText = "⬆️";
+        ikona.style.transform = `rotate(${relativniUgao}deg)`;
+    } else {
+        ikona.innerText = "🧭";
+        ikona.style.transform = "none";
+    }
+};
+
+window.zaustaviHibridniKompas = function() {
+    if (window.hibridGpsId !== null) {
+        navigator.geolocation.clearWatch(window.hibridGpsId);
+        window.hibridGpsId = null;
+    }
+    window.removeEventListener("deviceorientationabsolute", window.azurirajHibridnuStrelicu, true);
+    window.removeEventListener("deviceorientation", window.azurirajHibridnuStrelicu, true);
+
+    let panel = document.getElementById('hibridniKompasPanel');
+    if (panel) panel.style.display = 'none';
+};
+
 window.zatraziTrag = function() {
         if (window.zdravlje <= window.KAZNA_TRAG) {
             alert(window.recnik[window.trenutniJezik].porukaNemaTraga || "Nemate dovoljno energije za pomoć!");
@@ -4481,6 +4643,8 @@ window.zatraziTrag = function() {
         // 🌟 POPRAVKA: Dodato skidanje energije (azurirajZdravlje) direktno na klik dugmeta!
         kontejner.innerHTML = `<button onclick="window.azurirajZdravlje(-window.KAZNA_TRAG); window.pokreniSonarTrag()" class="btn-glavno" style="background:#0d47a1; margin: 10px 0; font-size:16px;">📡 AKTIVIRAJ SONAR (-${window.KAZNA_TRAG} 🍏)</button>`;
     };
+
+// ===================================================================
 
 window.pokreniSonarTrag = function() {
         if (!navigator.geolocation) { alert("GPS nije dostupan."); return; }
@@ -4881,7 +5045,7 @@ window.iscrtajSpisakTacaka = function() {
         staraUspehZadatka();
     };
 
-// ===================================================================
+// ==============================================================================================================================
     // 🎮 G2H MODULARNA FABRIKA LOGIČKIH IGARA
     // ===================================================================
     
@@ -6993,7 +7157,7 @@ crtajMine: function(kontejner) {
         kontejner.innerHTML = html;
     }
 };
-// ==========================================
+// ==============================================================================================================================
     // 🌙 WAKE LOCK & PAMETNI SCREENSAVER LOGIKA
     // ==========================================
     window.wakeLockObj = null;
@@ -7205,7 +7369,7 @@ window.SpremiZlatnikeUSef = async function(event) {
                 sefKontejner.innerHTML = `
                     <div style="font-size: 65px; margin-bottom: 5px; animation: pojavaKovcega 0.8s ease;">🔐</div>
                     <div style="color: #10b981; font-weight: 900; font-size: 24px; padding: 25px 15px; background:rgba(16,185,129,0.15); border-radius:12px; text-transform:uppercase; line-height:1.4;">
-                        🎉 ZLATNICI SU USPEŠNO<br>SPREMLJENI U SEF!<br>
+                        🎉 ZLATNICI SU USPEŠNO<br>Stavljeni U SEF!<br>
                         <span style="font-size: 16px; color: #f1f5f9; font-weight: bold; display:block; margin-top:20px; text-transform:none;">
                             Vaše blago je bezbedno osigurano i vezano za adresu:<br><b style="color:#fbbf24; font-size:18px; word-break: break-all; display:block; margin-top:5px;">${email}</b>
                         </span>
@@ -7955,5 +8119,27 @@ window.posaljiSlikeNaServer = async function() {
     </div>
     <iframe src="sef.html" style="width: 100%; flex-grow: 1; border: none;"></iframe>
 </div>
+
+<!-- STRIPOVSKI MODAL: PROVERA PAPIRNOG MATERIJALA -->
+<div id="modalHibridniRezim" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 100000; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; backdrop-filter: blur(5px);">
+    <div style="background: white; border-radius: 20px; max-width: 400px; width: 100%; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 4px solid #f59e0b;">
+        <div style="display: flex; padding: 20px; background: #fffbeb; align-items: center; gap: 15px;">
+            <img id="slikaAutoraHibrid" src="logo.png" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #f59e0b; flex-shrink: 0; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="position: relative; background: white; padding: 14px; border-radius: 14px; border: 2px solid #fcd34d; font-size: 14px; font-weight: 700; color: #78350f; line-height: 1.4;">
+                <div style="position: absolute; left: -9px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-right: 8px solid #fcd34d;"></div>
+                Za ovu avanturu biće ti neophodna moja knjiga staze i mapa! Da li ih imaš kod sebe?
+            </div>
+        </div>
+        <div style="padding: 15px; display: flex; flex-direction: column; gap: 10px; background: white;">
+            <button onclick="window.potvrdiHibridni()" style="background: #10b981; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 900; font-size: 15px; cursor: pointer;">
+                IMAMO SPREMNO! 🗺️
+            </button>
+            <button onclick="window.odustaniOdHibridnog()" style="background: #f1f5f9; color: #475569; border: 2px solid #cbd5e1; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer;">
+                Nemamo papire ❌
+            </button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
