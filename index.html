@@ -757,6 +757,42 @@ window.addEventListener('beforeunload', function (e) {
 </script>
 
 
+<div id="ekranTestTelefona" class="ekran" style="overflow-y: auto;">
+    <h2 style="color:#10b981; text-align:center;">🛠 Sistemska Provera</h2>
+    <p style="text-align:center; color:#475569; font-weight:bold;">Pre početka avanture moramo potvrditi da vaš telefon podržava sve funkcije.</p>
+
+    <div id="testGpsBox" class="zadatak-box">
+        <b style="font-size:18px;">1. Provera Lokacije (GPS)</b><br>
+        <button class="btn-glavno" onclick="window.testirajGPS()" style="margin-top:10px;">📍 TESTIRAJ GPS</button>
+        <div id="testGpsRezultat" style="margin-top:10px; font-size:15px; font-weight:bold; color:#f59e0b;">Čeka se provera...</div>
+        
+        <div id="uputstvoGps" style="display:none; margin-top:15px; font-size:14px; color:#b91c1c; background:#fef2f2; padding:15px; border-radius:8px; text-align:left; border:1px solid #fca5a5;">
+            💡 <b>Kako da rešite problem?</b><br><br>
+            Često je lokacija na telefonu uključena, ali vaš internet pregledač (Chrome ili Safari) nema dozvolu da je koristi.<br><br>
+            1. Kliknite na malu ikonicu katanca ili oznaku 'Aa' pored web adrese na samom vrhu ekrana.<br>
+            2. Pronađite opciju <b>Dozvole</b> (Permissions) ili <b>Podešavanja sajta</b>.<br>
+            3. Dozvolite pristup opciji <b>Lokacija</b>.<br>
+            4. Za maksimalnu preciznost, napravite telefonom oblik broja 8 u vazduhu kako biste kalibrisali senzor.
+        </div>
+    </div>
+
+    <div id="testKameraBox" class="zadatak-box" style="display:none; margin-top:15px;">
+        <b style="font-size:18px;">2. Provera Kamere</b><br>
+        <button class="btn-kamera" onclick="document.getElementById('testKameraInput').click()" style="margin-top:10px;">📸 USLIKAJ PROBNU SLIKU</button>
+        <input type="file" accept="image/*" capture="environment" id="testKameraInput" style="display:none;" onchange="window.zavrsiTestKamere(event)">
+        <div id="testKameraRezultat" style="margin-top:10px; font-size:15px; font-weight:bold; color:#f59e0b;">Čeka se slika...</div>
+        
+        <div id="uputstvoKamera" style="display:none; margin-top:15px; font-size:14px; color:#b91c1c; background:#fef2f2; padding:15px; border-radius:8px; text-align:left; border:1px solid #fca5a5;">
+            💡 <b>Kako da rešite problem?</b><br><br>
+            Vaš pregledač nema odobrenje da koristi kameru. Postupak je isti kao za lokaciju.<br><br>
+            Kliknite na ikonicu katanca ili 'Aa' pored adrese sajta na vrhu ekrana, otvorite <b>Dozvole</b> i odobrite pristup opciji <b>Kamera</b>. Zatim pokušajte ponovo.
+        </div>
+    </div>
+
+    <button id="btnZavrsiTest" class="btn-glavno" style="display:none; background:#10b981; margin-top:25px;" onclick="window.prikaziOriginalniModalZaStart()">✅ SVE RADI, ZAPOČNI IGRU!</button>
+</div>
+
+    
     <div id="ekranZadatak" class="ekran">
         <div class="top-bar">
             <span class="tim-info" id="prikazTim">Tim</span>
@@ -2542,14 +2578,19 @@ window.aktivirajZavrsnoDugme = function() {
     );
 };
 
-// Prikazuje modal kada se klikne crno dugme
-window.prikaziModalZaStart = function() {
+// Preimenovana originalna funkcija
+window.prikaziOriginalniModalZaStart = function() {
     let vrsta = document.getElementById('unosVrstaIgre') ? document.getElementById('unosVrstaIgre').value : 'klasicna';
     if (vrsta === 'hibridna') {
         document.getElementById('modalHibridniRezim').style.display = 'flex';
     } else {
         document.getElementById('modalPotvrdaLokacije').style.display = 'flex';
     }
+};
+
+// Nova funkcija koja preuzima klik sa dugmeta
+window.prikaziModalZaStart = function() {
+    window.prikaziEkran('ekranTestTelefona');
 };
      
 window.racunajTrajanjeUMs = function(trajanjeString) {
@@ -8151,6 +8192,48 @@ window.posaljiSlikeNaServer = async function() {
         btn.disabled = false;
         btn.style.opacity = "1";
         alert("Došlo je do greške pri slanju. Proverite internet konekciju.");
+    }
+};
+
+      // TESTIRANJE UREDAJA PRE ULASKA U IGRU
+window.testirajGPS = function() {
+    let rez = document.getElementById('testGpsRezultat');
+    rez.innerHTML = "⏳ Tražim satelite, sačekajte...";
+    rez.style.color = "#3b82f6";
+    
+    if (!navigator.geolocation) {
+        rez.innerHTML = "❌ GPS nije podržan na ovom uređaju.";
+        rez.style.color = "#ef4444";
+        return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+        function(pozicija) {
+            rez.innerHTML = "✅ GPS uspešno lociran!";
+            rez.style.color = "#10b981";
+            document.getElementById('testKameraBox').style.display = 'block';
+        },
+        function(greska) {
+            rez.innerHTML = "❌ Greška sa GPS-om. Proverite podešavanja lokacije na telefonu!";
+            rez.style.color = "#ef4444";
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+};
+
+window.zavrsiTestKamere = function(event) {
+    let rez = document.getElementById('testKameraRezultat');
+    if (event.target.files && event.target.files[0]) {
+        let citac = new FileReader();
+        citac.onload = function(e) {
+            rez.innerHTML = "✅ Slika uspešno učitana u memoriju!";
+            rez.style.color = "#10b981";
+            document.getElementById('btnZavrsiTest').style.display = 'block';
+        };
+        citac.readAsDataURL(event.target.files[0]);
+    } else {
+        rez.innerHTML = "❌ Niste uslikali fotografiju ili je pregledač blokirao pristup kameri.";
+        rez.style.color = "#ef4444";
     }
 };
 
