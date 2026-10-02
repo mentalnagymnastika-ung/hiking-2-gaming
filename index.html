@@ -13,6 +13,8 @@
     <link rel="apple-touch-icon" href="logo.png">
     <link rel="icon" href="logo.png" type="image/png">
 
+  
+
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -50,14 +52,12 @@ window.storage = getStorage(app);
 window.ref = ref;
 window.uploadString = uploadString;
 
-
-
 // 1. Omogućavanje oflajn keširanja baze (IndexedDB)
 enableIndexedDbPersistence(window.db).catch((err) => {
     console.warn("Oflajn keširanje nije uspelo:", err.code);
 });
 
-// 2. Povezivanje funkcija za bazu (Ovo je nedostajalo)
+// 2. Povezivanje funkcija za bazu
 window.doc = doc; window.getDoc = getDoc; window.setDoc = setDoc;
 window.collection = collection; window.query = query; window.where = where; window.getDocs = getDocs;
 
@@ -68,7 +68,6 @@ let sacuvanaSesijaId = localStorage.getItem('aktivna_sesija_id');
 let lokSes = sacuvanaSesijaId ? localStorage.getItem('offline_sesija_' + sacuvanaSesijaId) : null;
 let lokPot = sacuvanaSesijaId ? localStorage.getItem('offline_potraga_' + sacuvanaSesijaId) : null;
 
-// 4. Funkcija za oflajn oporavak
 // 4. Funkcija za oflajn oporavak
 const pokreniOporavak = (sData, potragaData) => {
     if (sData.expiresAt > new Date().getTime() && !sData.zavrsena) {
@@ -134,7 +133,7 @@ const pokreniOporavak = (sData, potragaData) => {
     }
 };
 
-// 5. Glavna logika za oflajn ili onlajn režim
+// 5. Glavna logika za oflajn ili onlajn režim (SPAJANJE OBA REŠENJA)
 if (!navigator.onLine && sacuvanaSesijaId && lokSes && lokPot) {
     console.log("⚡ OFFLINE OPORAVAK AKTIVAN ODMAH PRE AUTENTIFIKACIJE!");
     pokreniOporavak(JSON.parse(lokSes), JSON.parse(lokPot));
@@ -147,15 +146,33 @@ if (!navigator.onLine && sacuvanaSesijaId && lokSes && lokPot) {
             getDoc(doc(window.db, "sesije", sacuvanaSesijaId)).then(async (sesijaSnap) => {
                 if (sesijaSnap.exists()) {
                     let sData = sesijaSnap.data();
+                    
+                    // PAMETAN OPORAVAK: Čita šta je visibilitychange sačuvao
+                    if (lokSes) {
+                        let lokalniPodaci = JSON.parse(lokSes);
+                        if (lokalniPodaci.trenutniIndeks >= sData.trenutniIndeks) {
+                            sData = lokalniPodaci;
+                        }
+                    }
+
                     try {
                         let potragaSnap = await getDoc(doc(window.db, "potrage", sData.sifra));
-                        if (!potragaSnap.exists()) potragaSnap = await getDoc(doc(window.db, "potrage", String(sData.sifra).toUpperCase()));
+                        if (!potragaSnap.exists()) {
+                            potragaSnap = await getDoc(doc(window.db, "potrage", String(sData.sifra).toUpperCase()));
+                        }
                         
                         if (potragaSnap.exists()) {
                             pokreniOporavak(sData, potragaSnap.data());
+                        } else {
+                            if (lokSes && lokPot) pokreniOporavak(JSON.parse(lokSes), JSON.parse(lokPot));
                         }
                     } catch(err) {
                         if(lokSes && lokPot) pokreniOporavak(JSON.parse(lokSes), JSON.parse(lokPot));
+                    }
+                } else {
+                    if (lokSes && lokPot) {
+                        console.log("⚡ Oporavak iz lokalne memorije jer server kasni!");
+                        pokreniOporavak(JSON.parse(lokSes), JSON.parse(lokPot));
                     }
                 }
             }).catch(e => {
@@ -188,6 +205,21 @@ window.addEventListener('beforeunload', function (e) {
     if (localStorage.getItem('aktivna_sesija_id')) {
         e.preventDefault();
         e.returnValue = ''; 
+    }
+});
+
+// 8. OSLUŠKIVAČ ZA MOBILNE TELEFONE (Spasava podatke pri minimiziranju)
+document.addEventListener("visibilitychange", function() {
+    if (document.visibilityState === 'hidden') {
+        if (window.timIdentifikator && window.sesijaPodaci && typeof window.trenutnaTackaIndeks !== 'undefined') {
+            window.sesijaPodaci.trenutniIndeks = window.trenutnaTackaIndeks;
+            window.sesijaPodaci.zdravlje = window.zdravlje;
+            
+            localStorage.setItem('offline_sesija_' + window.timIdentifikator, JSON.stringify(window.sesijaPodaci));
+            if (window.potragaPodaci) {
+                localStorage.setItem('offline_potraga_' + window.timIdentifikator, JSON.stringify(window.potragaPodaci));
+            }
+        }
     }
 });
 </script>
@@ -597,6 +629,15 @@ window.addEventListener('beforeunload', function (e) {
     </select>
 </div>
 
+<!-- UM GYM IZBOR ISPORUKE ZADATAKA -->
+<div id="kontejnerUmGymIzbor" style="margin-top: 15px; background: #f0fdf4; padding: 15px; border-radius: 12px; border: 2px solid #22c55e; text-align: center; display: none;">
+    <label style="font-size: 14px; font-weight: 900; color: #166534; display: block; margin-bottom: 10px; text-transform: uppercase;">Način rada (UM GYM)</label>
+    <select id="unosUmGymMod" style="font-weight: bold; color: #14532d; font-size: 16px; border-color: #86efac; background: #ffffff; width: 100%; padding: 12px; border-radius: 8px; outline: none;">
+        <option value="audio" selected>🎧 Hands-Free (Audio instrukcije u hodu)</option>
+        <option value="vizuelno">👀 Prikaz na ekranu (Za grupe i vaspitače)</option>
+    </select>
+</div>
+
 <!-- DUGMAD ZA START U DVA KORAKA -->
 <div id="kontrolePocetka" style="margin-top: 25px; margin-bottom: 20px;">
     <!-- Korak 1: Učitavanje (zadržano staro ime funkcije) -->
@@ -761,10 +802,11 @@ window.addEventListener('beforeunload', function (e) {
     <h2 style="color:#10b981; text-align:center;">🛠 Sistemska Provera</h2>
     <p style="text-align:center; color:#475569; font-weight:bold;">Pre početka avanture moramo potvrditi da vaš telefon podržava sve funkcije.</p>
 
+    <!-- 1. GPS PROVERA -->
     <div id="testGpsBox" class="zadatak-box">
         <b style="font-size:18px;">1. Provera Lokacije (GPS)</b><br>
-        <button class="btn-glavno" onclick="window.testirajGPS()" style="margin-top:10px;">📍 TESTIRAJ GPS</button>
-        <div id="testGpsRezultat" style="margin-top:10px; font-size:15px; font-weight:bold; color:#f59e0b;">Čeka se provera...</div>
+        <button class="btn-glavno" onclick="window.testirajGPS()" style="margin-top:10px;">📍 PROVERI GPS SIGNAL</button>
+        <div id="testGpsRezultat" style="margin-top:10px; font-size:15px; font-weight:bold; color:#f59e0b;">Dodirnite dugme za potvrdu</div>
         
         <div id="uputstvoGps" style="display:none; margin-top:15px; font-size:14px; color:#b91c1c; background:#fef2f2; padding:15px; border-radius:8px; text-align:left; border:1px solid #fca5a5;">
             💡 <b>Kako da rešite problem?</b><br><br>
@@ -776,11 +818,12 @@ window.addEventListener('beforeunload', function (e) {
         </div>
     </div>
 
+    <!-- 2. PROVERA KAMERE -->
     <div id="testKameraBox" class="zadatak-box" style="display:none; margin-top:15px;">
         <b style="font-size:18px;">2. Provera Kamere</b><br>
         <button class="btn-kamera" onclick="document.getElementById('testKameraInput').click()" style="margin-top:10px;">📸 USLIKAJ PROBNU SLIKU</button>
         <input type="file" accept="image/*" capture="environment" id="testKameraInput" style="display:none;" onchange="window.zavrsiTestKamere(event)">
-        <div id="testKameraRezultat" style="margin-top:10px; font-size:15px; font-weight:bold; color:#f59e0b;">Čeka se slika...</div>
+        <div id="testKameraRezultat" style="margin-top:10px; font-size:15px; font-weight:bold; color:#f59e0b;">Dodirnite dugme za potvrdu</div>
         
         <div id="uputstvoKamera" style="display:none; margin-top:15px; font-size:14px; color:#b91c1c; background:#fef2f2; padding:15px; border-radius:8px; text-align:left; border:1px solid #fca5a5;">
             💡 <b>Kako da rešite problem?</b><br><br>
@@ -789,9 +832,19 @@ window.addEventListener('beforeunload', function (e) {
         </div>
     </div>
 
-    <button id="btnZavrsiTest" class="btn-glavno" style="display:none; background:#10b981; margin-top:25px;" onclick="window.prikaziOriginalniModalZaStart()">✅ SVE RADI, ZAPOČNI IGRU!</button>
-</div>
+    <!-- 3. PROVERA ZVUKA (Vidljivo samo za UM GYM Audio mod) -->
+    <div id="testZvukBox" class="zadatak-box" style="display:none; margin-top:15px; border-color:#0284c7; color:#0284c7;">
+        <b style="font-size:18px;">3. Provera Zvuka</b><br>
+        <button class="btn-glavno" style="background:#0284c7; margin-top:10px;" onclick="window.testirajZvukUMGYM()">🔊 TESTIRAJ ZVUK</button>
+        <div id="testZvukRezultat" style="margin-top:10px; font-size:15px; font-weight:bold; color:#f59e0b;">Dodirnite dugme za potvrdu</div>
+        
+        <div id="uputstvoZvukUspeh" style="display:none; margin-top:15px; font-size:16px; color:#0f172a; background:#e0f2f1; padding:15px; border-radius:8px; text-align:center; border:2px solid #059669; font-weight:900;">
+            Kada pokrenete igru, telefon će vam sam izgovoriti ime prve mete-mesta na koje treba da stignete i vaš UM GYM zadatak.
+        </div>
+    </div>
 
+    <button id="btnZavrsiTest" class="btn-glavno" style="display:none; background:#10b981; margin-top:25px;" onclick="window.prikaziOriginalniModalZaStart()">✅ ZAPOČNI AVANTURU!</button>
+</div>
     
     <div id="ekranZadatak" class="ekran">
         <div class="top-bar">
@@ -2176,7 +2229,7 @@ let safeSifra = String(podaci.sifra).replace(/'/g, "\\'");
 
         // Automatska provera: prve 3 rute u listi su besplatne, ostale traže proveru i kognitivnu valutu
         let jeBesplatna = podaci.besplatna !== undefined ? podaci.besplatna : (kontejner.children.length < 3);
-        let cenaStaze = podaci.cena || 70;
+        let cenaStaze = podaci.cena || 100;
         let otkljucaneStazeLokalno = JSON.parse(localStorage.getItem('otkljucane_staze')) || [];
         let jeKupljena = otkljucaneStazeLokalno.includes(podaci.sifra);
 
@@ -2314,86 +2367,131 @@ window.izaberiPotragu = function(podaci) {
         window.prikaziEkran('ekranIntro');
     };
 
- // NOVA FUNKCIJA: Kada igrač na Intro ekranu klikne "PRIJAVI EKIPU"
 // FUNKCIJA ZA OTVARANJE PRIJAVE TIMA (Ekran gde biraju boju)
+// FUNKCIJA ZA OTVARANJE PRIJAVE TIMA (Ekran gde biraju boju i režim)
 window.idiNaPrijavu = function() {
-        let podaci = window.odabranaPotraga;
-        document.getElementById('prikazImeOdabrane').innerText = podaci.ime;
-        
-        let unosSifra = document.getElementById('unosSifra');
+    let podaci = window.odabranaPotraga;
+    document.getElementById('prikazImeOdabrane').innerText = podaci.ime;
+    
+    let r = window.recnik[window.trenutniJezik];
+    let unosSifra = document.getElementById('unosSifra');
 
-        // 🌟 Vraćamo izgubljene proporcije koje su nestale zbog promene u password
-        unosSifra.style.width = "100%";
-        unosSifra.style.padding = "15px";
-        unosSifra.style.borderRadius = "10px";
-        unosSifra.style.boxSizing = "border-box";
-        unosSifra.style.textAlign = "center";
-        unosSifra.style.fontSize = "20px"; // Krupnije tačkice
-        unosSifra.style.marginTop = "8px";
+    // 1. ZAJEDNIČKI STIL ZA OBAVEZNA POLJA KOJA ČEKAJU UNOS (Plavi fokus i dubina)
+    const stilAktivnogPolja = "width:100%; padding:14px; border-radius:10px; box-sizing:border-box; font-size:16px; font-weight:700; border:2px solid #2563eb; background:#ffffff; color:#0f172a; outline:none; box-shadow:0 3px 10px rgba(37,99,235,0.1); transition:all 0.2s ease;";
+    const stilZakljucanogPolja = "width:100%; padding:14px; border-radius:10px; box-sizing:border-box; font-size:18px; font-weight:900; border:2px dashed #94a3b8; background:#e2e8f0; color:#475569; text-align:center; letter-spacing:4px;";
 
-        // 🌟 AUTOMATSKO POPUNJAVANJE, ZAKLJUČAVANJE I SAKRIVANJE ŠIFRE U TAČKICE
-        if (window.VIP_SIFRA_ZA_AUTOFIL) {
-            unosSifra.value = window.VIP_SIFRA_ZA_AUTOFIL;
-            unosSifra.type = "password"; 
-            unosSifra.readOnly = true;
-            unosSifra.style.background = "#e2e8f0";
-            unosSifra.style.color = "#475569";
-            unosSifra.style.border = "2px dashed #94a3b8";
-            unosSifra.style.letterSpacing = "6px"; // Širok razmak
-        } else if (podaci.sifra) {
-            unosSifra.value = podaci.sifra;
-            unosSifra.type = "password"; 
-            unosSifra.readOnly = true;
-            unosSifra.style.background = "#e2e8f0";
-            unosSifra.style.color = "#475569";
-            unosSifra.style.border = "2px dashed #94a3b8";
-            unosSifra.style.letterSpacing = "6px"; // Širok razmak
-        } else {
-            unosSifra.value = "";
-            unosSifra.type = "text"; 
-            unosSifra.readOnly = false;
-            unosSifra.style.background = "#fafafa";
-            unosSifra.style.color = "#333";
-            unosSifra.style.border = "2px solid #ddd";
-            unosSifra.style.letterSpacing = "normal";
-        }
+    // 2. ŠIFRA (Zaključana ili otvorena za unos)
+    if (window.VIP_SIFRA_ZA_AUTOFIL) {
+        unosSifra.value = window.VIP_SIFRA_ZA_AUTOFIL;
+        unosSifra.type = "password"; 
+        unosSifra.readOnly = true;
+        unosSifra.style.cssText = stilZakljucanogPolja;
+    } else if (podaci.sifra) {
+        unosSifra.value = podaci.sifra;
+        unosSifra.type = "password"; 
+        unosSifra.readOnly = true;
+        unosSifra.style.cssText = stilZakljucanogPolja;
+    } else {
+        unosSifra.value = "";
+        unosSifra.type = "text"; 
+        unosSifra.readOnly = false;
+        unosSifra.style.cssText = stilAktivnogPolja + " text-align:center; letter-spacing:normal;";
+    }
 
-        let r = window.recnik[window.trenutniJezik];
+    // 3. ODABIR EKIPE (Grupna ili Boje) SA JASNO OZNAČENIM POLJEM
+    let selBoja = document.getElementById('unosBojaTima');
+    let selGrupna = document.getElementById('unosBrojTima');
+    let unosImeTima = document.getElementById('unosTim');
 
-        if (podaci.isGrupna && podaci.brojTimova) {
-            document.getElementById('kontejnerBoja').style.display = 'none';
-            document.getElementById('kontejnerTimGrupna').style.display = 'block';
-            let sel = document.getElementById('unosBrojTima');
-            sel.innerHTML = `<option value="" disabled selected>${r.txtIzaberiteBroj}</option>`;
-            for(let i=1; i<=podaci.brojTimova; i++) {
-                let val = i < 10 ? "0"+i : ""+i;
-                sel.innerHTML += `<option value="${val}">${r.txtTim} ${val}</option>`;
-            }
-        } else {
-            document.getElementById('kontejnerBoja').style.display = 'block';
-            document.getElementById('kontejnerTimGrupna').style.display = 'none';
-        }
+    if (unosImeTima) {
+        unosImeTima.style.cssText = "width:100%; padding:12px; border-radius:10px; border:2px solid #cbd5e1; background:#ffffff; box-sizing:border-box; font-size:15px; font-weight:600; margin-top:8px;";
+    }
 
-        let totalPinova = podaci.pinovi ? podaci.pinovi.length : 0;
-        let tezinaSelect = document.getElementById('unosTezina');
-        
-        if (tezinaSelect) {
-            tezinaSelect.innerHTML = '';
-            if (totalPinova >= 9) {
-                tezinaSelect.innerHTML += `<option value="5">${r.txtBelaStazaLaka} (5 ${r.txtLokacijaBroj})</option>`;
-                tezinaSelect.innerHTML += `<option value="7">${r.txtPlavaStazaSrednja} (7 ${r.txtLokacijaBroj})</option>`;
-                tezinaSelect.innerHTML += `<option value="${totalPinova}" selected>${r.txtCrvenaStazaTeska} (${totalPinova} ${r.txtLokacijaBroj})</option>`;
-            } else if (totalPinova >= 6) {
-                let bela = Math.floor(totalPinova * 0.6); 
-                tezinaSelect.innerHTML += `<option value="${bela}">${r.txtBelaStazaLaka} (${bela} ${r.txtLokacijaBroj})</option>`;
-                tezinaSelect.innerHTML += `<option value="${totalPinova}" selected>${r.txtPlavaStazaSrednja} (${totalPinova} ${r.txtLokacijaBroj})</option>`;
-            } else {
-                tezinaSelect.innerHTML += `<option value="${totalPinova}" selected>${r.txtBelaStazaKratka} (${totalPinova} ${r.txtLokacijaBroj})</option>`;
+    if (podaci.isGrupna && podaci.brojTimova) {
+        document.getElementById('kontejnerBoja').style.display = 'none';
+        document.getElementById('kontejnerTimGrupna').style.display = 'block';
+        if (selGrupna) {
+            selGrupna.style.cssText = stilAktivnogPolja;
+            selGrupna.innerHTML = `<option value="" disabled selected>👉 ${r.txtIzaberiteBroj} (obavezno)</option>`;
+            for(let i = 1; i <= podaci.brojTimova; i++) {
+                let val = i < 10 ? "0" + i : "" + i;
+                selGrupna.innerHTML += `<option value="${val}">${r.txtTim} ${val}</option>`;
             }
         }
+    } else {
+        document.getElementById('kontejnerBoja').style.display = 'block';
+        document.getElementById('kontejnerTimGrupna').style.display = 'none';
+        if (selBoja) {
+            selBoja.style.cssText = stilAktivnogPolja;
+        }
+    }
 
-        window.prikaziEkran('ekranPrijava');
-    };
+    // 4. DUŽINA STAZE (TEŽINA)
+    let totalPinova = podaci.pinovi ? podaci.pinovi.length : 0;
+    let tezinaSelect = document.getElementById('unosTezina');
+    
+    if (tezinaSelect) {
+        tezinaSelect.style.cssText = "width:100%; padding:12px; border-radius:10px; border:2px solid #cbd5e1; background:#f8fafc; color:#1e293b; font-weight:700; font-size:15px; box-sizing:border-box;";
+        tezinaSelect.innerHTML = '';
+        if (totalPinova >= 9) {
+            tezinaSelect.innerHTML += `<option value="5">${r.txtBelaStazaLaka} (5 ${r.txtLokacijaBroj})</option>`;
+            tezinaSelect.innerHTML += `<option value="7">${r.txtPlavaStazaSrednja} (7 ${r.txtLokacijaBroj})</option>`;
+            tezinaSelect.innerHTML += `<option value="${totalPinova}" selected>${r.txtCrvenaStazaTeska} (${totalPinova} ${r.txtLokacijaBroj})</option>`;
+        } else if (totalPinova >= 6) {
+            let bela = Math.floor(totalPinova * 0.6); 
+            tezinaSelect.innerHTML += `<option value="${bela}">${r.txtBelaStazaLaka} (${bela} ${r.txtLokacijaBroj})</option>`;
+            tezinaSelect.innerHTML += `<option value="${totalPinova}" selected>${r.txtPlavaStazaSrednja} (${totalPinova} ${r.txtLokacijaBroj})</option>`;
+        } else {
+            tezinaSelect.innerHTML += `<option value="${totalPinova}" selected>${r.txtBelaStazaKratka} (${totalPinova} ${r.txtLokacijaBroj})</option>`;
+        }
+    }
+
+    // 5. NAČIN IGRE (Kartica visokog kontrasta sa uočljivim plavim okvirom)
+// 5. NAČIN IGRE (Kartica visokog kontrasta, dvojezična)
+    let kontejnerMod = document.getElementById('kontejnerAudioMod');
+    if (!kontejnerMod) {
+        kontejnerMod = document.createElement('div');
+        kontejnerMod.id = 'kontejnerAudioMod';
+        
+        let roditelj = tezinaSelect ? tezinaSelect.parentNode : document.getElementById('kontejnerBoja').parentNode;
+        if (roditelj) {
+            roditelj.appendChild(kontejnerMod);
+        }
+    }
+
+    let isEn = window.trenutniJezik === 'en';
+    let rezimNaslov = isEn ? "🎙️ Audio guidance mode:" : "🎙️ Režim vođenja kroz igru:";
+    let bedzIzbor = isEn ? "SELECT" : "IZBOR";
+    let optFreehand = isEn ? "🎧 Freehand mode (voice reads locations and tasks)" : "🎧 Freehand mod (glas čita lokaciju i opis)";
+    let optClassic = isEn ? "🔇 Classic game (silent, open manually)" : "🔇 Klasična igra (tišina, sami otvarate)";
+    let opisRezim = isEn ? "Recommended for walking and cycling, the phone reads tasks without looking at the screen." : "Preporučeno za šetnju i vožnju bicikla, telefon sam čita zadatke bez gledanja u ekran.";
+
+    kontejnerMod.innerHTML = `
+        <div style="background:#eff6ff; border:2px solid #3b82f6; border-radius:12px; padding:14px; margin-top:16px; margin-bottom:12px; box-shadow:0 4px 12px rgba(37,99,235,0.08); text-align:left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <label style="font-size:13px; font-weight:900; color:#1d4ed8; text-transform:uppercase; letter-spacing:0.5px;">
+                    ${rezimNaslov}
+                </label>
+                <span style="font-size:11px; background:#dbeafe; color:#1e40af; font-weight:800; padding:2px 8px; border-radius:12px;">${bedzIzbor}</span>
+            </div>
+            <select id="unosAudioMod" style="width:100%; padding:12px; border-radius:8px; border:2px solid #2563eb; background:#ffffff; color:#0f172a; font-weight:800; font-size:15px; box-sizing:border-box; cursor:pointer;">
+                <option value="freehand" selected>${optFreehand}</option>
+                <option value="klasicni">${optClassic}</option>
+            </select>
+            <div style="font-size:12px; color:#475569; margin-top:6px; font-weight:600; line-height:1.3;">
+                ${opisRezim}
+            </div>
+        </div>
+    `;
+
+    // 6. SKRIVANJE STAROG DUPLIRANOG MENIJA
+    let umGymKontejner = document.getElementById('kontejnerUmGymIzbor');
+    if (umGymKontejner) {
+        umGymKontejner.style.display = 'none';
+    }
+
+    window.prikaziEkran('ekranPrijava');
+};
 
     window.zatvoriDijalog = function() {
         let modal = document.getElementById('modalDijalog');
@@ -2580,6 +2678,9 @@ window.aktivirajZavrsnoDugme = function() {
 
 // Preimenovana originalna funkcija
 window.prikaziOriginalniModalZaStart = function() {
+    // 🌟 NOVO: Zapiši da je test uspešno završen za današnji dan
+    localStorage.setItem('zadnji_test_telefona', new Date().toDateString());
+
     let vrsta = document.getElementById('unosVrstaIgre') ? document.getElementById('unosVrstaIgre').value : 'klasicna';
     if (vrsta === 'hibridna') {
         document.getElementById('modalHibridniRezim').style.display = 'flex';
@@ -2588,11 +2689,96 @@ window.prikaziOriginalniModalZaStart = function() {
     }
 };
 
-// Nova funkcija koja preuzima klik sa dugmeta
+// Nova funkcija koja preuzima klik sa dugmeta I provera ZVUKA
+
 window.prikaziModalZaStart = function() {
+    // 🌟 NOVO: Provera da li je igrač već testirao telefon danas
+    let zadnjiTest = localStorage.getItem('zadnji_test_telefona');
+    let danasnjiDatum = new Date().toDateString();
+
+    if (zadnjiTest === danasnjiDatum) {
+        // Pametni preskok direktno na sledeći korak
+        window.prikaziOriginalniModalZaStart();
+        return;
+    }
+
+    // Ako nije testirao danas, prikaži ekran za test
     window.prikaziEkran('ekranTestTelefona');
+    
+    let modIzabran = document.getElementById('unosAudioMod') ? document.getElementById('unosAudioMod').value : 'klasicni';
+    let boxZvuk = document.getElementById('testZvukBox');
+    
+    if (modIzabran === 'freehand') {
+        if (boxZvuk) boxZvuk.style.display = 'block';
+    } else {
+        if (boxZvuk) boxZvuk.style.display = 'none';
+    }
 };
-     
+
+window.testirajZvukUMGYM = function() {
+    let rezultat = document.getElementById('testZvukRezultat');
+    let uputstvo = document.getElementById('uputstvoZvukUspeh');
+    
+    if (rezultat) {
+        rezultat.style.color = '#f59e0b';
+        rezultat.innerText = 'Učitavam glas...';
+    }
+
+    // 🌟 NOVO: Trajno otključavanje Web Audio API-ja (Za vilinsku prašinu)
+    try {
+        if (!window.GlavniAudioKontekst) {
+            window.GlavniAudioKontekst = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (window.GlavniAudioKontekst.state === 'suspended') {
+            window.GlavniAudioKontekst.resume();
+        }
+        // Puštamo mikro-ton od 0 sekundi da pretraživač registruje dodir
+        let osc = window.GlavniAudioKontekst.createOscillator();
+        let gain = window.GlavniAudioKontekst.createGain();
+        gain.gain.value = 0; 
+        osc.connect(gain);
+        gain.connect(window.GlavniAudioKontekst.destination);
+        osc.start(0);
+        osc.stop(window.GlavniAudioKontekst.currentTime + 0.1);
+    } catch(e) { console.log("Audio kontekst greška:", e); }
+
+    // Standardni glasovni TTS
+          window.speechSynthesis.cancel();
+                        
+                        let isEn = window.trenutniJezik === 'en';
+                        let tekstZaCitanje = isEn 
+                            ? "This is the last point, you have successfully finished our trail." 
+                            : "Ovo je poslednja tačka, završili ste ovu našu stazu.";
+                            
+                        let govor = new SpeechSynthesisUtterance(tekstZaCitanje);
+                        let glasovi = window.speechSynthesis.getVoices();
+                        
+                        if (isEn) {
+                            let engGlas = glasovi.find(g => g.lang.includes('en-US') || g.lang.includes('en-GB') || g.lang.includes('en'));
+                            if (engGlas) govor.voice = engGlas;
+                            else govor.lang = 'en-US';
+                        } else {
+                            let nasGlas = glasovi.find(g => g.lang.includes('hr') || g.lang.includes('sr') || g.lang.includes('bs'));
+                            if (nasGlas) govor.voice = nasGlas;
+                            else govor.lang = 'hr-HR';
+                        }
+                        
+                        govor.rate = 0.95;
+        
+        govor.onstart = function() {
+            if (rezultat) {
+                rezultat.style.color = '#10b981';
+                rezultat.innerText = 'Zvuk je spreman!';
+            }
+            if (uputstvo) {
+                uputstvo.style.display = 'block';
+            }
+        };
+
+        window.speechSynthesis.speak(govor);
+    
+};
+    //////////////////// 
 window.racunajTrajanjeUMs = function(trajanjeString) {
         if (!trajanjeString) return 3600000; // Osnova 1 sat ako fali podatak
 
@@ -2866,9 +3052,28 @@ window.primeniModelStaze = function(podaciStaze, okreniStazu, brojTima) {
 };
 
 window.zavrsiKreiranjeSesije = async function(okreniStazu) {
+
+    // 🌟 UNIVERZALNO OTKLJUČAVANJE ZVUKA ZA SVE STAZE (Auto, Bicikl, Pešak)
+    try {
+        if (!window.GlavniAudioKontekst) {
+            window.GlavniAudioKontekst = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (window.GlavniAudioKontekst.state === 'suspended') {
+            window.GlavniAudioKontekst.resume();
+        }
+        // Tihi mikro-ton koji trajno otključava zvučne efekte za vreme vožnje
+        let osc = window.GlavniAudioKontekst.createOscillator();
+        let gain = window.GlavniAudioKontekst.createGain();
+        gain.gain.value = 0; 
+        osc.connect(gain);
+        gain.connect(window.GlavniAudioKontekst.destination);
+        osc.start(0);
+        osc.stop(window.GlavniAudioKontekst.currentTime + 0.1);
+    } catch(e) { console.log("Audio kontekst greška na startu:", e); }
+
+
     let brojTima = document.getElementById('unosBrojTima') ? document.getElementById('unosBrojTima').value : null;
     
-    // Pozivamo pametnu funkciju koja sve sortira i vraća nam gotov niz
     window.potragaPodaci.pinovi = window.primeniModelStaze(window.potragaPodaci, okreniStazu, brojTima);
     
     let tezinaSelect = document.getElementById('unosTezina');
@@ -2878,8 +3083,6 @@ window.zavrsiKreiranjeSesije = async function(okreniStazu) {
         let odabranaDuzina = parseInt(tezinaSelect.value);
         if (odabranaDuzina > 0 && odabranaDuzina < window.potragaPodaci.pinovi.length) {
             window.potragaPodaci.pinovi = window.potragaPodaci.pinovi.slice(0, odabranaDuzina);
-            
-            // Ako smo isekli stazu (kraća težina), moramo ponovo osigurati završnu poruku na novom kraju!
             let indexZadnje = window.potragaPodaci.pinovi.length - 1;
             if (window.potragaPodaci.pinovi[indexZadnje] && window.potragaPodaci.pinovi[indexZadnje].zadatak) {
                 window.potragaPodaci.pinovi[indexZadnje].zadatak.isKrajnjaPoruka = true;
@@ -2894,6 +3097,10 @@ window.zavrsiKreiranjeSesije = async function(okreniStazu) {
     }
 
     let sada = new Date().getTime();
+    // Izvuci vrijednost iz novog izbornika
+    let izabranAudioMod = document.getElementById('unosAudioMod') ? document.getElementById('unosAudioMod').value : 'klasicni';
+
+
     window.sesijaPodaci = { 
         timId: window.timIdentifikator, 
         imePrikaz: window.tempImeTimaZaBazu, 
@@ -2910,23 +3117,110 @@ window.zavrsiKreiranjeSesije = async function(okreniStazu) {
         preskoceneTacke: 0,
         stazaRotirana: okreniStazu,
         deviceId: window.dajOtisakUredjaja(),
-        // DODATA LINIJA KOJA PAMTI IZBOR REŽIMA:
-        hibridniMod: (document.getElementById('unosVrstaIgre') && document.getElementById('unosVrstaIgre').value === 'hibridna')
+        hibridniMod: (document.getElementById('unosVrstaIgre') && document.getElementById('unosVrstaIgre').value === 'hibridna'),
+        audioMod: izabranAudioMod, // 🌟 Univerzalni zapis moda
+        umGymMod: izabranAudioMod === 'freehand' ? 'audio' : 'vizuelno' // Sinkronizacija sa starim varijablama
     };
     
     try {
-        localStorage.setItem('aktivna_sesija_id', window.timIdentifikator);
-        localStorage.setItem('offline_sesija_' + window.timIdentifikator, JSON.stringify(window.sesijaPodaci));
-        localStorage.setItem('offline_potraga_' + window.timIdentifikator, JSON.stringify(window.potragaPodaci));
+        let trenutnoVreme = new Date().getTime();
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+            let kljuc = localStorage.key(i);
+            if (kljuc && kljuc.startsWith('offline_sesija_')) {
+                try {
+                    let sacuvana = JSON.parse(localStorage.getItem(kljuc));
+                    if (sacuvana.zavrsena || sacuvana.expiresAt < trenutnoVreme) {
+                        let stariId = sacuvana.timId;
+                        localStorage.removeItem(kljuc);
+                        localStorage.removeItem('offline_potraga_' + stariId);
+                        localStorage.removeItem('faza_vremena_' + stariId);
+                    }
+                } catch(e) {} 
+            }
+        }
+
+       try {
+            // Pokušavamo redovan upis nakon blagog čišćenja
+            localStorage.setItem('aktivna_sesija_id', window.timIdentifikator);
+            localStorage.setItem('offline_sesija_' + window.timIdentifikator, JSON.stringify(window.sesijaPodaci));
+            localStorage.setItem('offline_potraga_' + window.timIdentifikator, JSON.stringify(window.potragaPodaci));
+        } catch(greskaKvota) {
+            // Agresivno čišćenje
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+                let k = localStorage.key(i);
+                if (k && (k.startsWith('offline_') || k.startsWith('faza_vremena_')) && !k.includes(window.timIdentifikator)) {
+                    localStorage.removeItem(k);
+                }
+            }
+            localStorage.setItem('aktivna_sesija_id', window.timIdentifikator);
+            localStorage.setItem('offline_sesija_' + window.timIdentifikator, JSON.stringify(window.sesijaPodaci));
+            localStorage.setItem('offline_potraga_' + window.timIdentifikator, JSON.stringify(window.potragaPodaci));
+        }
         
-        await window.setDoc(window.doc(window.db, "sesije", window.timIdentifikator), window.sesijaPodaci);
-        window.pokreniPrikaz();
+      // 🌟 NOVO: PAMETNO ČITANJE PRVE LOKACIJE (Freehand vs Klasični mod)
+        let jeUmGym = String(window.odabranaPotraga.sifra).toLowerCase().startsWith('umgym');
+        let tipKretanja = window.potragaPodaci.tip || 'Pešak';
+        let punTekstZaCitanje = "";
+        let prvaMeta = window.potragaPodaci.pinovi[0].imeLokacije || "sledeća tačka";
+        
+        // Provjeravamo da li je korisnik izabrao Freehand mod (ili je u pitanju UM GYM audio mod)
+        let jeFreehand = (window.sesijaPodaci && (window.sesijaPodaci.audioMod === 'freehand' || window.sesijaPodaci.umGymMod === 'audio'));
+
+        if (jeFreehand) {
+            if (jeUmGym) {
+                // 1. UM GYM: Čita lokaciju + Vežbu
+                let zadatakTekst = "Hodajte opušteno i pripremite se za vježbe.";
+                if (window.UMGYM_Fabrika && typeof window.UMGYM_Fabrika.izvuciZadatak === 'function') {
+                    zadatakTekst = window.UMGYM_Fabrika.izvuciZadatak('umgym_nivo1');
+                }
+                punTekstZaCitanje = "Krećemo! Vaša prva meta je " + prvaMeta + ". Zadatak do tamo je: " + zadatakTekst;
+            } else {
+                // 2. OSTALE STAZE (Pešak, Bicikl, Auto): Čita prvu lokaciju jer je aktivan Freehand mod
+                punTekstZaCitanje = "Krećemo! Vaša prva meta je " + prvaMeta + ".";
+                if (tipKretanja === 'Bicikl') {
+                    punTekstZaCitanje += " Srećna vožnja!";
+                } else if (tipKretanja === 'Automobil') {
+                    punTekstZaCitanje += " Vozite bezbedno!";
+                }
+            }
+        }
+        // Ako je izabran Klasični mod, 'punTekstZaCitanje' ostaje prazan i glas se neće oglasiti!
+
+        // Ako imamo šta da pročitamo, puštamo glas
+        if (punTekstZaCitanje !== "" && 'speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            let govor = new SpeechSynthesisUtterance(punTekstZaCitanje);
+            window.umgym_trenutniGovor = govor; 
+            let glasovi = window.speechSynthesis.getVoices();
+            let nasGlas = glasovi.find(g => g.lang.includes('hr') || g.lang.includes('sr') || g.lang.includes('bs'));
+            if (nasGlas) {
+                govor.voice = nasGlas;
+            } else {
+                govor.lang = 'hr-HR';
+            }
+            govor.rate = 0.95;
+            window.speechSynthesis.speak(govor);
+        }
+        // ---------------------------------------------------------------------
+
+        // Blindirano pokretanje prikaza - sprečava vraćanje na prethodni meni
+        try {
+            window.pokreniPrikaz();
+        } catch (err) {
+            console.error("Sigurnosni prelaz:", err);
+            window.prikaziEkran('ekranZadatak'); 
+        }
+        
+        window.setDoc(window.doc(window.db, "sesije", window.timIdentifikator), window.sesijaPodaci).catch(e => {
+            console.log("Oflajn režim: Podaci čekaju internet za slanje na server.");
+        });
+
     } catch(e) {
         console.error("Greška pri komunikaciji sa serverom:", e);
-        window.pokreniPrikaz(); 
+        try { window.pokreniPrikaz(); } catch(err) { window.prikaziEkran('ekranZadatak'); }
     }
 };
-
+ // ---------------------------------------------------------------------
     window.osveziSesijuNaServeru = async function() {
         if(!window.sesijaPodaci) return;
         window.sesijaPodaci.trenutniIndeks = window.trenutnaTackaIndeks;
@@ -2945,31 +3239,37 @@ window.zavrsiKreiranjeSesije = async function(okreniStazu) {
     };
 
 window.pokreniPrikaz = function() {
+    try {
         if(window.potragaPodaci.healthPostavke) { 
             window.KAZNA_GRESKA = window.potragaPodaci.healthPostavke.kazna;
             window.NAGRADA_TACNO = window.potragaPodaci.healthPostavke.nagrada; 
             window.KAZNA_TRAG = window.potragaPodaci.healthPostavke.trag; 
         }
-        document.getElementById('prikazTim').innerText = window.tempImeTimaZaBazu;
         
-        // NOVO: Upisivanje imena staze na ekran zadatka
+        let prikazTimEl = document.getElementById('prikazTim');
+        if(prikazTimEl) prikazTimEl.innerText = window.tempImeTimaZaBazu;
+        
         let imeStaze = window.odabranaPotraga ? window.odabranaPotraga.ime : "Zadatak";
         let txtImeStaze = document.getElementById('txtImeStazeZadatak');
         if (txtImeStaze) txtImeStaze.innerText = imeStaze;
 
         window.azurirajZdravlje(0); 
         
-        // --- AKTIVACIJA PAMETNOG EKRANA ---
-        window.aktivirajWakeLock();
-        window.resetujIdleTajmer();
-        // ----------------------------------
+        // BEZBEDNA AKTIVACIJA: Sprečava pucanje koda ako ove funkcije fale
+        if (typeof window.aktivirajWakeLock === 'function') window.aktivirajWakeLock();
+        if (typeof window.resetujIdleTajmer === 'function') window.resetujIdleTajmer();
 
         if(window.sesijaPodaci.zavrsena) { 
             window.resiKrajIgre(); 
         } else {
             window.kreniNaZadatke();
         }
+    } catch (err) {
+        console.error("Sigurnosni osigurač aktiviran u pokreniPrikaz:", err);
+        // ULTIMATIVNI SPAS: Ako bilo šta pukne, forsiraj ulazak u samu igru!
+        window.prikaziEkran('ekranZadatak'); 
     }
+};
 
     window.kreniNaZadatke = function() { window.ucitajTacku(window.trenutnaTackaIndeks); window.pokreniTajmer(); }
 
@@ -3181,11 +3481,16 @@ window.nadjiSledecuValidnuTacku = function(startIndeks) {
             let btnNazadNaUp = document.getElementById('btnNazadNaUputstvo');
             if(btnNazadNaUp) btnNazadNaUp.style.display = 'none';
             
-            let tipKretanja = window.potragaPodaci.tip || 'Pešak';
+let tipKretanja = window.potragaPodaci.tip || 'Pešak';
             let staraKontejner = document.getElementById('autoRadarKontejner');
             if(staraKontejner) staraKontejner.remove();
 
-            if (tipKretanja === 'Automobil' || tipKretanja === 'Bicikl') {
+            // 1. Prepoznavanje da li je u pitanju UM GYM Hands-Free
+            let jeUmGymStaza = String(window.potragaPodaci.sifra).toLowerCase().startsWith('umgym');
+            let jeAudioMod = window.sesijaPodaci && window.sesijaPodaci.umGymMod === 'audio';
+
+            // 2. Aktiviraj radar ako je Auto, Bicikl ILI (UM GYM + Audio mod)
+            if (tipKretanja === 'Automobil' || tipKretanja === 'Bicikl' || (jeUmGymStaza && jeAudioMod)) {
                 if(navMeni) navMeni.style.display = 'block';
                 document.getElementById('btnOtkljucaj').style.display = 'none';
                 document.getElementById('txtProveraMesta').style.display = 'none';
@@ -3193,19 +3498,20 @@ window.nadjiSledecuValidnuTacku = function(startIndeks) {
                 document.getElementById('btnPokreniQR').style.display = 'none';
                 document.getElementById('btnTrag').style.display = 'none';
 
-                let radarBoja = tipKretanja === 'Automobil' ? '#3b82f6' : '#f59e0b'; 
-                let radarIme = tipKretanja === 'Automobil' ? '🚗 AUTO RADAR AKTIVAN' : '🚲 CIKLO RADAR AKTIVAN';
-                let radarOpis = tipKretanja === 'Automobil' 
+                // 3. Dinamične boje i tekstovi (Dodata zelena boja i tekst za UM GYM)
+                let radarBoja = (tipKretanja === 'Automobil') ? '#3b82f6' : (jeUmGymStaza ? '#10b981' : '#f59e0b'); 
+                let radarIme = (tipKretanja === 'Automobil') ? '🚗 AUTO RADAR AKTIVAN' : (jeUmGymStaza ? '🎧 UM GYM RADAR AKTIVAN' : '🚲 CIKLO RADAR AKTIVAN');
+                let radarOpis = (tipKretanja === 'Automobil') 
                     ? 'Sistem lovi signal u pozadini i zapištaće čim uhvatimo zonu!'
-                    : 'Vozite bezbedno. Telefon će zapištati čim uhvatimo zonu ispred vas!';
+                    : (jeUmGymStaza ? 'Telefon je u džepu. Zvuk će se oglasiti kada uđete u zonu!' : 'Vozite bezbedno. Telefon će zapištati čim uhvatimo zonu ispred vas!');
 
                 let radarKontejner = document.createElement('div');
                 radarKontejner.id = 'autoRadarKontejner';
                 radarKontejner.innerHTML = `
                     <div style="background:#0f172a; padding:40px 20px; border-radius:15px; margin:20px 0; border:4px solid ${radarBoja}; box-shadow:0 0 30px ${radarBoja}66; text-align:center;">
                         <div class="skener-krug" style="width: 80px; height: 80px; border-width: 8px; margin: 0 auto 25px auto; border-color: ${radarBoja}4d; border-top-color: ${radarBoja}; animation-duration: 2s;"></div>
-                        <h3 style="color:${radarBoja}; margin:0 0 15px 0; font-size:28px; font-weight:900; text-transform:uppercase; letter-spacing:1px;">${radarIme}</h3>
-                        <p style="color:#cbd5e1; font-size:18px; line-height:1.4; margin:0; font-weight:bold;">${radarOpis}</p>
+                        <h3 style="color:${radarBoja}; margin:0 0 15px 0; font-size:24px; font-weight:900; text-transform:uppercase; letter-spacing:1px;">${radarIme}</h3>
+                        <p style="color:#cbd5e1; font-size:16px; line-height:1.4; margin:0; font-weight:bold;">${radarOpis}</p>
                         <p id="radarUdaljenost" style="color:#ffffff; font-weight:900; font-size:26px; margin-top:25px; background:rgba(0,0,0,0.6); padding:18px; border-radius:12px; border:2px solid #334155;">Udaljenost: Tražim satelite...</p>
                     </div>
                 `;
@@ -3213,7 +3519,7 @@ window.nadjiSledecuValidnuTacku = function(startIndeks) {
                 
                 window.pokreniAutoRadar(originalniPin.rad || 30, tipKretanja);
                 
-                } else {
+            } else {
                 if(navMeni) navMeni.style.display = 'none';
                 document.getElementById('btnOtkljucaj').style.display = 'block';
                 document.getElementById('txtProveraMesta').style.display = 'block';
@@ -3259,63 +3565,62 @@ window.nadjiSledecuValidnuTacku = function(startIndeks) {
     };
 
 window.pustiZvukAlarma = function() {
-        try {
-            let ctx = new (window.AudioContext || window.webkitAudioContext)();
-            let now = ctx.currentTime;
+    try {
+        let ctx = new (window.AudioContext || window.webkitAudioContext)();
+        let now = ctx.currentTime;
 
-            // 1. DEO: Kratki uvod 
-            let melodija = [
-                {f: 392.00, time: 0.00}, {f: 493.88, time: 0.10}, {f: 587.33, time: 0.20}, // Akord 1
-                {f: 440.00, time: 0.40}, {f: 554.37, time: 0.50}, {f: 659.25, time: 0.60}  // Akord 2
-            ];
+        // 1. DEO: Kratki uvod 
+        let melodija = [
+            {f: 392.00, time: 0.00}, {f: 493.88, time: 0.10}, {f: 587.33, time: 0.20}, 
+            {f: 440.00, time: 0.40}, {f: 554.37, time: 0.50}, {f: 659.25, time: 0.60}  
+        ];
 
-            melodija.forEach((nota) => {
-                let osc = ctx.createOscillator();
-                let gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
+        melodija.forEach((nota) => {
+            let osc = ctx.createOscillator();
+            let gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
 
-                osc.type = 'triangle'; 
-                osc.frequency.setValueAtTime(nota.f, now + nota.time);
+            osc.type = 'triangle'; 
+            osc.frequency.setValueAtTime(nota.f, now + nota.time);
 
-                gain.gain.setValueAtTime(0, now + nota.time);
-                gain.gain.linearRampToValueAtTime(0.25, now + nota.time + 0.02); 
-                gain.gain.exponentialRampToValueAtTime(0.001, now + nota.time + 0.15);
+            gain.gain.setValueAtTime(0, now + nota.time);
+            gain.gain.linearRampToValueAtTime(0.25, now + nota.time + 0.02); 
+            gain.gain.exponentialRampToValueAtTime(0.001, now + nota.time + 0.15);
 
-                osc.start(now + nota.time);
-                osc.stop(now + nota.time + 0.2);
-            });
+            osc.start(now + nota.time);
+            osc.stop(now + nota.time + 0.2);
+        });
 
-            // 2. DEO: VILINSKA PRAŠINA (Magični zvončići)
-            let vilinskeNote = [
-                1046.50, 1174.66, 1318.51, 1567.98, 1760.00, 
-                2093.00, 2349.32, 2637.02, 3135.96, 3520.00, 4186.01
-            ];
+        // 2. DEO: VILINSKA PRAŠINA (Magični zvončići)
+        let vilinskeNote = [
+            1046.50, 1174.66, 1318.51, 1567.98, 1760.00, 
+            2093.00, 2349.32, 2637.02, 3135.96, 3520.00, 4186.01
+        ];
 
-            vilinskeNote.forEach((freq, i) => {
-                let oscKraj = ctx.createOscillator();
-                let gainKraj = ctx.createGain();
-                oscKraj.connect(gainKraj);
-                gainKraj.connect(ctx.destination);
+        vilinskeNote.forEach((freq, i) => {
+            let oscKraj = ctx.createOscillator();
+            let gainKraj = ctx.createGain();
+            oscKraj.connect(gainKraj);
+            gainKraj.connect(ctx.destination);
 
-                oscKraj.type = 'sine'; // Kristalno čisto
-                
-                let vremePocetka = now + 0.85 + (i * 0.035);
-                
-                oscKraj.frequency.setValueAtTime(freq, vremePocetka);
+            oscKraj.type = 'sine'; 
+            
+            let vremePocetka = now + 0.85 + (i * 0.035);
+            
+            oscKraj.frequency.setValueAtTime(freq, vremePocetka);
 
-                gainKraj.gain.setValueAtTime(0, vremePocetka);
-                
-                // OVO JE PROMENJENO: Sa 0.1 na 0.025 (znatno tiše, ne plaši i ne iskače)
-                gainKraj.gain.linearRampToValueAtTime(0.040, vremePocetka + 0.01); 
-                gainKraj.gain.exponentialRampToValueAtTime(0.001, vremePocetka + 1.5); 
+            gainKraj.gain.setValueAtTime(0, vremePocetka);
+            
+            gainKraj.gain.linearRampToValueAtTime(0.040, vremePocetka + 0.01); 
+            gainKraj.gain.exponentialRampToValueAtTime(0.001, vremePocetka + 1.5); 
 
-                oscKraj.start(vremePocetka);
-                oscKraj.stop(vremePocetka + 1.6);
-            });
+            oscKraj.start(vremePocetka);
+            oscKraj.stop(vremePocetka + 1.6);
+        });
 
-        } catch(e) { console.log("Audio alarm nije podržan."); }
-    };
+    } catch(e) { console.log("Audio alarm nije podržan."); }
+};
 
 window.pokreniAutoRadar = function(radijus, tipKretanja) {
         window.zaustaviAutoRadar(); 
@@ -3327,7 +3632,7 @@ window.pokreniAutoRadar = function(radijus, tipKretanja) {
             efektivniRadijus = Math.max(radijus * 3, 80); 
         }
 
-        window.autoRadarId = navigator.geolocation.watchPosition(
+window.autoRadarId = navigator.geolocation.watchPosition(
             function(pozicija) {
                 let lat = pozicija.coords.latitude;
                 let lng = pozicija.coords.longitude;
@@ -3373,7 +3678,50 @@ window.pokreniAutoRadar = function(radijus, tipKretanja) {
                     }
                     
                     let pauzaPredZadatak = tipKretanja === 'Automobil' ? 2500 : 3500;
-                    setTimeout(() => { window.prikaziZadatak(); }, pauzaPredZadatak); 
+                    setTimeout(() => { 
+                        let trenutniPin = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
+                        let tipZadatka = trenutniPin.zadatak?.tip || '';
+                        let sifraIgre = (trenutniPin.zadatak?.igrica_kod || trenutniPin.zadatak?.tekst_zadatka || '').toLowerCase();
+                        let jeKraj = (window.trenutnaTackaIndeks >= window.potragaPodaci.pinovi.length - 1) || trenutniPin.zadatak?.isKrajnjaPoruka;
+                        
+                        // Skretnica: Da li je u pitanju UM GYM modul?
+                        if (tipZadatka === 'igrica' && sifraIgre.startsWith('umgym_')) {
+                            if (jeKraj) {
+                                // 🌟 POSLEDNJA TAČKA: Ne čitamo vežbu, već samo ZAVRŠNU PORUKU!
+                                let zavrsnaPoruka = trenutniPin.zadatak?.usmeravanje || window.GlavnaZavrsnaPoruka || "Završili ste UM GYM avanturu. Čestitamo!";
+                                
+                                if ('speechSynthesis' in window) {
+                                    window.speechSynthesis.cancel();
+                                    let govor = new SpeechSynthesisUtterance(zavrsnaPoruka);
+                                    window.umgym_trenutniGovor = govor; 
+                                    
+                                    let glasovi = window.speechSynthesis.getVoices();
+                                    let nasGlas = glasovi.find(g => g.lang.includes('hr') || g.lang.includes('sr') || g.lang.includes('bs'));
+                                    
+                                    if (nasGlas) {
+                                        govor.voice = nasGlas;
+                                    } else {
+                                        govor.lang = 'hr-HR';
+                                    }
+                                    
+                                    govor.rate = 0.95;
+                                    
+                                    // Kada telefon izgovori završnu poruku, automatski prelazi na ekran za uspeh
+                                    govor.onend = () => {
+                                        if (typeof window.uspehZadatka === 'function') window.uspehZadatka();
+                                    };
+                                    window.speechSynthesis.speak(govor);
+                                } else {
+                                    window.uspehZadatka();
+                                }
+                            } else {
+                                // Normalna tačka: Pokrećemo vežbu
+                                window.UMGYM_Fabrika.aktivirajZonu(sifraIgre);
+                            }
+                        } else {
+                            window.prikaziZadatak(); 
+                        }
+                    }, pauzaPredZadatak); 
                 }
             },
             function(greska) {
@@ -3389,363 +3737,420 @@ window.pokreniAutoRadar = function(radijus, tipKretanja) {
 // =====================================================================================
 
 window.prikaziZadatak = function() {
-        try {
-            document.getElementById('lokacijaKontejner').style.display = 'none';
-            
-            let navMeni = document.getElementById('navigacioniMeniNaDnu');
-            if(navMeni) navMeni.style.display = 'none'; 
-            
-            document.getElementById('zadatakKontejner').style.display = 'flex';
-            document.getElementById('porukaPolje').style.display = 'none';
-            document.getElementById('kompasPolje').style.display = 'none';
+    try {
+        document.getElementById('lokacijaKontejner').style.display = 'none';
+        
+        let navMeni = document.getElementById('navigacioniMeniNaDnu');
+        if(navMeni) navMeni.style.display = 'none'; 
+        
+        document.getElementById('zadatakKontejner').style.display = 'flex';
+        document.getElementById('porukaPolje').style.display = 'none';
+        document.getElementById('kompasPolje').style.display = 'none';
 
-            if (typeof window.zaustaviSonar === 'function') {
-                window.zaustaviSonar();
-            }
-            if (typeof window.zaustaviAutoRadar === 'function') {
-                window.zaustaviAutoRadar();
-            }
-            document.getElementById('unosOdgovor').value = '';
-            document.getElementById('unosOdgovor').style.display = 'none';
-            
-            let g2hKontejner = document.getElementById('g2hIgreUI');
-            if (g2hKontejner) {
-                g2hKontejner.style.display = 'none'; 
-                g2hKontejner.innerHTML = ''; 
-            }
-            
-            let staraKameraBtn = document.getElementById('btnKamera');
-            if (staraKameraBtn) staraKameraBtn.style.display = 'none';
-            
-
-            window.slikaSlikanaSada = false;
-            window.slikaSlikanaKreativni = false;
-            window.slikaSlikanaPronadji = false;
-            window.multiZlatnikSakupljen = false; 
-            window.G2H_trenutniStatusIgreUspeh = false; // Resetovanje statusa igre
-            document.getElementById('kvizUI').style.display = 'none';
-            document.getElementById('txtNapomena').style.display = 'none';
-            
-            let btnProveri = document.getElementById('btnProveri');
-            if(btnProveri) {
-                btnProveri.style.display = 'block';
-                btnProveri.style.background = "#2ecc71";
-                btnProveri.innerText = "PROVERI ODGOVOR";
-            }
-
-            if (!window.potragaPodaci || !window.potragaPodaci.pinovi || !window.potragaPodaci.pinovi[window.trenutnaTackaIndeks]) {
-                throw new Error("Podaci o zadatku nedostaju.");
-            }
-
-            let pin = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
-            let tip = pin.zadatak?.tip || 'zagonetka';
-            
-// =====================================================================
-// 🌟 NOVO: AUTOMATSKO PRESKAKANJE (Ako nema pravog zadatka na lokaciji)
-// =====================================================================
-let prazanTekst = !pin.zadatak?.tekst_zadatka || pin.zadatak.tekst_zadatka.trim() === '';
-// Preskačemo ekran zadatka ako je tip čisto 'zlatnik', ili ako si ostavio zagonetku skroz praznu!
-let nemaPravogZadatka = (tip === 'zlatnik') || (prazanTekst && (tip === 'zagonetka' || tip === 'info'));
-
-if (nemaPravogZadatka) {
-    // Sakrivamo kontejner da ne blinka prazan UI dok se animacija završava
-    document.getElementById('zadatakKontejner').style.display = 'none';
-    
-    // Proveravamo da li je u pitanju zlatnik kako bismo pustili animaciju
-    if (tip === 'zlatnik' && typeof window.pokaziZlatnikAnimaciju === 'function') {
-        window.pokaziZlatnikAnimaciju();
-        // Čekamo da se animacija završi (1.2s) pre nego što prikažemo Bravo ekran
-        setTimeout(() => {
-            window.uspehZadatka();
-        }, 1200);
-    } else {
-        // Za ostale prazne zadatke prelazimo odmah
-        window.uspehZadatka();
-    }
-    return; 
-}
-
-// 🧭 HIBRIDNI REŽIM: Ako igraju uz papirnu brošuru, preskačemo digitalne zadatke
-if (window.sesijaPodaci && window.sesijaPodaci.hibridniMod) {
-    let pinLok = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
-    let imeLok = pinLok.imeLokacije || ("Lokacija " + (window.trenutnaTackaIndeks + 1));
-    
-    document.getElementById('tekstZadatkaUUI').style.display = 'block';
-    document.getElementById('tekstZadatkaUUI').innerHTML = `
-        <div style="padding: 10px; text-align: center;">
-            <div style="font-size: 50px; margin-bottom: 10px;">🗺️</div>
-            <b style="color: #15803d; font-size: 20px; display: block; margin-bottom: 10px;">Stigli ste: ${imeLok}</b>
-            <p style="font-size: 16px; color: #334155; font-weight: bold; line-height: 1.5;">
-                Otvorite vašu papirnu mapu i rešite zadatak predviđen za ovu lokaciju!
-            </p>
-        </div>
-    `;
-    
-    let btnProveriHibrid = document.getElementById('btnProveri');
-    if (btnProveriHibrid) {
-        btnProveriHibrid.style.display = 'block';
-        btnProveriHibrid.style.background = '#10b981';
-        btnProveriHibrid.innerText = "✅ REŠILI SMO ZADATAK NA PAPIRU";
-        btnProveriHibrid.onclick = function() {
-            window.uspehZadatka();
-        };
-    }
-    return;
-}
-// =====================================================================
-
-            let slikaUI = document.getElementById('slikaZadatkaUUI');
-            
-            if (tip === 'igrica') {
-                let sifraIgre = pin.zadatak?.igrica_kod || pin.zadatak?.tekst_zadatka || ''; 
-                let kontejnerIgre = document.getElementById('g2hIgreUI');
-                
-                // Da li je ovo STARA G2H igra?
-                let staraIgra = sifraIgre.startsWith('memorija') || sifraIgre.startsWith('skocko') || 
-                                sifraIgre.startsWith('prekidaci') || sifraIgre.startsWith('slagalica') || 
-                                sifraIgre.startsWith('matricaboja') || sifraIgre.startsWith('staza') || 
-                                sifraIgre.startsWith('simon') || sifraIgre.startsWith('radna');
-
-                if (staraIgra) {
-                    // --- STARE G2H IGRE ---
-                    document.getElementById('tekstZadatkaUUI').style.display = 'none';
-                    if(btnProveri) btnProveri.style.display = 'none'; 
-                    if(kontejnerIgre) {
-                        kontejnerIgre.style.display = 'block';
-                        kontejnerIgre.innerHTML = ''; 
-                        if (sifraIgre.startsWith('memorija')) { window.G2H_FabrikaIgara.pokreniMemoriju(sifraIgre, kontejnerIgre); } 
-                        else if (sifraIgre.startsWith('skocko')) { window.G2H_FabrikaIgara.pokreniSkocka(sifraIgre, kontejnerIgre); }
-                        else if (sifraIgre.startsWith('prekidaci')) { window.G2H_FabrikaIgara.pokreniPrekidace(sifraIgre, kontejnerIgre); }
-                        else if (sifraIgre.startsWith('slagalica')) { window.G2H_FabrikaIgara.pokreniSlagalicu(sifraIgre, kontejnerIgre); }
-                        else if (sifraIgre.startsWith('matricaboja')) { window.G2H_FabrikaIgara.pokreniMatricuBoja(sifraIgre, kontejnerIgre); }
-                        else if (sifraIgre.startsWith('staza')) { window.G2H_FabrikaIgara.pokreniSvetlosnuStazu(sifraIgre, kontejnerIgre); }
-                        else if (sifraIgre.startsWith('simon')) { window.G2H_FabrikaIgara.pokreniSimon(sifraIgre, kontejnerIgre); }
-                        else if (sifraIgre.startsWith('radna')) { window.G2H_FabrikaIgara.pokreniRadnu(sifraIgre, kontejnerIgre); }
-                    }
- } else {
-                    // --- NOVI PAMETNI MODUL SA ZAŠTITOM ---
-                    document.getElementById('tekstZadatkaUUI').style.display = 'none';
-
-                    if(kontejnerIgre) {
-                        kontejnerIgre.style.display = 'block';
-                        kontejnerIgre.innerHTML = '';
-                        
-                        try {
-                            window.NoveLogickeIgre.pokreniIgru(pin.id, kontejnerIgre);
-                        } catch(errG2H) {
-                            console.error("Greska u G2H:", errG2H);
-                            kontejnerIgre.innerHTML = `<div style="padding:20px; background:#fef2f2; border:2px solid #ef4444; border-radius:10px; color:#dc2626; font-weight:bold; text-align:center;">GREŠKA U IGRI:<br>${errG2H.message}</div>`;
-                        }
-                    }
-
-                    // Pametno prikazivanje polja za unos
-                    let aktivnaNova = window.NoveLogickeIgre.aktivnaIgraNaEkranu;
-                    if (aktivnaNova === 'mine') {
-                        document.getElementById('unosOdgovor').style.display = 'none';
-                        if(btnProveri) btnProveri.style.display = 'none';
-                    } else {
-                        document.getElementById('unosOdgovor').value = '';
-                        document.getElementById('unosOdgovor').style.display = 'block';
-                        
-                        // Zaštita rečnika u slučaju da sistem ne stigne da ga učita
-                        let r = window.recnik[window.trenutniJezik] || window.recnik['sr'];
-                        
-                        document.getElementById('txtNapomena').innerText = r.napomena || "Unesite rešenje:";
-                        document.getElementById('txtNapomena').style.display = 'block';
-
-                        if(btnProveri) {
-                            btnProveri.style.display = 'block';
-                            btnProveri.style.background = "#2ecc71";
-                            btnProveri.innerText = r.btnProveri || "PROVERI ODGOVOR";
-                        }
-                    }
-                }
-                return;
-            }
-
-            
-
-            document.getElementById('tekstZadatkaUUI').style.display = 'block';
-
-            // --- MULTI ZADATAK (Sve na jednom ekranu) ---
-            if (tip === 'multi') {
-                let elovi = pin.zadatak?.multi_elementi || [];
-                let tekstZaPrikaz = `<div style="padding: 5px; text-align: center; font-family: sans-serif;">`;
-
-                if(pin.zadatak?.tekst_zadatka && pin.zadatak?.tekst_zadatka.trim() !== '') {
-                    tekstZaPrikaz += `<div style="font-size:20px; color:#1a4d54; margin-bottom:15px; font-weight:800; background:#e0f2fe; padding:10px; border-radius:8px; border:1px solid #bae6fd;">📋 ${pin.zadatak.tekst_zadatka}</div>`;
-                }
-
-                if (elovi.includes('zlatnik')) {
-                    tekstZaPrikaz += `
-                    <div id="multi_zlatnik_boks" onclick="window.sakupiMultiZlatnik()" style="background:#fff9db; border:3px dashed #f59e0b; padding:15px; margin-bottom:12px; text-align:center; border-radius:12px; cursor:pointer;">
-                        <div id="multi_zlatnik_ikona" style="font-size:45px; margin-bottom:5px;">🪙</div>
-                        <b id="multi_zlatnik_naslov" style="color:#b45309; font-size:18px; display:block; margin-bottom:5px;">Pronašli ste Zlatnik!</b>
-                        <span id="multi_zlatnik_uputstvo" style="font-size:15px; color:#78350f; font-weight:900; display:block; background:#fef3c7; padding:8px; border-radius:6px;">👉 DODIRNI ZLATNIK DA GA SAKUPIŠ 👈</span>
-                    </div>`;
-                }
-                
-                if (elovi.includes('zagonetka')) {
-                    let zagTekst = pin.zadatak?.zag_tekst ? pin.zadatak.zag_tekst : "Rešite zagonetku:";
-                    
-                    // 🌟 OVO JE KLJUČNA PROMENA: Tražimo sliku u novom polju (zag_slika) ali i u STAROM polju (slika)
-                    let izvorSlike = pin.zadatak?.zag_slika || "";
-                    
-                    let slikaZagHtml = izvorSlike ? `<img src="${izvorSlike}" style="width:100%; max-height:220px; object-fit:contain; border-radius:8px; margin-bottom:10px; border: 2px solid #3b82f6; cursor:zoom-in;" onclick="window.uvecajSlikuZadatka(this.src)">` : '';
-
-                    tekstZaPrikaz += `
-                    <div style="background:#f8fafc; border: 2px solid #cbd5e1; border-top:5px solid #3b82f6; padding:15px; margin-bottom:12px; border-radius:12px; text-align:center;">
-                        <b style="font-size:18px; color:#1e293b; font-weight:900; display:block; margin-bottom:5px;">🧠 Dešifrujte zagonetku:</b>
-                        ${slikaZagHtml}
-                        <p style="font-style:italic; font-size:18px; font-weight:700; color:#334155; margin: 8px 0; background:#ffffff; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">"${zagTekst}"</p>
-                        <input type="text" id="dinamicki_zag_odg" class="multi-input" placeholder="UKUCAJTE ODGOVOR..." style="width:100%; padding:12px; border: 2px solid #cbd5e1; border-radius:8px; font-size:18px; box-sizing:border-box; text-transform:uppercase; text-align:center; font-weight:900; color:#1e293b;">
-                    </div>`;
-                }
-                
-                if (elovi.includes('igrica')) {
-                    // DODATO DATA-SifRA Atribut i postavljen Prikaz.
-                    let kodIgre = pin.zadatak?.igrica_kod || 'memorija1';
-
-                    tekstZaPrikaz += `
-                    <div style="background:#eff6ff; border: 2px solid #2563eb; padding:15px; border-radius:12px; margin-bottom:12px; text-align:center;">
-                        <div style="font-size:35px; margin-bottom:5px;">🎮</div>
-                        <b style="font-size:18px; color:#2563eb; display:block; margin-bottom:5px;">Logički izazov aktiviran!</b>
-                        <button id="btn_multi_g2h_pokreni" data-reseno="ne" data-sifra="${kodIgre}" onclick="window.otvoriG2HIgruUPunomEkranu()" style="background:#ff9800; color:white; font-weight:900; border:none; padding:12px 15px; border-radius:8px; font-size:18px; cursor:pointer; width:100%; box-shadow:0 4px 6px rgba(255,152,0,0.2);">🚀 POKRENI IGRU PREKO CELOG EKRANA</button>
-                    </div>
-                    <div id="g2h_multi_puni_ekran" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#ffffff; z-index:99999; padding:15px; box-sizing:border-box; overflow-y:auto;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #e2e8f0; padding-bottom:10px; margin-bottom:15px;">
-                            <b style="font-size:18px; color:#2563eb;">🎮 Gaming 2 Hiking Izazov</b>
-                            <button onclick="document.getElementById('g2h_multi_puni_ekran').style.display='none'" style="background:#ef4444; color:white; border:none; padding:5px 12px; border-radius:6px; font-weight:bold; cursor:pointer;">❌ Zatvori</button>
-                        </div>
-                        <div id="multi_g2h_game_container" style="width:100%; min-height:400px;"></div>
-                    </div>`;
-                }
-                
-                if (elovi.includes('kreativni')) {
-                    let kreTekst = pin.zadatak?.kre_uputstvo ? pin.zadatak.kre_uputstvo : "Napravite fotografiju.";
-                    tekstZaPrikaz += `
-                    <div id="multi_kreativni_kontejner" style="background:#f8fafc; border: 2px solid #cbd5e1; border-top:5px solid #10b981; padding:15px; margin-bottom:12px; border-radius:12px; text-align:center; transition: all 0.3s ease;">
-                        <b style="font-size:18px; color:#1e293b; font-weight:900; display:block; margin-bottom:5px;">Kreativni zadatak ili izazov:</b>
-                        <p style="font-size:16px; font-weight:600; color:#334155; margin-bottom:10px;">${kreTekst}</p>
-                        <button id="dinamicki_btn_kamera_kreativni" class="btn-kamera" style="width:100%; background:#ff9800; color:white; font-weight:900; padding:12px; border:none; border-radius:8px; font-size:16px; cursor:pointer;" onclick="window.aktivanFotoMod='kreativni'; document.getElementById('skrivenaKamera').click()">📸 ${window.recnik[window.trenutniJezik].btnKamera}</button>
-                        <div id="multi_foto_preview_box_kreativni" style="display:none; margin-top:10px; text-align:center;"><img id="multi_foto_preview_kreativni" src="" style="max-width:100%; max-height:140px; border-radius:8px; border:3px solid #10b981; object-fit:contain; background:#fff;"></div>
-                    </div>`;
-                }
-
-                if (elovi.includes('pronadji')) {
-                    let proTekst = pin.zadatak?.pronadji_opis ? pin.zadatak.pronadji_opis : "Pronađite skriveni motiv.";
-                    let slikaProHtml = pin.zadatak?.slika ? `<img src="${pin.zadatak.slika}" style="width:100%; max-height:220px; object-fit:contain; border-radius:8px; margin-bottom:10px; border: 2px solid #0ea5e9; cursor:zoom-in;" onclick="window.uvecajSlikuZadatka(this.src)">` : '';
-
-                    tekstZaPrikaz += `
-                    <div id="multi_pronadji_kontejner" style="background:#f8fafc; border: 2px solid #cbd5e1; border-top:5px solid #0ea5e9; padding:15px; margin-bottom:12px; border-radius:12px; text-align:center; transition: all 0.3s ease;">
-                        <b style="font-size:18px; color:#1e293b; font-weight:900; display:block; margin-bottom:5px;">🔍 Pronađi skriveni motiv:</b>
-                        ${slikaProHtml}
-                        <p style="font-size:16px; font-weight:600; color:#334155; margin-bottom:10px;">${proTekst}</p>
-                        <button id="dinamicki_btn_kamera_pronadji" class="btn-kamera" style="width:100%; background:#ff9800; color:white; font-weight:900; padding:12px; border:none; border-radius:8px; font-size:16px; cursor:pointer;" onclick="window.aktivanFotoMod='pronadji'; document.getElementById('skrivenaKamera').click()">📸 ${window.recnik[window.trenutniJezik].btnKamera}</button>
-                        <div id="multi_foto_preview_box_pronadji" style="display:none; margin-top:10px; text-align:center;"><img id="multi_foto_preview_pronadji" src="" style="max-width:100%; max-height:140px; border-radius:8px; border:3px solid #10b981; object-fit:contain; background:#fff;"></div>
-                    </div>`;
-                }
-
-                if (elovi.includes('qr')) {
-                    let qrTekst = pin.zadatak?.qr_uputstvo ? pin.zadatak.qr_uputstvo : "Pronađite QR kod i unesite šifru.";
-                    tekstZaPrikaz += `
-                    <div style="background:#f8fafc; border: 2px solid #cbd5e1; border-top:5px solid #a855f7; padding:15px; margin-bottom:12px; border-radius:12px; text-align:center;">
-                        <b style="font-size:18px; color:#1e293b; font-weight:900; display:block; margin-bottom:5px;">📱 Skenirajte QR kod:</b>
-                        <p style="font-size:16px; font-weight:600; color:#475569; margin-bottom:10px;">${qrTekst}</p>
-                        <input type="text" id="dinamicki_qr_odg" class="multi-input" placeholder="UNESITE TAJNA REČ..." style="width:100%; padding:12px; border: 2px solid #cbd5e1; border-radius:8px; font-size:16px; box-sizing:border-box; text-align:center; font-weight:900; text-transform:uppercase;">
-                    </div>`;
-                }
-
-                tekstZaPrikaz += `</div>`;
-                
-                document.getElementById('tekstZadatkaUUI').innerHTML = tekstZaPrikaz;
-                document.getElementById('tekstZadatkaUUI').style.fontSize = "16px";
-                document.getElementById('tekstZadatkaUUI').style.textAlign = "center"; 
-
-                if (elovi.includes('kviz')) {
-                    window.generisiKvizUI(pin.zadatak?.kvizData);
-                } else {
-                    let kvizPolje = document.getElementById('kvizUI');
-                    if(kvizPolje) kvizPolje.style.display = 'none';
-                }
-                
-                if (btnProveri) {
-                    btnProveri.style.fontSize = "20px";
-                    btnProveri.style.padding = "16px";
-                    btnProveri.style.fontWeight = "900";
-                    btnProveri.style.borderRadius = "12px";
-                    btnProveri.style.background = "#2ecc71"; 
-                    btnProveri.innerText = `${window.recnik[window.trenutniJezik].btnProveri} 🗸`;
-                }
-
-                document.getElementById('txtNapomena').innerHTML = `<b style='color:#1565c0;'>💡 Korak po korak: Rešite trenutni izazov na ekranu da otvorite sledeći!</b>`;
-                document.getElementById('txtNapomena').style.display = 'block';
-
-            } else {
-                document.getElementById('tekstZadatkaUUI').innerText = pin.zadatak?.tekst_zadatka || "Zadatak...";
-                document.getElementById('tekstZadatkaUUI').style.fontSize = "26px";
-                document.getElementById('tekstZadatkaUUI').style.textAlign = "center"; 
-            }
-
-            window.TACAN_ODGOVOR = String(pin.zadatak?.odgovor || "foto");
-            
-            // --- LOGIKA ZA PRIKAZ MAIN SLIKE (Za solo zadatke) ---
-            if (slikaUI) {
-                let prikaziGlavnuSliku = false;
-                
-                if (tip !== 'multi') {
-                    if (tip === 'pronadji' && pin.zadatak?.slika) {
-                        slikaUI.src = pin.zadatak.slika;
-                        prikaziGlavnuSliku = true;
-                    } else if (tip === 'zagonetka' && (pin.zadatak?.zag_slika || pin.zadatak?.slika)) {
-                        slikaUI.src = pin.zadatak.zag_slika || pin.zadatak.slika;
-                        prikaziGlavnuSliku = true;
-                    }
-                }
-                
-                if (prikaziGlavnuSliku) {
-                    slikaUI.style.display = 'block'; 
-                    slikaUI.style.cursor = 'zoom-in';
-                    slikaUI.onclick = function() { window.uvecajSlikuZadatka(this.src); };
-                } else {
-                    slikaUI.style.display = 'none'; 
-                }
-            }
-
-            if (tip === 'kreativni' || tip === 'pronadji') {
-                document.getElementById('tekstZadatkaUUI').innerHTML = (pin.zadatak?.tekst_zadatka || "") + `
-                <button id="dinamicki_btn_kamera" class="btn-kamera" style="width:100%; margin-top:20px; background:#ff9800; color:white; font-weight:bold; padding:15px; border:none; border-radius:10px; font-size:16px; cursor:pointer;" onclick="window.aktivanFotoMod='solo'; document.getElementById('skrivenaKamera').click()">📸 ${window.recnik[window.trenutniJezik].btnKamera}</button>`;            
-                document.getElementById('txtNapomena').innerText = (tip === 'kreativni') ? window.recnik[window.trenutniJezik].napomenaKreativni : window.recnik[window.trenutniJezik].napomenaPronadji;
-                document.getElementById('txtNapomena').style.display = 'block';
-                if(tip === 'pronadji') document.getElementById('btnProveri').innerText = window.recnik[window.trenutniJezik].btnZavrsiPronadji || "PRONAŠAO SAM ✔️";
-            } else if (tip === 'kviz') {
-                window.generisiKvizUI(pin.zadatak?.kvizData);
-            } else if (tip === 'zlatnik') {
-                document.getElementById('tekstZadatkaUUI').innerHTML = `
-                    <div style="text-align: center; margin-bottom: 15px; position: relative; height: 140px; display: flex; justify-content: center; align-items: center;">
-                        <div id="zlatnik-fallback" style="display: none; font-size: 100px; text-shadow: 0px 10px 15px rgba(245,158,11,0.5);">🪙</div>
-                        <img src="/kovcegsablagom.png" onerror="this.style.display='none'; document.getElementById('zlatnik-fallback').style.display='block';" style="width: 140px; height: 140px; object-fit: contain; filter: drop-shadow(0px 10px 15px rgba(245,158,11,0.5));">
-                    </div>
-                    <div style="font-size: 22px; font-weight: bold; color: #b45309; text-align: center;">Pronašli ste energetski zlatnik! Pokupite ga da obnovite snagu tima.</div>
-                `;
-                document.getElementById('btnProveri').innerText = "POKUPI ZLATNIK I KRENI DALJE";
-            } else {
-                if(tip !== 'multi') {
-                    document.getElementById('unosOdgovor').style.display = 'block';
-                    document.getElementById('txtNapomena').innerText = window.recnik[window.trenutniJezik].napomena;
-                    document.getElementById('txtNapomena').style.display = 'block';
-                }
-            }
-        } catch(err) {
-            console.error(err);
-            if(document.getElementById('btnProveri')) document.getElementById('btnProveri').style.display = 'none'; 
-            
-            let tekstGreskeUUI = document.getElementById('tekstZadatkaUUI');
-            tekstGreskeUUI.style.display = 'block'; // 🌟 OVO SADA POSTAJE VIDLJIVO!
-            tekstGreskeUUI.innerHTML = `<div style="padding:20px; background:#fef2f2; border:2px solid #ef4444; border-radius:10px; color:#dc2626; font-weight:bold; text-align:center;">Sistemska greška: ${err.message}</div>`;
+        if (typeof window.zaustaviSonar === 'function') window.zaustaviSonar();
+        if (typeof window.zaustaviAutoRadar === 'function') window.zaustaviAutoRadar();
+        
+        document.getElementById('unosOdgovor').value = '';
+        document.getElementById('unosOdgovor').style.display = 'none';
+        
+        let g2hKontejner = document.getElementById('g2hIgreUI');
+        if (g2hKontejner) {
+            g2hKontejner.style.display = 'none'; 
+            g2hKontejner.innerHTML = ''; 
         }
-    };
+        
+        let staraKameraBtn = document.getElementById('btnKamera');
+        if (staraKameraBtn) staraKameraBtn.style.display = 'none';
 
+        window.slikaSlikanaSada = false;
+        window.slikaSlikanaKreativni = false;
+        window.slikaSlikanaPronadji = false;
+        window.multiZlatnikSakupljen = false; 
+        window.G2H_trenutniStatusIgreUspeh = false;
+        document.getElementById('kvizUI').style.display = 'none';
+        document.getElementById('txtNapomena').style.display = 'none';
+        
+        let btnProveri = document.getElementById('btnProveri');
+        if(btnProveri) {
+            btnProveri.style.display = 'block';
+            btnProveri.style.background = "#2ecc71";
+            btnProveri.innerText = "PROVERI ODGOVOR";
+            btnProveri.onclick = window.proveriOdgovor; 
+        }
+
+        if (!window.potragaPodaci || !window.potragaPodaci.pinovi || !window.potragaPodaci.pinovi[window.trenutnaTackaIndeks]) {
+            throw new Error("Podaci o zadatku nedostaju.");
+        }
+
+        let pin = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
+        let tip = pin.zadatak?.tip || 'zagonetka';
+
+             // 🌟 ZLATNO PRAVILO ZA GLAS: Čita se Ime i Opis SAMO ako je izabran Freehand (audio) 
+            // 🌟 POPRAVAK: Univerzalni Freehand mod za SVE staze (Pješak, Bicikl, Auto)
+             let jeFreehand = (window.sesijaPodaci && (window.sesijaPodaci.audioMod === 'freehand' || window.sesijaPodaci.umGymMod === 'audio'));
+
+             if (jeFreehand && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let tekstZaCitanje = "";
+            
+            if (pin.imeLokacije) tekstZaCitanje += pin.imeLokacije + ". ";
+            if (pin.opisLokacije) tekstZaCitanje += pin.opisLokacije;
+            
+            if (tekstZaCitanje.trim() !== "") {
+                let govor = new SpeechSynthesisUtterance(tekstZaCitanje);
+                window.trenutniGovorAplikacije = govor; 
+                let glasovi = window.speechSynthesis.getVoices();
+                let nasGlas = glasovi.find(g => g.lang.includes('hr') || g.lang.includes('sr') || g.lang.includes('bs'));
+                if (nasGlas) govor.voice = nasGlas;
+                else govor.lang = 'hr-HR';
+                govor.rate = 0.95;
+                window.speechSynthesis.speak(govor);
+            }
+        }
+
+        // 🌟 AUTOMATSKO PRESKAKANJE (Ako nema pravog zadatka na lokaciji)
+        let prazanTekst = !pin.zadatak?.tekst_zadatka || pin.zadatak.tekst_zadatka.trim() === '';
+        let nemaPravogZadatka = (tip === 'zlatnik') || (prazanTekst && (tip === 'zagonetka' || tip === 'info'));
+
+        if (nemaPravogZadatka) {
+            document.getElementById('zadatakKontejner').style.display = 'none';
+            if (tip === 'zlatnik' && typeof window.pokaziZlatnikAnimaciju === 'function') {
+                window.pokaziZlatnikAnimaciju();
+                setTimeout(() => { window.uspehZadatka(); }, 1200);
+            } else {
+                window.uspehZadatka();
+            }
+            return; 
+        }
+
+        // 🧭 HIBRIDNI REŽIM
+        if (window.sesijaPodaci && window.sesijaPodaci.hibridniMod) {
+            let imeLok = pin.imeLokacije || ("Lokacija " + (window.trenutnaTackaIndeks + 1));
+            document.getElementById('tekstZadatkaUUI').style.display = 'block';
+            document.getElementById('tekstZadatkaUUI').innerHTML = `
+                <div style="padding: 10px; text-align: center;">
+                    <div style="font-size: 50px; margin-bottom: 10px;">🗺️</div>
+                    <b style="color: #15803d; font-size: 20px; display: block; margin-bottom: 10px;">Stigli ste: ${imeLok}</b>
+                    <p style="font-size: 16px; color: #334155; font-weight: bold; line-height: 1.5;">
+                        Otvorite vašu papirnu mapu i rešite zadatak predviđen za ovu lokaciju!
+                    </p>
+                </div>
+            `;
+            let btnProveriHibrid = document.getElementById('btnProveri');
+            if (btnProveriHibrid) {
+                btnProveriHibrid.style.display = 'block';
+                btnProveriHibrid.style.background = '#10b981';
+                btnProveriHibrid.innerText = "✅ REŠILI SMO ZADATAK NA PAPIRU";
+                btnProveriHibrid.onclick = function() { window.uspehZadatka(); };
+            }
+            return;
+        }
+
+        let slikaUI = document.getElementById('slikaZadatkaUUI');
+        
+        if (tip === 'igrica') {
+            // 🌟 SUPER-SPAS: Čuvamo ORIGINALNU šifru sa svim velikim i malim slovima da se igrice ne bi srušile!
+            let originalnaSifraIgre = pin.zadatak?.igrica_kod || pin.zadatak?.tekst_zadatka || '';
+            // A koristimo samo malu verziju isključivo za naše IF / ELSE provjere ispod
+            let sifraIgreMala = originalnaSifraIgre.toLowerCase();
+            
+            let jeKraj = (window.trenutnaTackaIndeks >= window.potragaPodaci.pinovi.length - 1) || pin.zadatak?.isKrajnjaPoruka;
+
+            // 🛑 UM GYM PRESRETANJE
+            if (sifraIgreMala.startsWith('umgym_')) {
+                if (jeKraj) {
+                    let zavrsnaPoruka = pin.zadatak?.usmeravanje || window.GlavnaZavrsnaPoruka || "Završili ste UM GYM avanturu. Čestitamo!";
+                    let jeFreehand = (window.sesijaPodaci && (window.sesijaPodaci.audioMod === 'freehand' || window.sesijaPodaci.umGymMod === 'audio'));
+
+                    if (jeFreehand && 'speechSynthesis' in window) {
+                        // 🌟 FREEHAND MOD: Automatski čita fiksnu poruku i prebacuje na kraj
+                        document.getElementById('tekstZadatkaUUI').style.display = 'block';
+                        document.getElementById('tekstZadatkaUUI').innerHTML = `
+                            <div style="font-size:24px; font-weight:900; color:#10b981; margin-bottom:15px; text-align:center;">
+                                Učitavam završnu poruku... 🎙️
+                            </div>`;
+                        if (btnProveri) btnProveri.style.display = 'none';
+
+                        window.speechSynthesis.cancel();
+                        // 🌟 Izmenjeno: Čita isključivo fiksnu poruku
+                        let tekstZaCitanje = "Ovo je poslednja tačka, završili ste ovu našu stazu.";
+                        let govor = new SpeechSynthesisUtterance(tekstZaCitanje);
+                        let glasovi = window.speechSynthesis.getVoices();
+                        let nasGlas = glasovi.find(g => g.lang.includes('hr') || g.lang.includes('sr') || g.lang.includes('bs'));
+                        
+                        if (nasGlas) {
+                            govor.voice = nasGlas;
+                        } else {
+                            govor.lang = 'hr-HR';
+                        }
+                        govor.rate = 0.95;
+
+                        // Čim završi čitanje, automatski prebacuje na završni ekran
+                        govor.onend = function() {
+                            window.uspehZadatka();
+                        };
+
+                        window.speechSynthesis.speak(govor);
+                        return;
+
+                    } else {
+                        // 🌟 KLASIČNI MOD: Prikazuje zeleni ekran i dugme za ručni završetak
+                        document.getElementById('tekstZadatkaUUI').style.display = 'block';
+                        document.getElementById('tekstZadatkaUUI').innerHTML = `
+                            <div style="font-size:24px; font-weight:900; color:#10b981; margin-bottom:15px; text-align:center;">
+                                ${zavrsnaPoruka}
+                            </div>`;
+                            
+                        if (btnProveri) {
+                            btnProveri.style.display = 'block';
+                            btnProveri.style.background = '#10b981';
+                            btnProveri.innerText = "ZAVRŠI POTRAGU 🏆";
+                            btnProveri.onclick = window.uspehZadatka;
+                        }
+                        return; 
+                    }
+                } else {
+                    window.UMGYM_Fabrika.aktivirajZonu(originalnaSifraIgre);
+                    return; 
+                }
+            }
+            
+            // 🌟 POPRAVAK: Hvatamo pravi ID, a ako ne postoji, kreiramo ga da spriječimo rušenje!
+                let kontejnerIgre = document.getElementById('g2hIgreUI') || document.getElementById('g2h_igreUI');
+                if (!kontejnerIgre) {
+                      kontejnerIgre = document.createElement('div');
+                      kontejnerIgre.id = 'g2hIgreUI';
+                      document.getElementById('zadatakKontejner').appendChild(kontejnerIgre);
+                }
+            let staraIgra = sifraIgreMala.startsWith('memorija') || sifraIgreMala.startsWith('skocko') || 
+                            sifraIgreMala.startsWith('prekidaci') || sifraIgreMala.startsWith('slagalica') || 
+                            sifraIgreMala.startsWith('matricaboja') || sifraIgreMala.startsWith('staza') || 
+                            sifraIgreMala.startsWith('simon') || sifraIgreMala.startsWith('radna');
+
+            if (staraIgra) {
+                // --- STARE G2H IGRE ---
+                document.getElementById('tekstZadatkaUUI').style.display = 'none';
+                if(btnProveri) btnProveri.style.display = 'none'; 
+                if(kontejnerIgre) {
+                    kontejnerIgre.style.display = 'block';
+                    kontejnerIgre.innerHTML = ''; 
+                    // ŠALJEMO ORIGINALNU ŠIFRU (ne smanjenu verziju) U FABRIKU!
+                    if (sifraIgreMala.startsWith('memorija')) { window.G2H_FabrikaIgara.pokreniMemoriju(originalnaSifraIgre, kontejnerIgre); } 
+                    else if (sifraIgreMala.startsWith('skocko')) { window.G2H_FabrikaIgara.pokreniSkocka(originalnaSifraIgre, kontejnerIgre); }
+                    else if (sifraIgreMala.startsWith('prekidaci')) { window.G2H_FabrikaIgara.pokreniPrekidace(originalnaSifraIgre, kontejnerIgre); }
+                    else if (sifraIgreMala.startsWith('slagalica')) { window.G2H_FabrikaIgara.pokreniSlagalicu(originalnaSifraIgre, kontejnerIgre); }
+                    else if (sifraIgreMala.startsWith('matricaboja')) { window.G2H_FabrikaIgara.pokreniMatricuBoja(originalnaSifraIgre, kontejnerIgre); }
+                    else if (sifraIgreMala.startsWith('staza')) { window.G2H_FabrikaIgara.pokreniSvetlosnuStazu(originalnaSifraIgre, kontejnerIgre); }
+                    else if (sifraIgreMala.startsWith('simon')) { window.G2H_FabrikaIgara.pokreniSimon(originalnaSifraIgre, kontejnerIgre); }
+                    else if (sifraIgreMala.startsWith('radna')) { window.G2H_FabrikaIgara.pokreniRadnu(originalnaSifraIgre, kontejnerIgre); }
+                }
+            } else {
+                // --- NOVI PAMETNI MODUL SA ZAŠTITOM ---
+                document.getElementById('tekstZadatkaUUI').style.display = 'none';
+                if(kontejnerIgre) {
+                    kontejnerIgre.style.display = 'block';
+                    kontejnerIgre.innerHTML = '';
+                    try {
+                        window.NoveLogickeIgre.pokreniIgru(pin.id, kontejnerIgre);
+                    } catch(errG2H) {
+                        console.error("Greška u G2H:", errG2H);
+                        kontejnerIgre.innerHTML = `<div style="padding:20px; background:#fef2f2; border:2px solid #ef4444; border-radius:10px; color:#dc2626; font-weight:bold; text-align:center;">GREŠKA U IGRI:<br>${errG2H.message}</div>`;
+                    }
+                }
+
+                let aktivnaNova = window.NoveLogickeIgre.aktivnaIgraNaEkranu;
+                if (aktivnaNova === 'mine') {
+                    document.getElementById('unosOdgovor').style.display = 'none';
+                    if(btnProveri) btnProveri.style.display = 'none';
+                } else {
+                    document.getElementById('unosOdgovor').value = '';
+                    document.getElementById('unosOdgovor').style.display = 'block';
+                    let r = window.recnik[window.trenutniJezik] || window.recnik['sr'];
+                    document.getElementById('txtNapomena').innerText = r.napomena || "Unesite rešenje:";
+                    document.getElementById('txtNapomena').style.display = 'block';
+                    if(btnProveri) {
+                        btnProveri.style.display = 'block';
+                        btnProveri.style.background = "#2ecc71";
+                        btnProveri.innerText = r.btnProveri || "PROVERI ODGOVOR";
+                    }
+                }
+            }
+            return;
+        }
+
+        document.getElementById('tekstZadatkaUUI').style.display = 'block';
+
+        if (tip === 'multi') {
+            let elovi = pin.zadatak?.multi_elementi || [];
+            let tekstZaPrikaz = `<div style="padding: 5px; text-align: center; font-family: sans-serif;">`;
+
+            if(pin.zadatak?.tekst_zadatka && pin.zadatak?.tekst_zadatka.trim() !== '') {
+                tekstZaPrikaz += `<div style="font-size:20px; color:#1a4d54; margin-bottom:15px; font-weight:800; background:#e0f2fe; padding:10px; border-radius:8px; border:1px solid #bae6fd;">📋 ${pin.zadatak.tekst_zadatka}</div>`;
+            }
+
+            if (elovi.includes('zlatnik')) {
+                tekstZaPrikaz += `
+                <div id="multi_zlatnik_boks" onclick="window.sakupiMultiZlatnik()" style="background:#fff9db; border:3px dashed #f59e0b; padding:15px; margin-bottom:12px; text-align:center; border-radius:12px; cursor:pointer;">
+                    <div id="multi_zlatnik_ikona" style="font-size:45px; margin-bottom:5px;">🪙</div>
+                    <b id="multi_zlatnik_naslov" style="color:#b45309; font-size:18px; display:block; margin-bottom:5px;">Pronašli ste Zlatnik!</b>
+                    <span id="multi_zlatnik_uputstvo" style="font-size:15px; color:#78350f; font-weight:900; display:block; background:#fef3c7; padding:8px; border-radius:6px;">👉 DODIRNI ZLATNIK DA GA SAKUPIŠ 👈</span>
+                </div>`;
+            }
+            
+            if (elovi.includes('zagonetka')) {
+                let zagTekst = pin.zadatak?.zag_tekst ? pin.zadatak.zag_tekst : "Rešite zagonetku:";
+                let izvorSlike = pin.zadatak?.zag_slika || "";
+                let slikaZagHtml = izvorSlike ? `<img src="${izvorSlike}" style="width:100%; max-height:220px; object-fit:contain; border-radius:8px; margin-bottom:10px; border: 2px solid #3b82f6; cursor:zoom-in;" onclick="window.uvecajSlikuZadatka(this.src)">` : '';
+
+                tekstZaPrikaz += `
+                <div style="background:#f8fafc; border: 2px solid #cbd5e1; border-top:5px solid #3b82f6; padding:15px; margin-bottom:12px; border-radius:12px; text-align:center;">
+                    <b style="font-size:18px; color:#1e293b; font-weight:900; display:block; margin-bottom:5px;">🧠 Dešifrujte zagonetku:</b>
+                    ${slikaZagHtml}
+                    <p style="font-style:italic; font-size:18px; font-weight:700; color:#334155; margin: 8px 0; background:#ffffff; padding:10px; border-radius:6px; border:1px solid #e2e8f0;">"${zagTekst}"</p>
+                    <input type="text" id="dinamicki_zag_odg" class="multi-input" placeholder="UKUCAJTE ODGOVOR..." style="width:100%; padding:12px; border: 2px solid #cbd5e1; border-radius:8px; font-size:18px; box-sizing:border-box; text-transform:uppercase; text-align:center; font-weight:900; color:#1e293b;">
+                </div>`;
+            }
+            
+            if (elovi.includes('igrica')) {
+                let kodIgre = pin.zadatak?.igrica_kod || 'memorija1';
+                tekstZaPrikaz += `
+                <div style="background:#eff6ff; border: 2px solid #2563eb; padding:15px; border-radius:12px; margin-bottom:12px; text-align:center;">
+                    <div style="font-size:35px; margin-bottom:5px;">🎮</div>
+                    <b style="font-size:18px; color:#2563eb; display:block; margin-bottom:5px;">Logički izazov aktiviran!</b>
+                    <button id="btn_multi_g2h_pokreni" data-reseno="ne" data-sifra="${kodIgre}" onclick="window.otvoriG2HIgruUPunomEkranu()" style="background:#ff9800; color:white; font-weight:900; border:none; padding:12px 15px; border-radius:8px; font-size:18px; cursor:pointer; width:100%; box-shadow:0 4px 6px rgba(255,152,0,0.2);">🚀 POKRENI IGRU PREKO CELOG EKRANA</button>
+                </div>
+                <div id="g2h_multi_puni_ekran" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#ffffff; z-index:99999; padding:15px; box-sizing:border-box; overflow-y:auto;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #e2e8f0; padding-bottom:10px; margin-bottom:15px;">
+                        <b style="font-size:18px; color:#2563eb;">🎮 Gaming 2 Hiking Izazov</b>
+                        <button onclick="document.getElementById('g2h_multi_puni_ekran').style.display='none'" style="background:#ef4444; color:white; border:none; padding:5px 12px; border-radius:6px; font-weight:bold; cursor:pointer;">❌ Zatvori</button>
+                    </div>
+                    <div id="multi_g2h_game_container" style="width:100%; min-height:400px;"></div>
+                </div>`;
+            }
+            
+            if (elovi.includes('kreativni')) {
+                let kreTekst = pin.zadatak?.kre_uputstvo ? pin.zadatak.kre_uputstvo : "Napravite fotografiju.";
+                tekstZaPrikaz += `
+                <div id="multi_kreativni_kontejner" style="background:#f8fafc; border: 2px solid #cbd5e1; border-top:5px solid #10b981; padding:15px; margin-bottom:12px; border-radius:12px; text-align:center; transition: all 0.3s ease;">
+                    <b style="font-size:18px; color:#1e293b; font-weight:900; display:block; margin-bottom:5px;">Kreativni zadatak ili izazov:</b>
+                    <p style="font-size:16px; font-weight:600; color:#334155; margin-bottom:10px;">${kreTekst}</p>
+                    <button id="dinamicki_btn_kamera_kreativni" class="btn-kamera" style="width:100%; background:#ff9800; color:white; font-weight:900; padding:12px; border:none; border-radius:8px; font-size:16px; cursor:pointer;" onclick="window.aktivanFotoMod='kreativni'; document.getElementById('skrivenaKamera').click()">📸 ${window.recnik[window.trenutniJezik].btnKamera}</button>
+                    <div id="multi_foto_preview_box_kreativni" style="display:none; margin-top:10px; text-align:center;"><img id="multi_foto_preview_kreativni" src="" style="max-width:100%; max-height:140px; border-radius:8px; border:3px solid #10b981; object-fit:contain; background:#fff;"></div>
+                </div>`;
+            }
+
+            if (elovi.includes('pronadji')) {
+                let proTekst = pin.zadatak?.pronadji_opis ? pin.zadatak.pronadji_opis : "Pronađite skriveni motiv.";
+                let slikaProHtml = pin.zadatak?.slika ? `<img src="${pin.zadatak.slika}" style="width:100%; max-height:220px; object-fit:contain; border-radius:8px; margin-bottom:10px; border: 2px solid #0ea5e9; cursor:zoom-in;" onclick="window.uvecajSlikuZadatka(this.src)">` : '';
+
+                tekstZaPrikaz += `
+                <div id="multi_pronadji_kontejner" style="background:#f8fafc; border: 2px solid #cbd5e1; border-top:5px solid #0ea5e9; padding:15px; margin-bottom:12px; border-radius:12px; text-align:center; transition: all 0.3s ease;">
+                    <b style="font-size:18px; color:#1e293b; font-weight:900; display:block; margin-bottom:5px;">🔍 Pronađi skriveni motiv:</b>
+                    ${slikaProHtml}
+                    <p style="font-size:16px; font-weight:600; color:#334155; margin-bottom:10px;">${proTekst}</p>
+                    <button id="dinamicki_btn_kamera_pronadji" class="btn-kamera" style="width:100%; background:#ff9800; color:white; font-weight:900; padding:12px; border:none; border-radius:8px; font-size:16px; cursor:pointer;" onclick="window.aktivanFotoMod='pronadji'; document.getElementById('skrivenaKamera').click()">📸 ${window.recnik[window.trenutniJezik].btnKamera}</button>
+                    <div id="multi_foto_preview_box_pronadji" style="display:none; margin-top:10px; text-align:center;"><img id="multi_foto_preview_pronadji" src="" style="max-width:100%; max-height:140px; border-radius:8px; border:3px solid #10b981; object-fit:contain; background:#fff;"></div>
+                </div>`;
+            }
+
+            if (elovi.includes('qr')) {
+                let qrTekst = pin.zadatak?.qr_uputstvo ? pin.zadatak.qr_uputstvo : "Pronađite QR kod i unesite šifru.";
+                tekstZaPrikaz += `
+                <div style="background:#f8fafc; border: 2px solid #cbd5e1; border-top:5px solid #a855f7; padding:15px; margin-bottom:12px; border-radius:12px; text-align:center;">
+                    <b style="font-size:18px; color:#1e293b; font-weight:900; display:block; margin-bottom:5px;">📱 Skenirajte QR kod:</b>
+                    <p style="font-size:16px; font-weight:600; color:#475569; margin-bottom:10px;">${qrTekst}</p>
+                    <input type="text" id="dinamicki_qr_odg" class="multi-input" placeholder="UNESITE TAJNA REČ..." style="width:100%; padding:12px; border: 2px solid #cbd5e1; border-radius:8px; font-size:16px; box-sizing:border-box; text-align:center; font-weight:900; text-transform:uppercase;">
+                </div>`;
+            }
+
+            tekstZaPrikaz += `</div>`;
+            
+            document.getElementById('tekstZadatkaUUI').innerHTML = tekstZaPrikaz;
+            document.getElementById('tekstZadatkaUUI').style.fontSize = "16px";
+            document.getElementById('tekstZadatkaUUI').style.textAlign = "center"; 
+
+            if (elovi.includes('kviz')) {
+                window.generisiKvizUI(pin.zadatak?.kvizData);
+            } else {
+                let kvizPolje = document.getElementById('kvizUI');
+                if(kvizPolje) kvizPolje.style.display = 'none';
+            }
+            
+            if (btnProveri) {
+                btnProveri.style.fontSize = "20px";
+                btnProveri.style.padding = "16px";
+                btnProveri.style.fontWeight = "900";
+                btnProveri.style.borderRadius = "12px";
+                btnProveri.style.background = "#2ecc71"; 
+                btnProveri.innerText = `${window.recnik[window.trenutniJezik].btnProveri} 🗸`;
+            }
+
+            document.getElementById('txtNapomena').innerHTML = `<b style='color:#1565c0;'>💡 Korak po korak: Rešite trenutni izazov na ekranu da otvorite sledeći!</b>`;
+            document.getElementById('txtNapomena').style.display = 'block';
+
+        } else {
+            document.getElementById('tekstZadatkaUUI').innerText = pin.zadatak?.tekst_zadatka || "Zadatak...";
+            document.getElementById('tekstZadatkaUUI').style.fontSize = "26px";
+            document.getElementById('tekstZadatkaUUI').style.textAlign = "center"; 
+        }
+
+        window.TACAN_ODGOVOR = String(pin.zadatak?.odgovor || "foto");
+        
+        if (slikaUI) {
+            let prikaziGlavnuSliku = false;
+            if (tip !== 'multi') {
+                if (tip === 'pronadji' && pin.zadatak?.slika) {
+                    slikaUI.src = pin.zadatak.slika;
+                    prikaziGlavnuSliku = true;
+                } else if (tip === 'zagonetka' && (pin.zadatak?.zag_slika || pin.zadatak?.slika)) {
+                    slikaUI.src = pin.zadatak.zag_slika || pin.zadatak.slika;
+                    prikaziGlavnuSliku = true;
+                }
+            }
+            if (prikaziGlavnuSliku) {
+                slikaUI.style.display = 'block'; 
+                slikaUI.style.cursor = 'zoom-in';
+                slikaUI.onclick = function() { window.uvecajSlikuZadatka(this.src); };
+            } else {
+                slikaUI.style.display = 'none'; 
+            }
+        }
+
+        if (tip === 'kreativni' || tip === 'pronadji') {
+            document.getElementById('tekstZadatkaUUI').innerHTML = (pin.zadatak?.tekst_zadatka || "") + `
+            <button id="dinamicki_btn_kamera" class="btn-kamera" style="width:100%; margin-top:20px; background:#ff9800; color:white; font-weight:bold; padding:15px; border:none; border-radius:10px; font-size:16px; cursor:pointer;" onclick="window.aktivanFotoMod='solo'; document.getElementById('skrivenaKamera').click()">📸 ${window.recnik[window.trenutniJezik].btnKamera}</button>`;            
+            document.getElementById('txtNapomena').innerText = (tip === 'kreativni') ? window.recnik[window.trenutniJezik].napomenaKreativni : window.recnik[window.trenutniJezik].napomenaPronadji;
+            document.getElementById('txtNapomena').style.display = 'block';
+            if(tip === 'pronadji') document.getElementById('btnProveri').innerText = window.recnik[window.trenutniJezik].btnZavrsiPronadji || "PRONAŠAO SAM ✔️";
+        } else if (tip === 'kviz') {
+            window.generisiKvizUI(pin.zadatak?.kvizData);
+        } else if (tip === 'zlatnik') {
+            document.getElementById('tekstZadatkaUUI').innerHTML = `
+                <div style="text-align: center; margin-bottom: 15px; position: relative; height: 140px; display: flex; justify-content: center; align-items: center;">
+                    <div id="zlatnik-fallback" style="display: none; font-size: 100px; text-shadow: 0px 10px 15px rgba(245,158,11,0.5);">🪙</div>
+                    <img src="/kovcegsablagom.png" onerror="this.style.display='none'; document.getElementById('zlatnik-fallback').style.display='block';" style="width: 140px; height: 140px; object-fit: contain; filter: drop-shadow(0px 10px 15px rgba(245,158,11,0.5));">
+                </div>
+                <div style="font-size: 22px; font-weight: bold; color: #b45309; text-align: center;">Pronašli ste energetski zlatnik! Pokupite ga da obnovite snagu tima.</div>
+            `;
+            document.getElementById('btnProveri').innerText = "POKUPI ZLATNIK I KRENI DALJE";
+        } else {
+            if(tip !== 'multi') {
+                document.getElementById('unosOdgovor').style.display = 'block';
+                document.getElementById('txtNapomena').innerText = window.recnik[window.trenutniJezik].napomena;
+                document.getElementById('txtNapomena').style.display = 'block';
+            }
+        }
+    } catch(err) {
+        console.error(err);
+        if(document.getElementById('btnProveri')) document.getElementById('btnProveri').style.display = 'none'; 
+        
+        let tekstGreskeUUI = document.getElementById('tekstZadatkaUUI');
+        tekstGreskeUUI.style.display = 'block';
+        tekstGreskeUUI.innerHTML = `<div style="padding:20px; background:#fef2f2; border:2px solid #ef4444; border-radius:10px; color:#dc2626; font-weight:bold; text-align:center;">Sistemska greška: ${err.message}</div>`;
+    }
+};
+
+// =====================================================================================
 window.generisiKvizUI = function(kvizData) {
         let ui = document.getElementById('kvizUI');
         ui.innerHTML = '';
@@ -4127,7 +4532,7 @@ window.uspehZadatka = function() {
             window.odabranaPotraga.pinovi.find(p => p.id === pin.id) || pin : pin;
         
         // Provera kraja se vrši isključivo na osnovu dužine timskog niza rute
-        let jeKraj = (window.trenutnaTackaIndeks >= window.potragaPodaci.pinovi.length - 1);
+        let jeKraj = (window.trenutniJezik, window.trenutnaTackaIndeks >= window.potragaPodaci.pinovi.length - 1);
 
         window.vecPresaoNaSledecu = false;
         document.getElementById('zavrsniMeni').style.display = "block"; 
@@ -4215,8 +4620,6 @@ window.uspehZadatka = function() {
         }
 
         // --- 1. NEOBORIVA PROVERA DA LI JE STAZA OKRENUTA ---
-        // Pošto je staza fizički okrenuta ranije u kodu, prava završna poruka (isKrajnjaPoruka) 
-        // sada se nalazi na PRVOM mestu u nizu (indeks 0)! Ovo je 100% siguran dokaz.
         let stazaStvarnoOkrenuta = false;
         if (window.odabranaPotraga && window.odabranaPotraga.pinovi && window.odabranaPotraga.pinovi.length > 0) {
             if (window.odabranaPotraga.pinovi[0].zadatak && window.odabranaPotraga.pinovi[0].zadatak.isKrajnjaPoruka) {
@@ -4233,11 +4636,38 @@ window.uspehZadatka = function() {
         }
         
         let cistTekstPoruke = (tekstPoruke || '').trim();
-
+        
         if (smernicaKontejner) {
             if (cistTekstPoruke !== '' && !sakrijSmernicu) {
-                if (txtSmernica) txtSmernica.innerText = cistTekstPoruke; 
+                
+                if (cistTekstPoruke.includes("http://") || cistTekstPoruke.includes("https://")) {
+                    let urlRegex = /(https?:\/\/[^\s]+)/g;
+                    let izvuceniURL = cistTekstPoruke.match(urlRegex);
+                    
+                    if (izvuceniURL && izvuceniURL.length > 0) {
+                        let cistiLink = izvuceniURL[0];
+                        let samoTekst = cistTekstPoruke.replace(cistiLink, '').trim();
+                        samoTekst = samoTekst.replace(/\n/g, '<br>');
+                        
+                        if (txtSmernica) {
+                            txtSmernica.innerHTML = `
+                                <div style="font-size:22px; font-weight:800; color:#000; margin-bottom:15px;">
+                                    ${samoTekst}
+                                </div>
+                                <button onclick="window.open('${cistiLink}', '_blank')" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 900; font-size: 16px; cursor: pointer; width: 100%; box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4); text-transform: uppercase;">
+                                    🔗 OTVORI TREZOR
+                                </button>
+                            `;
+                        }
+                    } else {
+                        if (txtSmernica) txtSmernica.innerHTML = cistTekstPoruke.replace(/\n/g, '<br>');
+                    }
+                } else {
+                    if (txtSmernica) txtSmernica.innerHTML = cistTekstPoruke.replace(/\n/g, '<br>'); 
+                }
+
                 smernicaKontejner.style.display = "block"; 
+                
                 if (bNaslov) {
                     bNaslov.innerText = jeKraj ? 
                         (window.trenutniJezik === 'sr' ? '🏆 Završna poruka:' : '🏆 Final message:') : 
@@ -4249,6 +4679,52 @@ window.uspehZadatka = function() {
         }
 
         window.prikaziEkran('ekranUspeh');
+
+        // 🌟 NOVO: AUTOMATSKI PRELAZ SA EKRANA USPJEHA (Za Freehand i vožnju)
+        let jeFreehand = (window.sesijaPodaci && (window.sesijaPodaci.audioMod === 'freehand' || window.sesijaPodaci.umGymMod === 'audio'));
+        let tipKretanja = window.potragaPodaci.tip || 'Pešak';
+
+        // Ako nije kraj igre, i ako je Freehand mod ili vožnja (Auto/Bicikl), automatski preskačemo ekran uspjeha i idemo na sljedeću točku!
+        if (!jeKraj && (jeFreehand || tipKretanja === 'Automobil' || tipKretanja === 'Bicikl')) {
+            setTimeout(() => {
+                window.kliknutoSledeca();
+            }, 3000); // 3 sekunde pauze da igrač vidi da je zadatak riješen, a onda se sam pokreće radar za iduću metu!
+        }
+    
+
+        // 🌟 NOVO: Čitanje završne poruke u Freehand modu
+        if (jeKraj) {
+            let jeFreehand = (window.sesijaPodaci && (window.sesijaPodaci.audioMod === 'freehand' || window.sesijaPodaci.umGymMod === 'audio'));
+            
+            if (jeFreehand && 'speechSynthesis' in window) {
+                // Uklanjamo URL linkove iz teksta da ih sintisajzer ne bi čitao slovo po slovo
+                let tekstZaCitanjeGlasom = cistTekstPoruke;
+                let urlRegex = /(https?:\/\/[^\s]+)/g;
+                let izvuceniURL = cistTekstPoruke.match(urlRegex);
+                if (izvuceniURL && izvuceniURL.length > 0) {
+                    tekstZaCitanjeGlasom = cistTekstPoruke.replace(izvuceniURL[0], '').trim();
+                }
+
+                if (tekstZaCitanjeGlasom !== "") {
+                    // Dodajemo mali uvodni uzvik kako bi zvučalo prirodnije
+                    let finalniGovor = "Čestitamo! " + tekstZaCitanjeGlasom;
+                    
+                    window.speechSynthesis.cancel(); // Prekidamo sve što je prethodno čitao
+                    let govor = new SpeechSynthesisUtterance(finalniGovor);
+                    let glasovi = window.speechSynthesis.getVoices();
+                    let nasGlas = glasovi.find(g => g.lang.includes('hr') || g.lang.includes('sr') || g.lang.includes('bs'));
+                    
+                    if (nasGlas) {
+                        govor.voice = nasGlas;
+                    } else {
+                        govor.lang = 'hr-HR';
+                    }
+                    
+                    govor.rate = 0.95;
+                    window.speechSynthesis.speak(govor);
+                }
+            }
+        }
     };
  // ---------------------------------------------------
     
@@ -4318,6 +4794,25 @@ let preostaleMinute = Math.floor(window.preostaloSekundi / 60);
 
         // 🌟 NOVO: PRIKAZ PRESKOČENIH TAČAKA U IZVEŠTAJU
         let preskocenoTacaka = window.sesijaPodaci.preskoceneTacke || 0;
+
+        // UM GYM STATISTIKA
+        let umGymSavladano = window.sesijaPodaci.umGymSavladano || 0;
+        if (umGymSavladano > 0) {
+            let kontejnerIzvestaja = document.getElementById('txtStatPresli').parentNode;
+            let umGymDiv = document.createElement('div');
+            umGymDiv.style.marginTop = '15px';
+            umGymDiv.style.marginBottom = '15px';
+            umGymDiv.style.padding = '15px';
+            umGymDiv.style.background = '#ecfdf5';
+            umGymDiv.style.border = '2px solid #10b981';
+            umGymDiv.style.borderRadius = '10px';
+            umGymDiv.style.color = '#047857';
+            umGymDiv.innerHTML = `🧘‍♂️ <b>Trening kompletiran!</b><br>Uspešno ste savladali <span style="font-size:24px; font-weight:900;">${umGymSavladano}</span> UM GYM izazova.`;
+            
+            let bonusKontejner = document.getElementById('bonusVremeKontejner');
+            kontejnerIzvestaja.insertBefore(umGymDiv, bonusKontejner);
+        }
+
         let stariPreskoceni = document.getElementById('statPreskoceneTacke');
         if (stariPreskoceni) stariPreskoceni.remove();
 
@@ -4552,73 +5047,117 @@ window.pokreniTajmer = function() {
     }
 
 window.pokreniOtkljucavanje = function() {
-        let pin = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
+    let pin = window.potragaPodaci.pinovi[window.trenutnaTackaIndeks];
 
-        if (pin.dozvoliPomoc === false) {
-            alert(window.trenutniJezik === 'sr' ? "Na ovoj lokaciji GPS provera je isključena. Molimo skenirajte QR kod sa terena!" : "GPS check is disabled here. Please scan the QR code!");
-            window.pokreniQRProveru();
-            return;
-        }
-
-        document.getElementById('zavesaProvere').style.display = 'flex';
-        document.getElementById('skenerAnimacija').style.display = 'block';
-        document.getElementById('txtZavesa').innerText = window.recnik[window.trenutniJezik].proveraU_toku || "Proveravam satelite...";
-        document.getElementById('btnZatvoriZavesu').style.display = 'none';
-        
-        let btnZavesaQR = document.getElementById('btnZavesaQR');
-        if(btnZavesaQR) btnZavesaQR.style.display = 'none';
-
-        if (!navigator.geolocation) {
-            document.getElementById('skenerAnimacija').style.display = 'none';
-            document.getElementById('txtZavesa').innerText = "GPS nije podržan na ovom uređaju.";
-            document.getElementById('btnZatvoriZavesu').style.display = 'block';
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            function(pozicija) {
-                let lat = pozicija.coords.latitude;
-                let lng = pozicija.coords.longitude;
-                
-                // 🌟 STROGA PROVERA: Radar sada gleda ISKLJUČIVO trenutnu metu na kojoj se nalazite!
-                let udaljenostDoSledece = Math.round(window.izracunajUdaljenost(lat, lng, pin.lat, pin.lng));
-                let radijusSledece = pin.rad || 15;
-
-                document.getElementById('skenerAnimacija').style.display = 'none';
-
-                if (udaljenostDoSledece <= radijusSledece) {
-                    document.getElementById('txtZavesa').innerText = window.recnik[window.trenutniJezik].lokacijaTacna || "DA! Stigli ste na pravu lokaciju!";
-                    
-                    // =========================================================
-                    // 🌟 NOVO: ULAZAK U PORTAL (Automatski zvuk i animacija)
-                    // =========================================================
-                    if (typeof window.pokaziZlatnikAnimaciju === 'function') {
-                        window.pokaziZlatnikAnimaciju();
-                    }
-
-                    setTimeout(() => {
-                        document.getElementById('zavesaProvere').style.display = 'none';
-                        window.prikaziZadatak();
-                    }, 1500);
-                } else {
-                    if (udaljenostDoSledece <= radijusSledece * 2) {
-                        document.getElementById('txtZavesa').innerText = (window.recnik[window.trenutniJezik].lokacijaNetacnaBlizu || "NE još! Ali ste veoma blizu.") + ` (${udaljenostDoSledece}m)`;
-                    } else {
-                        document.getElementById('txtZavesa').innerText = (window.recnik[window.trenutniJezik].lokacijaNetacnaDaleko || "NE! Daleko ste od cilja.") + ` (${udaljenostDoSledece}m)`;
-                    }
-                    document.getElementById('btnZatvoriZavesu').style.display = 'block';
-                    if(btnZavesaQR) btnZavesaQR.style.display = 'block';
-                }
-            },
-            function(greska) {
-                document.getElementById('skenerAnimacija').style.display = 'none';
-                document.getElementById('txtZavesa').innerText = window.recnik[window.trenutniJezik].greskaGPS || "Greška sa GPS-om.";
-                document.getElementById('btnZatvoriZavesu').style.display = 'block';
-                if(btnZavesaQR) btnZavesaQR.style.display = 'block';
-            },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-        );
+    // Provera da li je dozvoljena GPS provera na ovoj lokaciji
+    if (pin.dozvoliPomoc === false) {
+        alert(window.trenutniJezik === 'sr' ? "Na ovoj lokaciji GPS provera je isključena. Molimo skenirajte QR kod sa terena!" : "GPS check is disabled here. Please scan the QR code!");
+        window.pokreniQRProveru();
+        return;
     }
+
+    // Prikazivanje UI zavese za proveru
+    document.getElementById('zavesaProvere').style.display = 'flex';
+    document.getElementById('skenerAnimacija').style.display = 'block';
+    // Menjamo tekst da korisnik zna da proces sada traje par sekundi
+    document.getElementById('txtZavesa').innerText = window.recnik[window.trenutniJezik].proveraU_toku || "Kalibrišem satelite, sačekajte par sekundi...";
+    document.getElementById('btnZatvoriZavesu').style.display = 'none';
+    
+    let btnZavesaQR = document.getElementById('btnZavesaQR');
+    if(btnZavesaQR) btnZavesaQR.style.display = 'none';
+
+    if (!navigator.geolocation) {
+        document.getElementById('skenerAnimacija').style.display = 'none';
+        document.getElementById('txtZavesa').innerText = "GPS nije podržan na ovom uređaju.";
+        document.getElementById('btnZatvoriZavesu').style.display = 'block';
+        return;
+    }
+
+    // --- NOVI MEHANIZAM: USREDNJAVANJE I FILTRIRANJE GPS-a ---
+    let uzorci = [];
+    let maxUzoraka = 4; // Koliko dobrih očitavanja čekamo
+    let pokusaji = 0;
+    let maxPokusaja = 10; // Maksimalno "otkucaja" pre nego što odustanemo i uzmemo najbolje
+    let watchId = null;
+
+    // Funkcija koja se poziva kada imamo konačnu, stabilnu lokaciju
+    function zavrsiProveru(konacniLat, konacniLng) {
+        if(watchId !== null) navigator.geolocation.clearWatch(watchId);
+        
+        let udaljenostDoSledece = Math.round(window.izracunajUdaljenost(konacniLat, konacniLng, pin.lat, pin.lng));
+        let radijusSledece = pin.rad || 15;
+
+        document.getElementById('skenerAnimacija').style.display = 'none';
+
+        if (udaljenostDoSledece <= radijusSledece) {
+            document.getElementById('txtZavesa').innerText = window.recnik[window.trenutniJezik].lokacijaTacna || "DA! Stigli ste na pravu lokaciju!";
+            
+            if (typeof window.pokaziZlatnikAnimaciju === 'function') {
+                window.pokaziZlatnikAnimaciju();
+            }
+
+            setTimeout(() => {
+                document.getElementById('zavesaProvere').style.display = 'none';
+                window.prikaziZadatak();
+            }, 1500);
+        } else {
+            if (udaljenostDoSledece <= radijusSledece * 2) {
+                document.getElementById('txtZavesa').innerText = (window.recnik[window.trenutniJezik].lokacijaNetacnaBlizu || "NE još! Ali ste veoma blizu.") + ` (${udaljenostDoSledece}m)`;
+            } else {
+                document.getElementById('txtZavesa').innerText = (window.recnik[window.trenutniJezik].lokacijaNetacnaDaleko || "NE! Daleko ste od cilja.") + ` (${udaljenostDoSledece}m)`;
+            }
+            document.getElementById('btnZatvoriZavesu').style.display = 'block';
+            if(btnZavesaQR) btnZavesaQR.style.display = 'block';
+        }
+    }
+
+    // Koristimo watchPosition da bismo dobili više očitavanja zaredom
+    watchId = navigator.geolocation.watchPosition(
+        function(pozicija) {
+            pokusaji++;
+            let acc = pozicija.coords.accuracy;
+
+            // 1. SCENARIO: Savršen signal (manje od 10 metara greške). Prekidamo odmah.
+            if (acc <= 10) {
+                zavrsiProveru(pozicija.coords.latitude, pozicija.coords.longitude);
+                return;
+            }
+
+            // 2. SCENARIO: Skupljamo samo uzorke čija je greška ispod 30 metara
+            if (acc <= 30) {
+                uzorci.push({ lat: pozicija.coords.latitude, lng: pozicija.coords.longitude, acc: acc });
+            }
+
+            // 3. SCENARIO: Skupili smo dovoljno dobrih uzoraka, pravimo prosjek
+            if (uzorci.length >= maxUzoraka) {
+                let avgLat = uzorci.reduce((sum, p) => sum + p.lat, 0) / uzorci.length;
+                let avgLng = uzorci.reduce((sum, p) => sum + p.lng, 0) / uzorci.length;
+                zavrsiProveru(avgLat, avgLng);
+                return;
+            }
+
+            // 4. SCENARIO: Isteklo je vrijeme za pokušaje (prošlo je previše sekundi)
+            if (pokusaji >= maxPokusaja) {
+                if (uzorci.length > 0) {
+                    // Ako imamo barem neke dobre uzorke, uzimamo onaj sa najboljom preciznošću
+                    uzorci.sort((a, b) => a.acc - b.acc);
+                    zavrsiProveru(uzorci[0].lat, uzorci[0].lng);
+                } else {
+                    // Ako nema nijednog dobrog, prinuđeni smo da uzmemo zadnji dobijeni
+                    zavrsiProveru(pozicija.coords.latitude, pozicija.coords.longitude);
+                }
+            }
+        },
+        function(greska) {
+            if(watchId !== null) navigator.geolocation.clearWatch(watchId);
+            document.getElementById('skenerAnimacija').style.display = 'none';
+            document.getElementById('txtZavesa').innerText = window.recnik[window.trenutniJezik].greskaGPS || "Greška sa GPS-om.";
+            document.getElementById('btnZatvoriZavesu').style.display = 'block';
+            if(btnZavesaQR) btnZavesaQR.style.display = 'block';
+        },
+        { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 }
+    );
+}
 
     window.zatvoriZavesu = function() {
         document.getElementById('zavesaProvere').style.display = 'none';
@@ -7255,6 +7794,328 @@ crtajMine: function(kontejner) {
             }
         }
         kontejner.innerHTML = html;
+    }
+};
+
+
+// ===================================================================
+// 🌳 UM GYM FABRIKA ZADATAKA (Nezavisni modul) - FINALNA VERZIJA
+// ===================================================================
+window.UMGYM_Fabrika = {
+    // SRPSKA BAZA ZADATAKA
+    bazaZadataka: {
+        'umgym_nivo1': [
+            "U laganom hodu, podignite pogled ka nebu, pa ga mirno spustite ka tlu. Ponovite 5 puta. Ovo opušta vrat i popravlja držanje tela.",
+            "Koračajući umerenim tempom, lagano okrenite glavu ulevo, zadržite dve sekunde, pa udesno. Ponovite 6 puta. Ova vežba poboljšava dotok krvi u glavu.",
+            "U laganom hodu, ne pomerajući glavu, pogledajte očima gore, dole, levo i desno. Uradite to 4 puta. Tako odmaramo očne mišiće i budimo fokus.",
+            "Dok mirno hodate, nagnite glavu blago ka levom ramenu, udahnite, pa ponovite udesno. Uradite po 4 puta na svaku stranu. Osetićete prijatno rasterećenje u vratu.",
+            "U umerenom hodu, nasmešite se, opustite vilicu i napravite 5 mirnih udaha na nos. Osmeh šalje signal nervnom sistemu da je telo bezbedno i opušteno.",
+            "Koračajući ujednačeno, pogledajte daleko ispred sebe u daljinu, a zatim u vrh svojih cipela. Ponovite 6 puta. Ovo izoštrava vid i prilagođava fokus oka.",
+            "U laganom hodu, 5 puta blago povucite bradu ka grudnom košu bez savijanja leđa. Ova vežba rasterećuje pršljenove i jača vratne mišiće.",
+            "Usporite korak, oslušnite zvuke oko sebe i prepoznajte tri različita zvuka iz prirode. Ova vežba razvija slušnu pažnju i smiruje misli.",
+            "U laganom hodu, napravite polukrug glavom od jednog ramena ka drugom, preko grudi. Ponovite 4 puta. Time nežno masirate vratne mišiće.",
+            "Koračajući po ravnom, zatvorite oči na samo jedan korak, pa ih otvorite i nastavite mirno. Ponovite 5 puta. Vežba budi unutrašnji centar za ravnotežu.",
+            "U umerenom hodu, duboko udahnite na nos, a izdahnite na blago otvorena usta uz tihi uzdah. Ponovite 5 puta. Ovo oslobađa napetost i puni mozak kiseonikom.",
+            "Dok hodate ujednačeno, pogledajte ulevo i pronađite 3 zelena detalja na stazi, a zatim ponovite udesno. Time vežbamo periferni vid i snalaženje u prostoru.",
+            "U laganom hodu, blago podižite obrve i opuštajte čelo 6 puta. Napetost na licu nestaje, a cirkulacija se odmah popravlja.",
+            "Uspravite pogled pravo u visini očiju i napravite 10 mirnih koraka bez spuštanja glave. Time kičmi vraćate prirodan i pravilan položaj.",
+            "Koračajući umereno, blago zategnite mišiće lica na dve sekunde, pa ih potpuno opustite. Uradite 4 puta. Svesno opuštanje lica razbija umor.",
+            "U laganom hodu, pogledajte jedno drvo sa leve strane dok telo ide pravo, pa ponovite desno. Ponovite po 4 puta. Odličan trening za orijentaciju u hodu.",
+            "Koračajući ujednačeno, udahnite mirno, izgovorite u sebi reč mir i lagano izdahnite. Ponovite 5 puta. Spoj daha i koraka stvara unutrašnji sklad.",
+            "U umerenom hodu, uspravite glavu kao da vas nevidljiva nit vuče ka visini i napravite 12 stabilnih koraka. Telo usvaja lako i prirodno držanje.",
+            "U laganom hodu, progutajte pljuvačku, opustite jezik i napravite 6 mirnih koraka. Opuštanje vilice smanjuje pritisak u potiljku.",
+            "Koračajući opušteno, obuhvatite pogledom širok prostor oko sebe i udahnite punim plućima 3 puta. Široko vidno polje prirodno smiruje puls."
+        ],
+        'umgym_nivo2': [
+            "U laganom hodu, kružite ramenima unazad 8 puta. Ovo otvara grudni koš i olakšava disanje.",
+            "Koračajući mirno, dodirujte palcem redom svaki prst na istoj ruci, napred i nazad. Ponovite 6 krugova. Fina motorika direktno podstiče rad mozga.",
+            "U umerenom hodu, blago masirajte prste jedne ruke drugom šakom, od korena ka vrhu, na obe ruke. To poboljšava perifernu cirkulaciju i budi nerve.",
+            "Dok hodate ujednačeno, ispružite ruke ispred sebe, pa okrenite dlanove ka gore, a zatim ka dole. Ponovite 8 puta. Pokret vraća gipkost laktovima i podlakticama.",
+            "U laganom hodu, povežite prste iza leđa, blago otvorite ramena i napravite 10 koraka. Vaša kičma se isteže i oslobađa od pognutog stava.",
+            "Koračajući umerenim tempom, stisnite šake u laganu pesnicu, pa ih široko otvorite i raširite prste. Ponovite 8 puta. Ovo ubrzava vensku cirkulaciju u rukama.",
+            "U laganom hodu, podignite ruke u visini ramena, pa ih lagano spustite. Uradite to 6 puta. Tako nežno aktivirate mišiće leđa bez zamora.",
+            "Dok hodate mirno, spojite jagodice svih prstiju obe ruke ispred grudi i blago ih pritisnite 5 puta. Ova vežba usklađuje levu i desnu stranu tela.",
+            "Koračajući opušteno, otresite šake kao da skidate kapljice vode sa prstiju tokom 6 koraka. Mišići ruku i podlaktica se odmah oslobađaju napetosti.",
+            "U umerenom hodu, stavite dlanove na ramena i napravite 6 laganih krugova laktovima ka napred. Pokret čuva pokretljivost ramenog pojasa.",
+            "Dok koračate ujednačenim tempom, ispružite desnu ruku napred pa je spustite, zatim levu ruku. Uradite po 5 ponavljanja. Naizmenični pokreti stvaraju lep ritam hoda.",
+            "U laganom hodu, kružite zglobovima šaka u smeru kazaljke na satu 8 puta. Održavanje gipkosti zglobova šake sprečava ukočenost.",
+            "Koračajući mirno, pljesnite tiho dlanom o dlan ispred sebe na svaki četvrti korak, ukupno 5 puta. Ritam zvuka i pokreta odlično usklađuje pažnju.",
+            "U umerenom hodu, stavite obe šake na donji deo leđa i napravite 10 uspravnih koraka. Ovakav stav odmara lumbalni deo i popravlja stabilnost.",
+            "Dok hodate ravnomerno, podignite palčeve obe ruke ka gore i držite ruke ispred sebe tokom 6 koraka. Jasan položaj ruku jača tonus i pažnju.",
+            "U laganom hodu, dodirnite desnom šakom levo rame, a levom šakom desno rame, pa opustite. Ponovite 5 puta. Ukršteni dodir ramena podstiče saradnju obe moždane hemisfere.",
+            "Koračajući umereno, podignite ramena visoko ka ušima na jednu sekundu, pa ih naglo spustite. Ponovite 5 puta. Odličan način za brzo skidanje tereta sa vrata.",
+            "U laganom hodu, ispružite ruke u stranu u visini struka i pravite male krugove dlanovima 8 puta. Blaga izdržljivost koja jača mišiće oko lopatica.",
+            "Pustite ruke da se slobodno njišu pored tela tokom 15 koraka umerenog hoda. Prirodno njihanje ruku smanjuje napor i olakšava koračanje.",
+            "Dok mirno hodate, spojite dlanove ispred grudi i napravite 4 duboka udaha. Ova vežba stabilizuje grudni koš i umiruje unutrašnji ritam."
+        ],
+        'umgym_nivo3': [
+            "U laganom hodu, blago zarotirajte ramena malo ulevo, pa udesno. Ponovite 6 puta. Meka rotacija masira kičmu i podstiče gipkost trupa.",
+            "Uskladite korak i dah u umerenom hodu: 3 koraka udišite vazduh, a 3 koraka mirno izdišite. Uradite 5 ciklusa. Pluća se ravnomerno pune kiseonikom.",
+            "U laganom hodu, spustite ruku na stomak i osetite kako se stomak širi pri udahu. Ponovite 5 dubokih udaha. Trbušno disanje prirodno rasterećuje srce i relaksira telo.",
+            "Koračajući ujednačeno, na svaki šesti korak blago uvucite stomak i ispravite leđa. Ponovite 5 puta. Aktivacija dubokih mišića štiti kičmu pri svakom koraku.",
+            "U umerenom hodu, zamahnite desnom rukom napred dok koračate levom nogom, pa obrnuto. Ponovite 8 puta. Unakrsno kretanje je osnova prirodnog i zdravog hoda.",
+            "U laganom hodu, blago nagnite gornji deo tela za centimetar ulevo, pa udesno. Ponovite 6 puta. Bočni mišići trupa se nežno bude i istežu.",
+            "Koračajući mirno, udahnite duboko šireći rebra u stranu, pa polako izdahnite kroz blago skupljene usne. Uradite 4 puta. Ovo poboljšava provetravanje pluća.",
+            "U umerenom hodu, napravite 10 koraka zamišljajući da nosite knjigu na glavi. Ponovite dva puta. Trup automatski pronalazi idealnu ravnotežu.",
+            "Koračajući ravnomerno, svesno opustite donji deo leđa tokom 15 koraka. Rasterećenje lumbalnog dela smanjuje zamor pri dužoj šetnji.",
+            "U laganom hodu, stavite ruke na bokove i napravite 8 koraka sa jasnim prenosom težine. Stabilna karlica omogućava siguran oslonac.",
+            "Dok hodate umerenim tempom, dodirnite desnom šakom levi kuk, pa levom šakom desni kuk. Ponovite 6 puta. Ova rotacija budi kose trbušne mišiće.",
+            "Koračajući umereno, udahnite kroz 4 koraka, zadržite dah 2 koraka, pa izdahnite kroz 4 koraka. Ponovite 3 puta. Vežba jača plućni kapacitet.",
+            "U laganom hodu, okrenite dlanove ka spolja i blago podignite grudni koš tokom 8 koraka. Ovo poništava posledice dugog sedenja.",
+            "Koračajući mirno, pogledajte blago preko levog ramena unazad na trenutak, pa preko desnog. Ponovite po 3 puta. Odličan trening za rotaciju gornjeg dela tela.",
+            "U umerenom hodu, zamislite da sa svakim izdahom izbacujete umor iz tela. Ponovite 5 svesnih udaha i izdaha. Povezanost uma i daha vraća snagu.",
+            "U laganom hodu, ispružite ruke polukružno ispred sebe kao da grlite veliko drvo tokom 8 koraka. Deo leđa oko lopatica dobija prijatno istezanje.",
+            "Koračajući ravnomerno, blago privucite pupak ka kičmi na tri sekunde, pa opustite. Ponovite 5 puta. Odličan način za održavanje tonusa trbušnog zida u hodu.",
+            "Ubrzajte blago korak na tri sekunde, pa usporite na pet sekundi. Ponovite 5 krugova. Promena brzine kretanja stimuliše motornu kontrolu u mozgu.",
+            "Koračajući mirno, napravite 10 koraka dok u sebi odbrojavate od 10 unazad do 1. Spoj misaonog zadatka i hoda jača radnu memoriju.",
+            "U umerenom hodu, duboko udahnite na nos, ispravite se i recite sebi: osećam se dobro. Ponovite 3 puta. Pozitivna misao dokazano smanjuje doživljaj napora."
+        ],
+        'umgym_nivo4': [
+            "U umerenom hodu, podignite koleno malo više nego obično pri svakom drugom koraku. Uradite to 8 puta. Ovo jača pregibače kuka i smanjuje rizik od saplitanja.",
+            "U laganom hodu, svesno spustite petu, pa polako prenesite težinu celim stopalom ka prstima. Ponovite 10 koraka. Stopala dobijaju prirodnu elastičnu masažu.",
+            "Koračajući ravnomerno, napravite 4 malo duža koraka, a zatim 4 kraća koraka. Ponovite 4 puta. Promena dužine koraka čuva pokretljivost zglobova nogu.",
+            "Na ravnom i bezbednom delu staze, koračajte u laganom hodu 8 koraka oslanjajući se više na pete. Ova vežba jača prednje mišiće potkolenice i čuva skočne zglobove.",
+            "U laganom hodu, pređite na prste i napravite 6 pažljivih koraka. Listovi i Ahilove tetive postaju snažniji i elastičniji.",
+            "Koračajući mirno, postavljajte stopala u pravoj liniji, jedno ispred drugog, tokom 8 koraka. Vrhunska vežba za ravnotežu i stabilan korak.",
+            "Na trenutak usporite, prenesite težinu na levu nogu na sekundu, pa na desnu, dok nastavljate hod. Ponovite 5 puta. Jačamo osećaj sigurnosti u zglobovima.",
+            "U laganom hodu, pri svakom koraku nežno savijte prste unutar obuće, pa ih opustite. Ponovite 8 puta. Budi se svod stopala i popravlja stabilnost baze.",
+            "Koračajući umereno, blago savijte kolena praveći mekši korak tokom 10 koraka. Zglobovi uče kako da prirodno ublaže udarce o tlo.",
+            "U umerenom hodu, na svaki peti korak blago zategnite mišiće sedalnog dela na jednu sekundu. Ponovite 6 puta. Ovi mišići su glavni čuvari stabilnosti karlice.",
+            "Pokušajte da u laganom hodu koračate potpuno tiho i meko tokom 12 koraka. Meki hod čuva kičmene pršljenove od potresa.",
+            "U umerenom hodu, napravite 8 koraka sa blago raširenim stopalima za širu bazu oslonca. Širi stav daje osećaj stabilnosti i rasterećuje mišiće nogu.",
+            "Koračajući lagano, podignite desnu petu ka zadnjici pri koraku, pa levu. Ponovite 6 puta. Vežba blago isteže prednju ložu butine.",
+            "U umerenom hodu, usmerite pažnju na tlo i osetite čvrstinu podloge tokom 10 koraka. Jasna svest o tlu smanjuje strah od nestabilnosti.",
+            "Koračajući mirno, napravite tri koraka, napravite malu pauzu od sekunde, pa nastavite. Ponovite 4 puta. Kontrolisano usporavanje vežba reflekse zaustavljanja.",
+            "U laganom hodu, napravite mali kružni pokret stopalom u skočnom zglobu pri svakom podizanju noge, 4 puta po nozi. Ovo čuva gipkost skočnog zgloba.",
+            "Koračajte ujednačenim tempom umerenog hoda brojeći u sebi do 20 bez prekida. Ravnomeran tempo hoda čuva energiju i rasterećuje srce.",
+            "U umerenom hodu, pri svakom koraku zamislite da se blago odgurnete palcem stopala ka napred. Ponovite 10 puta. Pravilan odraz daje telu lakoću kretanja.",
+            "U laganom hodu, opustite ruke i oslonite se samo na snagu i stabilnost nogu tokom 8 koraka. Mozak automatski fino podešava ravnotežu tela.",
+            "Za kraj ove deonice, udahnite duboko u laganom hodu, opustite noge i nastavite najprijatnijim tempom. Telo je razgibano, a zglobovi spremni za nastavak."
+        ]
+    },
+
+    // ENGLESKA BAZA ZADATAKA
+    bazaZadataka_en: {
+        'umgym_nivo1': [
+            "While walking slowly, look up at the sky, then calmly lower your gaze to the ground. Repeat 5 times. This relaxes the neck and improves posture.",
+            "Walking at a moderate pace, gently turn your head to the left, hold for two seconds, then to the right. Repeat 6 times. This exercise improves blood flow to the head.",
+            "In a slow walk, without moving your head, look up, down, left, and right with your eyes. Do this 4 times. This rests the eye muscles and awakens focus.",
+            "While walking calmly, tilt your head slightly towards your left shoulder, inhale, then repeat to the right. Do this 4 times on each side. You will feel a pleasant relief in your neck.",
+            "In a moderate walk, smile, relax your jaw, and take 5 calm breaths through your nose. Smiling sends a signal to the nervous system that the body is safe and relaxed.",
+            "Walking steadily, look far ahead into the distance, then down at the tips of your shoes. Repeat 6 times. This sharpens your vision and adjusts eye focus.",
+            "In a slow walk, gently pull your chin towards your chest 5 times without bending your back. This exercise relieves the vertebrae and strengthens neck muscles.",
+            "Slow your pace, listen to the sounds around you, and identify three different sounds from nature. This exercise develops auditory attention and calms the mind.",
+            "In a slow walk, make a semicircle with your head from one shoulder to the other, across your chest. Repeat 4 times. This gently massages the neck muscles.",
+            "Walking on flat ground, close your eyes for just one step, then open them and continue calmly. Repeat 5 times. This awakens the inner balance center.",
+            "In a moderate walk, take a deep breath through your nose and exhale through a slightly open mouth with a soft sigh. Repeat 5 times. This releases tension and fills the brain with oxygen.",
+            "While walking steadily, look to the left and find 3 green details on the path, then repeat to the right. This trains peripheral vision and spatial orientation.",
+            "In a slow walk, gently raise your eyebrows and relax your forehead 6 times. Facial tension disappears, and circulation immediately improves.",
+            "Keep your gaze straight at eye level and take 10 calm steps without lowering your head. This restores the spine's natural and correct position.",
+            "Walking moderately, gently tighten your facial muscles for two seconds, then completely relax them. Do this 4 times. Conscious facial relaxation breaks fatigue.",
+            "In a slow walk, look at a tree on the left while your body moves straight, then repeat on the right. Repeat 4 times each. Excellent training for orientation while walking.",
+            "Walking steadily, inhale calmly, say the word 'peace' to yourself, and exhale slowly. Repeat 5 times. The combination of breath and steps creates inner harmony.",
+            "In a moderate walk, hold your head upright as if an invisible thread is pulling you upwards, and take 12 stable steps. The body adopts an easy and natural posture.",
+            "In a slow walk, swallow your saliva, relax your tongue, and take 6 calm steps. Relaxing the jaw reduces pressure in the back of the head.",
+            "Walking relaxedly, take in the wide space around you with your gaze and take 3 deep breaths. A wide field of vision naturally calms the pulse."
+        ],
+        'umgym_nivo2': [
+            "In a slow walk, roll your shoulders backward 8 times. This opens the chest and makes breathing easier.",
+            "Walking calmly, touch your thumb to each finger on the same hand in order, back and forth. Repeat 6 rounds. Fine motor skills directly stimulate brain activity.",
+            "In a moderate walk, gently massage the fingers of one hand with the other, from the base to the top, on both hands. This improves peripheral circulation.",
+            "While walking steadily, stretch your arms in front of you, turn your palms up, then down. Repeat 8 times. This movement restores flexibility to elbows and forearms.",
+            "In a slow walk, interlock your fingers behind your back, slightly open your shoulders, and take 10 steps. Your spine stretches and frees itself from a slouched posture.",
+            "Walking at a moderate pace, squeeze your hands into a light fist, then open them wide and spread your fingers. Repeat 8 times. This accelerates venous circulation in the arms.",
+            "In a slow walk, raise your arms to shoulder height, then slowly lower them. Do this 6 times. This gently activates your back muscles without fatigue.",
+            "While walking calmly, bring the fingertips of both hands together in front of your chest and press them gently 5 times. This synchronizes the left and right sides of the body.",
+            "Walking relaxedly, shake your hands as if flicking water drops off your fingers for 6 steps. The arm muscles are immediately relieved of tension.",
+            "In a moderate walk, place your hands on your shoulders and make 6 light circles forward with your elbows. This preserves shoulder joint mobility.",
+            "While walking steadily, extend your right arm forward then lower it, followed by your left arm. Do 5 repetitions each. Alternating movements create a nice walking rhythm.",
+            "In a slow walk, rotate your wrists clockwise 8 times. Maintaining wrist flexibility prevents stiffness.",
+            "Walking calmly, softly clap your hands in front of you on every fourth step, 5 times in total. The rhythm of sound and movement perfectly coordinates attention.",
+            "In a moderate walk, place both hands on your lower back and take 10 upright steps. This posture rests the lumbar region and improves stability.",
+            "While walking evenly, point both thumbs up and hold your hands in front of you for 6 steps. A clear hand position strengthens muscle tone and focus.",
+            "In a slow walk, touch your left shoulder with your right hand, and your right shoulder with your left hand, then relax. Repeat 5 times. Cross-body touches encourage brain hemisphere cooperation.",
+            "Walking moderately, raise your shoulders high towards your ears for one second, then drop them suddenly. Repeat 5 times. A great way to quickly remove weight from your neck.",
+            "In a slow walk, extend your arms to the sides at waist height and make small circles with your palms 8 times. Light endurance that strengthens the muscles around the shoulder blades.",
+            "Let your arms swing freely by your sides for 15 steps of moderate walking. Natural arm swinging reduces effort and makes stepping easier.",
+            "While walking calmly, bring your palms together in front of your chest and take 4 deep breaths. This exercise stabilizes the rib cage and calms your inner rhythm."
+        ],
+        'umgym_nivo3': [
+            "In a slow walk, slightly rotate your shoulders a bit to the left, then to the right. Repeat 6 times. A soft rotation massages the spine and encourages torso flexibility.",
+            "Synchronize your step and breath in a moderate walk: inhale for 3 steps, and exhale calmly for 3 steps. Do 5 cycles. The lungs fill evenly with oxygen.",
+            "In a slow walk, place your hand on your stomach and feel it expand as you inhale. Repeat 5 deep breaths. Belly breathing naturally relieves the heart and relaxes the body.",
+            "Walking steadily, on every sixth step slightly pull your stomach in and straighten your back. Repeat 5 times. Activating deep muscles protects the spine with every step.",
+            "In a moderate walk, swing your right arm forward as you step with your left leg, and vice versa. Repeat 8 times. Cross-body movement is the foundation of natural, healthy walking.",
+            "In a slow walk, slightly lean your upper body a centimeter to the left, then to the right. Repeat 6 times. The lateral torso muscles are gently awakened and stretched.",
+            "Walking calmly, inhale deeply expanding your ribs to the sides, then slowly exhale through slightly pursed lips. Do this 4 times. This improves lung ventilation.",
+            "In a moderate walk, take 10 steps imagining you are carrying a book on your head. Repeat twice. The torso automatically finds its ideal balance.",
+            "Walking evenly, consciously relax your lower back for 15 steps. Relieving the lumbar area reduces fatigue during a longer walk.",
+            "In a slow walk, place your hands on your hips and take 8 steps with a clear weight transfer. A stable pelvis allows for a secure foundation.",
+            "While walking at a moderate pace, touch your left hip with your right hand, then your right hip with your left hand. Repeat 6 times. This rotation awakens the oblique abdominal muscles.",
+            "Walking moderately, inhale over 4 steps, hold your breath for 2 steps, then exhale over 4 steps. Repeat 3 times. This exercise strengthens lung capacity.",
+            "In a slow walk, turn your palms outward and slightly lift your chest for 8 steps. This reverses the effects of prolonged sitting.",
+            "Walking calmly, look slightly over your left shoulder backward for a moment, then over your right. Repeat 3 times each. Excellent training for upper body rotation.",
+            "In a moderate walk, imagine you are expelling fatigue from your body with every exhale. Repeat 5 conscious inhales and exhales. Mind-breath connection restores strength.",
+            "In a slow walk, extend your arms in a semicircle in front of you as if hugging a large tree for 8 steps. The area around your shoulder blades gets a pleasant stretch.",
+            "Walking evenly, gently pull your navel towards your spine for three seconds, then relax. Repeat 5 times. A great way to maintain abdominal tone while walking.",
+            "Slightly quicken your pace for three seconds, then slow down for five seconds. Repeat 5 rounds. Changing walking speed stimulates motor control in the brain.",
+            "Walking calmly, take 10 steps while counting down from 10 to 1 in your head. Combining a mental task with walking strengthens working memory.",
+            "In a moderate walk, take a deep breath through your nose, straighten up, and tell yourself: I feel good. Repeat 3 times. A positive thought demonstrably reduces the perception of effort."
+        ],
+        'umgym_nivo4': [
+            "In a moderate walk, lift your knee a little higher than usual on every second step. Do this 8 times. This strengthens the hip flexors and reduces the risk of tripping.",
+            "In a slow walk, consciously land on your heel, then slowly transfer your weight through the whole foot to your toes. Repeat for 10 steps. Your feet get a natural elastic massage.",
+            "Walking evenly, take 4 slightly longer steps, followed by 4 shorter steps. Repeat 4 times. Changing stride length preserves leg joint mobility.",
+            "On a flat and safe part of the path, walk slowly for 8 steps relying more on your heels. This exercise strengthens the front shin muscles and protects the ankles.",
+            "In a slow walk, switch to walking on your toes and take 6 careful steps. Your calves and Achilles tendons become stronger and more elastic.",
+            "Walking calmly, place your feet in a straight line, one in front of the other, for 8 steps. A superb exercise for balance and a stable stride.",
+            "Slow down for a moment, shift your weight to your left leg for a second, then to your right, as you continue walking. Repeat 5 times. We strengthen the feeling of security in the joints.",
+            "In a slow walk, gently curl your toes inside your shoes with each step, then relax them. Repeat 8 times. This awakens the foot arch and improves base stability.",
+            "Walking moderately, slightly bend your knees making a softer step for 10 steps. The joints learn how to naturally absorb impacts from the ground.",
+            "In a moderate walk, slightly tighten your glute muscles for one second on every fifth step. Repeat 6 times. These muscles are the main guardians of pelvic stability.",
+            "Try to walk completely silently and softly in a slow walk for 12 steps. A soft walk protects the spinal vertebrae from shocks.",
+            "In a moderate walk, take 8 steps with your feet slightly spread apart for a wider base of support. A wider stance gives a sense of stability and relieves leg muscles.",
+            "Walking slowly, lift your right heel towards your buttocks as you step, then your left. Repeat 6 times. This exercise gently stretches the front of the thigh.",
+            "In a moderate walk, focus your attention on the ground and feel the firmness of the surface for 10 steps. A clear awareness of the ground reduces the fear of instability.",
+            "Walking calmly, take three steps, make a small one-second pause, then continue. Repeat 4 times. Controlled deceleration trains stopping reflexes.",
+            "In a slow walk, make a small circular movement with your ankle as you lift your leg, 4 times per leg. This preserves ankle flexibility.",
+            "Walk at an even, moderate pace, counting up to 20 continuously in your head. An even walking pace conserves energy and relieves the heart.",
+            "In a moderate walk, imagine gently pushing off forward with your big toe on each step. Repeat 10 times. A proper push-off gives the body ease of movement.",
+            "In a slow walk, relax your arms and rely only on the strength and stability of your legs for 8 steps. The brain automatically fine-tunes the body's balance.",
+            "To finish this section, take a deep breath in a slow walk, relax your legs, and continue at your most comfortable pace. Your body is limber and joints ready to continue."
+        ]
+    },
+
+    // 1. IZVLAČENJE ZADATKA NA OSNOVU JEZIKA
+    izvuciZadatak: function(sifraKategorije) {
+        let ociscenaSifra = (sifraKategorije || '').trim().toLowerCase();
+        let isEn = window.trenutniJezik === 'en';
+        
+        // Bira bazu u zavisnosti od jezika
+        let aktivnaBaza = isEn ? this.bazaZadataka_en : this.bazaZadataka;
+        
+        let zadaci = aktivnaBaza[ociscenaSifra] || aktivnaBaza['umgym_nivo1'];
+        if (!zadaci || zadaci.length === 0) {
+            zadaci = this.bazaZadataka['umgym_nivo1']; 
+        }
+        
+        let nasumicniIndeks = Math.floor(Math.random() * zadaci.length);
+        return zadaci[nasumicniIndeks];
+    },
+
+    // 2. AKTIVACIJA I PREVOD META LOKACIJE
+    aktivirajZonu: function(sifraKategorije) {
+        let isEn = window.trenutniJezik === 'en';
+        let zadatakTekst = this.izvuciZadatak(sifraKategorije);
+        let sledeciIndeks = window.trenutnaTackaIndeks + 1;
+        
+        let imeSledeceLokacije = isEn ? "next point" : "sledeća tačka";
+        if (sledeciIndeks < window.potragaPodaci.pinovi.length) {
+            imeSledeceLokacije = window.potragaPodaci.pinovi[sledeciIndeks].imeLokacije || imeSledeceLokacije;
+        }
+
+        // Dvojezična uvodna rečenica
+        let punTekst = isEn 
+            ? "Great, we have arrived. Now heading to " + imeSledeceLokacije + ". Our task is: " + zadatakTekst
+            : "Bravo, stigli smo. Sada idemo ka " + imeSledeceLokacije + ". Naš zadatak je: " + zadatakTekst;
+        
+        window.sesijaPodaci.umGymSavladano = (window.sesijaPodaci.umGymSavladano || 0) + 1;
+        
+        if (window.sesijaPodaci.umGymMod === 'vizuelno') {
+            this.prikaziVizuelniZadatak(imeSledeceLokacije, zadatakTekst, isEn);
+        } else {
+            this.izgovoriUputstvo(punTekst, imeSledeceLokacije, zadatakTekst, isEn);
+        }
+    },
+
+    // 3. GOVORNI SISTEM (Bira engleski glas za 'en', a hrvatski/srpski za 'sr')
+    izgovoriUputstvo: function(punTekst, meta, zadatakTekst, isEn) {
+        if (!('speechSynthesis' in window)) {
+            this.prikaziVizuelniZadatak(meta, zadatakTekst, isEn);
+            return;
+        }
+
+        window.speechSynthesis.cancel();
+        let izgovoreno = false;
+
+        let izvrsiGovor = () => {
+            if (izgovoreno) return;
+            izgovoreno = true;
+
+            let govor = new SpeechSynthesisUtterance(punTekst);
+            window.umgym_trenutniGovor = govor;
+            let glasovi = window.speechSynthesis.getVoices();
+            
+            if (isEn) {
+                // Ako je engleski, traži engleski govorni paket
+                let engGlas = glasovi.find(g => g.lang.includes('en-US') || g.lang.includes('en-GB') || g.lang.includes('en'));
+                if (engGlas) govor.voice = engGlas;
+                else govor.lang = 'en-US';
+            } else {
+                // Ako je srpski, prvo traži najbolji paket
+                let nasGlas = glasovi.find(g => g.lang.includes('hr') || g.lang.includes('sr') || g.lang.includes('bs'));
+                if (nasGlas) govor.voice = nasGlas;
+                else govor.lang = 'hr-HR';
+            }
+            
+            govor.rate = 0.95;
+
+            govor.onend = () => {
+                if (typeof window.uspehZadatka === 'function') window.uspehZadatka();
+            };
+
+            govor.onerror = () => {
+                this.prikaziVizuelniZadatak(meta, zadatakTekst, isEn);
+            };
+
+            window.speechSynthesis.speak(govor);
+        };
+
+        let proveraGlasova = window.speechSynthesis.getVoices();
+        if (proveraGlasova.length > 0) {
+            izvrsiGovor();
+        } else {
+            window.speechSynthesis.onvoiceschanged = izvrsiGovor;
+            setTimeout(izvrsiGovor, 500);
+        }
+    },
+
+    // 4. VIZUELNI POP-UP (U potpunosti dvojezičan)
+    prikaziVizuelniZadatak: function(meta, zadatakTekst, isEn) {
+        let stariModal = document.getElementById('umgymVizuelniModal');
+        if (stariModal) stariModal.remove();
+
+        let modal = document.createElement('div');
+        modal.id = 'umgymVizuelniModal';
+        modal.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:#064e3b; display:flex; justify-content:center; align-items:center; z-index:100000; padding:20px; box-sizing:border-box;";
+        
+        let naslov = isEn ? "UM GYM TASK" : "UM GYM ZADATAK";
+        let metaLabel = isEn ? "Target" : "Meta";
+        let btnTekst = isEn ? "TASK COMPLETED ✔️" : "ZADATAK SAVLADAN ✔️";
+
+        modal.innerHTML = `
+            <div style="background:#fff; padding:30px; border-radius:20px; text-align:center; box-shadow:0 15px 50px rgba(0,0,0,0.5); max-width:400px; width:100%; border:4px solid #10b981;">
+                <div style="font-size:65px; margin-bottom:15px;">🧘‍♂️</div>
+                <h2 style="color:#047857; margin:0 0 10px 0; font-size:26px; text-transform:uppercase; font-weight:900;">${naslov}</h2>
+                <div style="background:#ecfdf5; border:2px dashed #34d399; padding:20px; border-radius:12px; margin-bottom:20px;">
+                    <span style="font-size:15px; font-weight:900; color:#065f46; display:block; margin-bottom:12px; text-transform:uppercase;">${metaLabel}: ${meta}</span>
+                    <p style="font-size:20px; color:#0f172a; font-weight:bold; line-height:1.4; margin:0;">${zadatakTekst}</p>
+                </div>
+                <button id="btnZavrsiUmGym" style="background:#10b981; color:white; padding:18px; border:none; border-radius:12px; font-weight:900; cursor:pointer; width:100%; font-size:18px; box-shadow:0 4px 6px rgba(16,185,129,0.3); text-transform:uppercase;">
+                    ${btnTekst}
+                </button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        document.getElementById('btnZavrsiUmGym').onclick = () => {
+            modal.remove();
+            if (typeof window.uspehZadatka === 'function') {
+                window.uspehZadatka();
+            } else if (typeof window.uspehIgrica === 'function') {
+                window.uspehIgrica();
+            }
+        };
     }
 };
 // ==============================================================================================================================
