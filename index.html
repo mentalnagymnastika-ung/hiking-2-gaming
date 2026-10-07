@@ -2808,7 +2808,7 @@ window.AudioPodlogaModul = {
         this.azurirajJacinu();
     },
 
-    pustiNumeruPoId: function(id) {
+   pustiNumeruPoId: function(id) {
         let pronadjena = this.teme.find(t => t.id === id);
         if (!pronadjena) return;
 
@@ -2820,35 +2820,41 @@ window.AudioPodlogaModul = {
         console.log('▶ Pokretanje:', pronadjena.naziv, pronadjena.src);
         this.aktivnaNumera = pronadjena;
 
-        // Sve kritične audio komande stavljamo u try-catch blok da spriječimo blokiranje ekrana
         try {
-            this.audioObjekat.pause();
-            
-            // Zadajemo direktno novu putanju umjesto problematičnog brisanja atributa
-            this.audioObjekat.src = (pronadjena.tip === 'fajl' && !pronadjena.src.startsWith('./')) 
+            // 1. Potpuno zaustavljamo i "ubijamo" stari audio proces iz memorije
+            if (this.audioObjekat) {
+                this.audioObjekat.pause();
+                this.audioObjekat.removeAttribute('src'); 
+                this.audioObjekat.load();
+            }
+
+            // 2. Pravimo apsolutno novi, čisti element svaki put
+            let putanja = (pronadjena.tip === 'fajl' && !pronadjena.src.startsWith('./')) 
                 ? './' + pronadjena.src 
                 : pronadjena.src;
 
+            this.audioObjekat = new Audio(putanja);
             this.audioObjekat.loop = (pronadjena.tip === 'fajl');
             this.azurirajJacinu();
-            this.audioObjekat.load(); // Pravilno učitava novu putanju
 
+            // 3. Pokretanje uz hvatanje specifičnih upozorenja
             let obecanje = this.audioObjekat.play();
             if (obecanje !== undefined) {
                 obecanje.catch(err => {
-                    console.warn("▶️ Audio na čekanju ili prekinut:", err.name, err.message);
+                    console.warn("▶️ Audio pauziran ili čeka interakciju:", err ? err.message : "Nepoznato");
                 });
             }
         } catch(e) {
             console.error("Greška pri promjeni zvuka:", e);
         }
 
-        // Zatvaranje modala je sada sigurno jer je izvan opasne zone
         let modal = document.getElementById('modalIzborMuzike');
         if (modal) {
             modal.style.display = 'none';
         }
     },
+
+
 
     otvoriMeniTema: function() {
 
