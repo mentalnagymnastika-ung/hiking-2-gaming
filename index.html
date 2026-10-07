@@ -849,6 +849,40 @@ document.addEventListener("visibilitychange", function() {
     <div id="ekranZadatak" class="ekran">
         <div class="top-bar">
             <span class="tim-info" id="prikazTim">Tim</span>
+            
+<!-- Diskretna kontrola zvuka podloge sa dugmetom za izbor muzike -->
+<div id="kontrolaZvukaPodloge" style="display: flex; align-items: center; gap: 6px; background: #ffffff; padding: 4px 8px; border-radius: 20px; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+    <span onclick="window.AudioPodlogaModul.otvoriMeniTema()" 
+          style="font-size: 16px; cursor: pointer; user-select: none; transition: transform 0.1s;" 
+          onactive="this.style.transform='scale(0.9)'" 
+          title="Izaberi muzičku temu">🎵</span>
+    <input type="range" min="0" max="1" step="0.05" value="1" 
+           oninput="window.AudioPodlogaModul.podesiJacinu(parseFloat(this.value))" 
+           style="width: 55px; height: 4px; accent-color: #10b981; cursor: pointer;">
+</div>
+
+<!-- Mali prozor za ručni odabir muzičke teme -->
+<div id="modalIzborMuzike" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.75); z-index: 100000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(4px);">
+    <div style="background: white; border-radius: 16px; max-width: 320px; width: 100%; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 3px solid #10b981; text-align: center;">
+        <div style="font-size: 32px; margin-bottom: 5px;">🎵</div>
+        <h3 style="margin: 0 0 6px 0; color: #065f46; font-size: 18px; font-weight: 900; text-transform: uppercase;">Muzička podloga</h3>
+        <p style="font-size: 13px; color: #64748b; margin: 0 0 15px 0; font-weight: 600;">Izaberite melodiju koja vam najviše prija tokom hoda:</p>
+        
+        <!-- Lista tema koja se dinamički popunjava -->
+        <div id="listaMuzickihTema" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;"></div>
+
+        <!-- Napomena o internet vezi za radio stanice -->
+        <div style="font-size: 12px; color: #475569; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; text-align: left; line-height: 1.4;">
+            📡 <b>Napomena:</b> Za slušanje radio stanica neophodan je internet signal, dok lokalne numere, rade potpuno samostalno i bez internet mreže.
+        </div>
+        
+        <button onclick="document.getElementById('modalIzborMuzike').style.display='none'" 
+                style="background: #e2e8f0; color: #475569; border: none; padding: 10px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; width: 100%;">
+            Zatvori ✕
+        </button>
+    </div>
+</div>
+
             <div class="tajmer-info">
                 ⏱ <span id="prikazVreme">60:00</span>
             </div>
@@ -2676,6 +2710,265 @@ window.aktivirajZavrsnoDugme = function() {
     );
 };
 
+
+// ===================================================================
+// 🎵 AUTOMATSKI AUDIO PODSISTEM ZA PODLOGU
+// ===================================================================
+
+window.AudioPodlogaModul = {
+
+    teme: [
+        {
+            id: 'willow',
+            naziv: '🌿 Breath of the Willow',
+            src: 'Breath_of_the_Willow.mp3',
+            tip: 'fajl'
+        },
+        {
+            id: 'podloga1',
+            naziv: '🎹 Prirodna podloga 01',
+            src: 'podloga_01.mp3',
+            tip: 'fajl'
+        },
+        {
+            id: 'radio_naxi',
+            naziv: '📻 ISKLJUČI RADIO',
+            src: 'https://naxi128ssl.streaming.rs:9152/',
+            tip: 'radio'
+        },
+        {
+            id: 'radio_karolina',
+            naziv: '📻 Radio Karolina',
+            src: 'https://streaming.karolina.rs/karolina.mp3',
+            tip: 'radio'
+        }
+    ],
+
+    audioObjekat: new Audio(),
+
+    aktivnaNumera: null,
+
+    osnovnaJacina: 0.18,
+
+    trenutniFaktorKorisnika: 1.0,
+
+    jeGovorUToku: false,
+
+    inicijalizuj: function() {
+        this.audioObjekat.preload = 'none';
+        this.audioObjekat.playsInline = true;
+
+        // Dijagnostika - veoma korisno za mobilni telefon
+        this.audioObjekat.addEventListener('error', () => {
+            console.error(
+                'AUDIO GREŠKA:',
+                this.audioObjekat.error,
+                this.aktivnaNumera
+            );
+        });
+
+        this.audioObjekat.addEventListener('playing', () => {
+            console.log(
+                '🎵 Audio radi:',
+                this.aktivnaNumera ? this.aktivnaNumera.naziv : ''
+            );
+        });
+
+        this.audioObjekat.addEventListener('waiting', () => {
+            console.log('⏳ Audio čeka stream...');
+        });
+
+        this.audioObjekat.addEventListener('stalled', () => {
+            console.warn('⚠️ Audio stream je zastao.');
+        });
+    },
+
+    pokreniNasumicnuPodlogu: function() {
+
+        let lokalneTeme = this.teme.filter(
+            t => t.tip === 'fajl'
+        );
+
+        if (lokalneTeme.length === 0) return;
+
+        let nasumicniIndeks = Math.floor(
+            Math.random() * lokalneTeme.length
+        );
+
+        this.pustiNumeruPoId(
+            lokalneTeme[nasumicniIndeks].id
+        );
+    },
+
+    podesiJacinu: function(faktor) {
+
+        this.trenutniFaktorKorisnika =
+            Math.max(0, Math.min(1, faktor));
+
+        this.azurirajJacinu();
+    },
+
+    pustiNumeruPoId: function(id) {
+        let pronadjena = this.teme.find(t => t.id === id);
+        if (!pronadjena) return;
+
+        if (pronadjena.tip === 'radio' && !navigator.onLine) {
+            alert("Za slušanje radija neophodna je internet veza. Izaberite neku od lokalnih numera.");
+            return;
+        }
+
+        console.log('▶ Pokretanje:', pronadjena.naziv, pronadjena.src);
+        this.aktivnaNumera = pronadjena;
+
+        // Sve kritične audio komande stavljamo u try-catch blok da spriječimo blokiranje ekrana
+        try {
+            this.audioObjekat.pause();
+            
+            // Zadajemo direktno novu putanju umjesto problematičnog brisanja atributa
+            this.audioObjekat.src = (pronadjena.tip === 'fajl' && !pronadjena.src.startsWith('./')) 
+                ? './' + pronadjena.src 
+                : pronadjena.src;
+
+            this.audioObjekat.loop = (pronadjena.tip === 'fajl');
+            this.azurirajJacinu();
+            this.audioObjekat.load(); // Pravilno učitava novu putanju
+
+            let obecanje = this.audioObjekat.play();
+            if (obecanje !== undefined) {
+                obecanje.catch(err => {
+                    console.warn("▶️ Audio na čekanju ili prekinut:", err.name, err.message);
+                });
+            }
+        } catch(e) {
+            console.error("Greška pri promjeni zvuka:", e);
+        }
+
+        // Zatvaranje modala je sada sigurno jer je izvan opasne zone
+        let modal = document.getElementById('modalIzborMuzike');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    },
+
+    otvoriMeniTema: function() {
+
+        let kontejner =
+            document.getElementById(
+                'listaMuzickihTema'
+            );
+
+        let modal =
+            document.getElementById(
+                'modalIzborMuzike'
+            );
+
+        if (!kontejner || !modal) return;
+
+        kontejner.innerHTML = '';
+
+        this.teme.forEach(tema => {
+
+            let jesteAktivna =
+                this.aktivnaNumera &&
+                this.aktivnaNumera.id === tema.id;
+
+            let dugme =
+                document.createElement('button');
+
+            dugme.style.cssText = `
+                width: 100%;
+                padding: 12px;
+                border-radius: 10px;
+                font-weight: 800;
+                font-size: 14px;
+                cursor: pointer;
+                text-align: left;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                border: 2px solid ${
+                    jesteAktivna
+                        ? '#10b981'
+                        : '#cbd5e1'
+                };
+                background: ${
+                    jesteAktivna
+                        ? '#ecfdf5'
+                        : '#ffffff'
+                };
+                color: ${
+                    jesteAktivna
+                        ? '#047857'
+                        : '#1e293b'
+                };
+                box-shadow: ${
+                    jesteAktivna
+                        ? '0 2px 6px rgba(16,185,129,0.2)'
+                        : 'none'
+                };
+                margin-top: 6px;
+                transition: all 0.2s;
+            `;
+
+            dugme.innerHTML = `
+                <span>${tema.naziv}</span>
+                <span>${jesteAktivna ? '✓' : '▶'}</span>
+            `;
+
+            dugme.onclick = () => {
+
+                this.pustiNumeruPoId(
+                    tema.id
+                );
+
+            };
+
+            kontejner.appendChild(dugme);
+        });
+
+        modal.style.display = 'flex';
+    },
+
+    postaviStanjeGovora: function(uTokuGovor) {
+
+        this.jeGovorUToku = uTokuGovor;
+
+        this.azurirajJacinu();
+    },
+
+    azurirajJacinu: function() {
+
+        let ciljna =
+            this.osnovnaJacina *
+            this.trenutniFaktorKorisnika;
+
+        if (this.jeGovorUToku) {
+
+            this.audioObjekat.volume =
+                ciljna * 0.30;
+
+        } else {
+
+            this.audioObjekat.volume =
+                ciljna;
+        }
+    },
+
+    zaustavi: function() {
+
+        this.audioObjekat.pause();
+
+        this.audioObjekat.removeAttribute('src');
+
+        this.audioObjekat.load();
+
+        this.aktivnaNumera = null;
+    }
+};
+
+window.AudioPodlogaModul.inicijalizuj();
+
+// ===================================================================
 // Preimenovana originalna funkcija
 window.prikaziOriginalniModalZaStart = function() {
     // 🌟 NOVO: Zapiši da je test uspešno završen za današnji dan
@@ -2714,6 +3007,7 @@ window.prikaziModalZaStart = function() {
         if (boxZvuk) boxZvuk.style.display = 'none';
     }
 };
+//////////  test zvuka
 
 window.testirajZvukUMGYM = function() {
     let rezultat = document.getElementById('testZvukRezultat');
@@ -2724,7 +3018,6 @@ window.testirajZvukUMGYM = function() {
         rezultat.innerText = 'Učitavam glas...';
     }
 
-    // 🌟 NOVO: Trajno otključavanje Web Audio API-ja (Za vilinsku prašinu)
     try {
         if (!window.GlavniAudioKontekst) {
             window.GlavniAudioKontekst = new (window.AudioContext || window.webkitAudioContext)();
@@ -2732,51 +3025,46 @@ window.testirajZvukUMGYM = function() {
         if (window.GlavniAudioKontekst.state === 'suspended') {
             window.GlavniAudioKontekst.resume();
         }
-        // Puštamo mikro-ton od 0 sekundi da pretraživač registruje dodir
-        let osc = window.GlavniAudioKontekst.createOscillator();
-        let gain = window.GlavniAudioKontekst.createGain();
-        gain.gain.value = 0; 
-        osc.connect(gain);
-        gain.connect(window.GlavniAudioKontekst.destination);
-        osc.start(0);
-        osc.stop(window.GlavniAudioKontekst.currentTime + 0.1);
-    } catch(e) { console.log("Audio kontekst greška:", e); }
+    } catch(e) { console.log("Audio kontekst ignorisan pri testu", e); }
 
-    // Standardni glasovni TTS
-          window.speechSynthesis.cancel();
+    window.speechSynthesis.cancel();
                         
-                        let isEn = window.trenutniJezik === 'en';
-                        let tekstZaCitanje = isEn 
-                            ? "This is the last point, you have successfully finished our trail." 
-                            : "Ovo je poslednja tačka, završili ste ovu našu stazu.";
+    let isEn = window.trenutniJezik === 'en';
+    let tekstZaCitanje = isEn ? "Sound check completed." : "Provera zvuka uspešna.";
                             
-                        let govor = new SpeechSynthesisUtterance(tekstZaCitanje);
-                        let glasovi = window.speechSynthesis.getVoices();
+    let govor = new SpeechSynthesisUtterance(tekstZaCitanje);
+    let glasovi = window.speechSynthesis.getVoices();
                         
-                        if (isEn) {
-                            let engGlas = glasovi.find(g => g.lang.includes('en-US') || g.lang.includes('en-GB') || g.lang.includes('en'));
-                            if (engGlas) govor.voice = engGlas;
-                            else govor.lang = 'en-US';
-                        } else {
-                            let nasGlas = glasovi.find(g => g.lang.includes('hr') || g.lang.includes('sr') || g.lang.includes('bs'));
-                            if (nasGlas) govor.voice = nasGlas;
-                            else govor.lang = 'hr-HR';
-                        }
+    if (isEn) {
+        let engGlas = glasovi.find(g => g.lang.includes('en-US') || g.lang.includes('en-GB') || g.lang.includes('en'));
+        if (engGlas) govor.voice = engGlas;
+        else govor.lang = 'en-US';
+    } else {
+        let nasGlas = glasovi.find(g => g.lang.includes('hr') || g.lang.includes('sr') || g.lang.includes('bs'));
+        if (nasGlas) govor.voice = nasGlas;
+        else govor.lang = 'hr-HR';
+    }
                         
-                        govor.rate = 0.95;
+    govor.rate = 0.95;
         
-        govor.onstart = function() {
-            if (rezultat) {
-                rezultat.style.color = '#10b981';
-                rezultat.innerText = 'Zvuk je spreman!';
-            }
-            if (uputstvo) {
-                uputstvo.style.display = 'block';
-            }
-        };
+    govor.onend = function() {
+        if (rezultat) {
+            rezultat.style.color = '#10b981';
+            rezultat.innerText = 'Zvuk je spreman!';
+        }
+        if (uputstvo) {
+            uputstvo.style.display = 'block';
+        }
+        if (window.AudioPodlogaModul) window.AudioPodlogaModul.postaviStanjeGovora(false);
+    };
 
-        window.speechSynthesis.speak(govor);
-    
+    govor.onerror = function(e) {
+        console.log("TTS greska:", e);
+        if (window.AudioPodlogaModul) window.AudioPodlogaModul.postaviStanjeGovora(false);
+    };
+
+    if (window.AudioPodlogaModul) window.AudioPodlogaModul.postaviStanjeGovora(true);
+    window.speechSynthesis.speak(govor);
 };
     //////////////////// 
 window.racunajTrajanjeUMs = function(trajanjeString) {
@@ -2798,6 +3086,10 @@ window.racunajTrajanjeUMs = function(trajanjeString) {
         // Ako nema reč "sat" ni "dan", to su novi, čisti MINUTI iz admina!
         return broj * 60000; 
     };
+
+            // ==========================================
+            //  Napravi novu sesiju
+            // ==========================================
 
 window.napraviNovuSesiju = async function() {
     window.potragaPodaci = JSON.parse(JSON.stringify(window.odabranaPotraga)); 
@@ -3169,14 +3461,14 @@ window.zavrsiKreiranjeSesije = async function(okreniStazu) {
         if (jeFreehand) {
             if (jeUmGym) {
                 // 1. UM GYM: Čita lokaciju + Vežbu
-                let zadatakTekst = "Hodajte opušteno i pripremite se za vježbe.";
+                let zadatakTekst = "Hodajte opušteno i pripremite se za vežbe.";
                 if (window.UMGYM_Fabrika && typeof window.UMGYM_Fabrika.izvuciZadatak === 'function') {
                     zadatakTekst = window.UMGYM_Fabrika.izvuciZadatak('umgym_nivo1');
                 }
-                punTekstZaCitanje = "Krećemo! Vaša prva meta je " + prvaMeta + ". Zadatak do tamo je: " + zadatakTekst;
+                punTekstZaCitanje = " Vaša stanica je " + prvaMeta + ". Zadatak do tamo je: " + zadatakTekst;
             } else {
                 // 2. OSTALE STAZE (Pešak, Bicikl, Auto): Čita prvu lokaciju jer je aktivan Freehand mod
-                punTekstZaCitanje = "Krećemo! Vaša prva meta je " + prvaMeta + ".";
+                punTekstZaCitanje = "Vaša prva stanica je " + prvaMeta + ".";
                 if (tipKretanja === 'Bicikl') {
                     punTekstZaCitanje += " Srećna vožnja!";
                 } else if (tipKretanja === 'Automobil') {
@@ -3186,7 +3478,12 @@ window.zavrsiKreiranjeSesije = async function(okreniStazu) {
         }
         // Ako je izabran Klasični mod, 'punTekstZaCitanje' ostaje prazan i glas se neće oglasiti!
 
-        // Ako imamo šta da pročitamo, puštamo glas
+        // Ako je izabran Freehand režim, računar sam pokreće jednu od dve numere
+        if (jeFreehand) {
+            window.AudioPodlogaModul.pokreniNasumicnuPodlogu();
+        }
+
+        // Ako imamo šta da pročitamo, puštamo glas uz automatsko stišavanje podloge
         if (punTekstZaCitanje !== "" && 'speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             let govor = new SpeechSynthesisUtterance(punTekstZaCitanje);
@@ -3199,6 +3496,17 @@ window.zavrsiKreiranjeSesije = async function(okreniStazu) {
                 govor.lang = 'hr-HR';
             }
             govor.rate = 0.95;
+
+            govor.onstart = function() {
+                window.AudioPodlogaModul.postaviStanjeGovora(true);
+            };
+            govor.onend = function() {
+                window.AudioPodlogaModul.postaviStanjeGovora(false);
+            };
+            govor.onerror = function() {
+                window.AudioPodlogaModul.postaviStanjeGovora(false);
+            };
+
             window.speechSynthesis.speak(govor);
         }
         // ---------------------------------------------------------------------
@@ -3787,26 +4095,43 @@ window.prikaziZadatak = function() {
 
              // 🌟 ZLATNO PRAVILO ZA GLAS: Čita se Ime i Opis SAMO ako je izabran Freehand (audio) 
             // 🌟 POPRAVAK: Univerzalni Freehand mod za SVE staze (Pješak, Bicikl, Auto)
-             let jeFreehand = (window.sesijaPodaci && (window.sesijaPodaci.audioMod === 'freehand' || window.sesijaPodaci.umGymMod === 'audio'));
+            let jeFreehand = (window.sesijaPodaci && (window.sesijaPodaci.audioMod === 'freehand' || window.sesijaPodaci.umGymMod === 'audio'));
 
-             if (jeFreehand && 'speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                let tekstZaCitanje = "";
+        if (jeFreehand && 'speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            let tekstZaCitanje = "";
             
             if (pin.imeLokacije) tekstZaCitanje += pin.imeLokacije + ". ";
             if (pin.opisLokacije) tekstZaCitanje += pin.opisLokacije;
-            
+
             if (tekstZaCitanje.trim() !== "") {
                 let govor = new SpeechSynthesisUtterance(tekstZaCitanje);
                 window.trenutniGovorAplikacije = govor; 
                 let glasovi = window.speechSynthesis.getVoices();
                 let nasGlas = glasovi.find(g => g.lang.includes('hr') || g.lang.includes('sr') || g.lang.includes('bs'));
+                
                 if (nasGlas) govor.voice = nasGlas;
                 else govor.lang = 'hr-HR';
+                
                 govor.rate = 0.95;
+
+                govor.onstart = function() {
+                    if (window.AudioPodlogaModul) window.AudioPodlogaModul.postaviStanjeGovora(true);
+                };
+                
+                govor.onend = function() {
+                    if (window.AudioPodlogaModul) window.AudioPodlogaModul.postaviStanjeGovora(false);
+                };
+                
+                govor.onerror = function(e) {
+                    console.log("Greska sa citanjem zadatka", e);
+                    if (window.AudioPodlogaModul) window.AudioPodlogaModul.postaviStanjeGovora(false);
+                };
+
                 window.speechSynthesis.speak(govor);
             }
         }
+
 
         // 🌟 AUTOMATSKO PRESKAKANJE (Ako nema pravog zadatka na lokaciji)
         let prazanTekst = !pin.zadatak?.tekst_zadatka || pin.zadatak.tekst_zadatka.trim() === '';
@@ -4729,9 +5054,12 @@ window.uspehZadatka = function() {
  // ---------------------------------------------------
     
 window.resiKrajIgre = function() {
-        // 🛑 ZAUSTAVLJANJE AUTO-RADARA NA KRAJU IGRE
+        // Zaustavljanje auto-radara i muzičke podloge na kraju igre
         if (typeof window.zaustaviAutoRadar === 'function') {
             window.zaustaviAutoRadar();
+        }
+        if (window.AudioPodlogaModul) {
+            window.AudioPodlogaModul.zaustavi();
         }
 
         window.sesijaPodaci.zavrsena = true; window.osveziSesijuNaServeru();
@@ -7799,192 +8127,121 @@ crtajMine: function(kontejner) {
 
 
 // ===================================================================
-// 🌳 UM GYM FABRIKA ZADATAKA (Nezavisni modul) - FINALNA VERZIJA
+// 🌳 UM GYM FABRIKA ZADATAKA (Nezavisni modul) - FINALNA VERZIJA NLP
 // ===================================================================
 window.UMGYM_Fabrika = {
     // SRPSKA BAZA ZADATAKA
-    bazaZadataka: {
+   bazaZadataka: {
         'umgym_nivo1': [
-            "U laganom hodu, podignite pogled ka nebu, pa ga mirno spustite ka tlu. Ponovite 5 puta. Ovo opušta vrat i popravlja držanje tela.",
-            "Koračajući umerenim tempom, lagano okrenite glavu ulevo, zadržite dve sekunde, pa udesno. Ponovite 6 puta. Ova vežba poboljšava dotok krvi u glavu.",
-            "U laganom hodu, ne pomerajući glavu, pogledajte očima gore, dole, levo i desno. Uradite to 4 puta. Tako odmaramo očne mišiće i budimo fokus.",
-            "Dok mirno hodate, nagnite glavu blago ka levom ramenu, udahnite, pa ponovite udesno. Uradite po 4 puta na svaku stranu. Osetićete prijatno rasterećenje u vratu.",
-            "U umerenom hodu, nasmešite se, opustite vilicu i napravite 5 mirnih udaha na nos. Osmeh šalje signal nervnom sistemu da je telo bezbedno i opušteno.",
-            "Koračajući ujednačeno, pogledajte daleko ispred sebe u daljinu, a zatim u vrh svojih cipela. Ponovite 6 puta. Ovo izoštrava vid i prilagođava fokus oka.",
-            "U laganom hodu, 5 puta blago povucite bradu ka grudnom košu bez savijanja leđa. Ova vežba rasterećuje pršljenove i jača vratne mišiće.",
-            "Usporite korak, oslušnite zvuke oko sebe i prepoznajte tri različita zvuka iz prirode. Ova vežba razvija slušnu pažnju i smiruje misli.",
-            "U laganom hodu, napravite polukrug glavom od jednog ramena ka drugom, preko grudi. Ponovite 4 puta. Time nežno masirate vratne mišiće.",
-            "Koračajući po ravnom, zatvorite oči na samo jedan korak, pa ih otvorite i nastavite mirno. Ponovite 5 puta. Vežba budi unutrašnji centar za ravnotežu.",
-            "U umerenom hodu, duboko udahnite na nos, a izdahnite na blago otvorena usta uz tihi uzdah. Ponovite 5 puta. Ovo oslobađa napetost i puni mozak kiseonikom.",
-            "Dok hodate ujednačeno, pogledajte ulevo i pronađite 3 zelena detalja na stazi, a zatim ponovite udesno. Time vežbamo periferni vid i snalaženje u prostoru.",
-            "U laganom hodu, blago podižite obrve i opuštajte čelo 6 puta. Napetost na licu nestaje, a cirkulacija se odmah popravlja.",
-            "Uspravite pogled pravo u visini očiju i napravite 10 mirnih koraka bez spuštanja glave. Time kičmi vraćate prirodan i pravilan položaj.",
-            "Koračajući umereno, blago zategnite mišiće lica na dve sekunde, pa ih potpuno opustite. Uradite 4 puta. Svesno opuštanje lica razbija umor.",
-            "U laganom hodu, pogledajte jedno drvo sa leve strane dok telo ide pravo, pa ponovite desno. Ponovite po 4 puta. Odličan trening za orijentaciju u hodu.",
-            "Koračajući ujednačeno, udahnite mirno, izgovorite u sebi reč mir i lagano izdahnite. Ponovite 5 puta. Spoj daha i koraka stvara unutrašnji sklad.",
-            "U umerenom hodu, uspravite glavu kao da vas nevidljiva nit vuče ka visini i napravite 12 stabilnih koraka. Telo usvaja lako i prirodno držanje.",
-            "U laganom hodu, progutajte pljuvačku, opustite jezik i napravite 6 mirnih koraka. Opuštanje vilice smanjuje pritisak u potiljku.",
-            "Koračajući opušteno, obuhvatite pogledom širok prostor oko sebe i udahnite punim plućima 3 puta. Široko vidno polje prirodno smiruje puls."
+            "U laganom hodu, podignite pogled ka nebu na minimalno dve sekunde, pa ga lagano spustite ka tlu na minimalno dve sekunde. Ponovite ovo bar pet puta, ili slobodno nastavite u ovom ritmu dok koračate ka sledećoj tački ako vam prija. Ova vežba rasterećuje vrat i prirodno ispravlja leđa, dajući vam osećaj slobode i lakšeg koraka.",
+            "Koračajući umerenim tempom, okrenite glavu ulevo na minimalno dve sekunde, a zatim udesno na dve sekunde, brojeći lagano u sebi. Ponovite najmanje šest puta, a po želji i tokom celog puta do sledeće tačke. Cilj ove vežbe je da donese svežinu u glavu i učini svaki pokret mekim i lakim.",
+            "U laganom hodu, ne pomerajući glavu, zadržite pogled po minimalno dve sekunde gore, dole, levo i desno. Ponovite najmanje četiri ciklusa, a možete vežbati i lagano celim putem ka sledećoj tački. Dozvolite očima da se rasterete i odmore, a pažnji da se potpuno razbistri.",
+            "Dok hodate, nagnite glavu ka levom ramenu na minimalno tri sekunde, pa ka desnom na tri sekunde. Ponovite po četiri puta na svaku stranu, ili nastavite u ovom ritmu do naredne tačke. Ova vežba oslobađa napetost u ramenom pojasu i donosi prijatan osećaj lakoće u vratu.",
+            "U umerenom hodu, nasmešite se, dozvolite vilici da se opusti i napravite pet polakih, dubokih udaha na nos i izdaha na usta. Slobodno dišite u ovom mirnom ritmu sve do cilja. Dok se smešite, vaše telo prima poruku da je sve u redu i da je bezbedno.",
+            "Koračajući ujednačeno, zadržite pogled u daljinu tri sekunde, a zatim na vrhove svojih cipela dve sekunde. Ponovite ovo bar šest puta, ili smenjujte fokus dok prelazite ovu stazu. Primetite kako pogled dobija oštrinu, a um se prirodno fokusira.",
+            "U laganom hodu, povucite bradu blago ka grudnom košu na dve sekunde, pa je lagano vratite. Ponovite najmanje pet puta, ili nastavite dok hodate dalje ako vam prija taj blagi pokret. Osetite kako se potiljak i gornji deo leđa izdužuju i rasterećuju.",
+            "Usporite korak i tokom desetak sekundi pažljivo osluškujte okruženje dok ne prepoznate tri različita zvuka iz prirode. Možete nastaviti da osluškujete prostor sve do sledeće tačke. Dok slušate, unutrašnji dijalozi se utišavaju, a pažnja postaje bistra i prisutna.",
+            "U laganom hodu, pravite lagani polukrug glavom od jednog ramena ka drugom u trajanju od tri sekunde. Ponovite najmanje četiri puta, ili nastavite u ugodnom ritmu do sledeće tačke. Ovaj pokret pruža nežnu masažu koja izuzetno prija mišićima vrata.",
+            "Na ravnom i preglednom delu staze, zatvorite oči na tačno jedan korak, pa ih otvorite i nastavite mirno i stabilno. Ponovite ovo bar pet puta, a po želji i češće na bezbednim delovima staze. Ova vežba budi duboki centar za ravnotežu i jača poverenje u sopstveno telo.",
+            "U umerenom hodu, napravite pet svesnih, dubokih udaha na nos i potpunih izdaha na usta, uz tihi uzdah olakšanja. Ostanite u ovom dubokom disanju celim putem do sledeće tačke. Sa svakim izdahom telo otpušta teret, a svaki udah ga puni svežom energijom.",
+            "Dok koračate ujednačeno, pogledajte ulevo tri sekunde i uočite tri zelena detalja, pa ponovite udesno. Nastavite da istražujete prostor pogledom dok hodate ka sledećoj tački. Vaše vidno polje se prirodno širi, a pogled postaje pažljiviji i smireniji.",
+            "Koračajući lagano, podižite obrve na dve sekunde, pa dozvolite čelu da se potpuno izgladi dve sekunde. Ponovite bar šest puta, ili kad god osetite potrebu na ovoj stazi. Primetite kako popušta napetost oko očiju, a celo lice postaje meko i odmorno.",
+            "Ispravite pogled u visinu očiju i napravite deset stabilnih koraka sa uspravnom, ali opuštenom glavom. Zadržite ovaj osećaj uspravnosti celim putem do naredne tačke. Vaša kičma prirodno pronalazi svoju osu, čineći da koračate dostojanstveno i bez napora.",
+            "Koračajući umereno, zategnite mišiće lica na dve sekunde, pa dozvolite da se potpuno opuste na tri sekunde. Ponovite ovo bar četiri puta dok hodate ka cilju. Primetite kako nakon svesnog zatezanja lice postaje duboko opušteno, a celo telo znatno lakše.",
+            "U laganom hodu, zadržite pogled na drvetu sa leve strane tri sekunde, pa na drvetu sa desne strane tri sekunde. Ponavljajte ovaj ritam dok koračate stazom. Ova jednostavna vizuelna smena pomaže vam da se povežete sa prostorom i osetite lakoću kretanja.",
+            "Koračajući ujednačeno, napravite lagan i dubok udah, u sebi izgovorite reč mir, pa mirno izdahnite. Nastavite da spajate reč, dah i korake sve do sledeće tačke. Osetite kako se dah i pokret stapaju u jedan skladan i smirujući ritam.",
+            "U umerenom hodu, zamislite da vas nežna nit sa vrha temena lagano vuče ka visini i napravite dvanaest stabilnih koraka. Nosite ovaj prijatan osećaj lakoće i dužine celim putem do sledeće tačke. Vaše telo lako usvaja pravilan i odmoran položaj.",
+            "U laganom hodu, dozvolite vilici i jeziku da se potpuno opuste, ostavljajući zube blago razdvojene, pa nastavite miran hod. Održavajte ovaj položaj lica dok koračate ovom deonicom. Čim se vilica opusti, potiljak automatski oslobađa nakupljenu napetost.",
+            "Dok koračate opušteno, dozvolite svom vidnom polju da se široko otvori uz tri duboka udaha. Uživajte u ovom širokom pogledu sve do sledeće tačke. Širok periferni vid šalje signal mozgu da uspori puls i uvede vas u potpuni mir.",
+            "U laganom hodu, svesno i meko zatreptajte pet puta, pa pogledajte u daljinu tri sekunde. Ponovite ovu vežbu tri puta, ili nastavite po potrebi dok hodate. Osetite kako se oči prirodno vlaže, odmaraju i osvežavaju.",
+            "Koračajući umerenim tempom, tokom osam koraka nežno pomerajte vilicu levo i desno, bez ikakvog naprezanja. Ovu vežbu možete ponavljati opušteno duž cele staze. Dok se vilica oslobađa, slepoočnice i vrat postaju meki i rasterećeni.",
+            "U laganom hodu, pogledajte u najdalju tačku ispred sebe tri sekunde, pa u list ili kamenčić pored staze dve sekunde. Ponovite najmanje pet puta, ili duž cele ove deonice. Smenjivanje blizine i daljine vraća prirodnu elastičnost očnim mišićima.",
+            "Koračajući opušteno, tokom desetak sekundi potražite tri mirisa iz prirode, poput zemlje, lišća ili trave, pa ih lagano udahnite. Ostanite u ovom čulnom kontaktu sa prirodom sve do sledeće tačke. Čulo mirisa se budi, a misli postaju bistre i tihe.",
+            "U umerenom hodu, napravite četiri svesna udaha, a pri svakom izdahu spustite ramena i opustite celo lice. Ponavljajte ovo disanje tokom čitavog hoda ka sledećoj tački. Sa svakim izdahom telo postaje sve lakše, a svaki novi korak prijatniji."
         ],
         'umgym_nivo2': [
-            "U laganom hodu, kružite ramenima unazad 8 puta. Ovo otvara grudni koš i olakšava disanje.",
-            "Koračajući mirno, dodirujte palcem redom svaki prst na istoj ruci, napred i nazad. Ponovite 6 krugova. Fina motorika direktno podstiče rad mozga.",
-            "U umerenom hodu, blago masirajte prste jedne ruke drugom šakom, od korena ka vrhu, na obe ruke. To poboljšava perifernu cirkulaciju i budi nerve.",
-            "Dok hodate ujednačeno, ispružite ruke ispred sebe, pa okrenite dlanove ka gore, a zatim ka dole. Ponovite 8 puta. Pokret vraća gipkost laktovima i podlakticama.",
-            "U laganom hodu, povežite prste iza leđa, blago otvorite ramena i napravite 10 koraka. Vaša kičma se isteže i oslobađa od pognutog stava.",
-            "Koračajući umerenim tempom, stisnite šake u laganu pesnicu, pa ih široko otvorite i raširite prste. Ponovite 8 puta. Ovo ubrzava vensku cirkulaciju u rukama.",
-            "U laganom hodu, podignite ruke u visini ramena, pa ih lagano spustite. Uradite to 6 puta. Tako nežno aktivirate mišiće leđa bez zamora.",
-            "Dok hodate mirno, spojite jagodice svih prstiju obe ruke ispred grudi i blago ih pritisnite 5 puta. Ova vežba usklađuje levu i desnu stranu tela.",
-            "Koračajući opušteno, otresite šake kao da skidate kapljice vode sa prstiju tokom 6 koraka. Mišići ruku i podlaktica se odmah oslobađaju napetosti.",
-            "U umerenom hodu, stavite dlanove na ramena i napravite 6 laganih krugova laktovima ka napred. Pokret čuva pokretljivost ramenog pojasa.",
-            "Dok koračate ujednačenim tempom, ispružite desnu ruku napred pa je spustite, zatim levu ruku. Uradite po 5 ponavljanja. Naizmenični pokreti stvaraju lep ritam hoda.",
-            "U laganom hodu, kružite zglobovima šaka u smeru kazaljke na satu 8 puta. Održavanje gipkosti zglobova šake sprečava ukočenost.",
-            "Koračajući mirno, pljesnite tiho dlanom o dlan ispred sebe na svaki četvrti korak, ukupno 5 puta. Ritam zvuka i pokreta odlično usklađuje pažnju.",
-            "U umerenom hodu, stavite obe šake na donji deo leđa i napravite 10 uspravnih koraka. Ovakav stav odmara lumbalni deo i popravlja stabilnost.",
-            "Dok hodate ravnomerno, podignite palčeve obe ruke ka gore i držite ruke ispred sebe tokom 6 koraka. Jasan položaj ruku jača tonus i pažnju.",
-            "U laganom hodu, dodirnite desnom šakom levo rame, a levom šakom desno rame, pa opustite. Ponovite 5 puta. Ukršteni dodir ramena podstiče saradnju obe moždane hemisfere.",
-            "Koračajući umereno, podignite ramena visoko ka ušima na jednu sekundu, pa ih naglo spustite. Ponovite 5 puta. Odličan način za brzo skidanje tereta sa vrata.",
-            "U laganom hodu, ispružite ruke u stranu u visini struka i pravite male krugove dlanovima 8 puta. Blaga izdržljivost koja jača mišiće oko lopatica.",
-            "Pustite ruke da se slobodno njišu pored tela tokom 15 koraka umerenog hoda. Prirodno njihanje ruku smanjuje napor i olakšava koračanje.",
-            "Dok mirno hodate, spojite dlanove ispred grudi i napravite 4 duboka udaha. Ova vežba stabilizuje grudni koš i umiruje unutrašnji ritam."
+            "U laganom hodu, kružite ramenima unazad minimalno osam puta, praveći široke i meke krugove. Slobodno nastavite ovo kruženje dok god vam prija na putu do sledeće tačke. Grudni koš se otvara, lopatice se oslobađaju, a disanje postaje duboko i prijatno.",
+            "Koračajući ujednačeno, nežno dodirujte palcem svaki prst po jednu sekundu, napred i nazad. Ponovite vežbu u najmanje šest krugova, a možete i celim putem do sledeće tačke. Ova vežba sinhronizuje moždane hemisfere, budi finu motoriku i fokusira pažnju.",
+            "U umerenom hodu, masirajte palcem svaki prst druge ruke od korena ka vrhu, pa zamenite ruke. Radite ovo lagano sve dok ne stignete do naredne tačke. Ova masaža greje dlanove, pospešuje cirkulaciju i vraća osećaj prijatne živosti u celo telo.",
+            "Dok hodate ujednačeno, ispružite ruke ispred sebe, držeći dlanove okrenute nagore dve sekunde, pa nadole dve sekunde. Ponovite bar osam puta, ili nastavite u ritmu svog koraka. Zglobovi laktova i podlaktice oslobađaju se napetosti i postaju elastični.",
+            "U laganom hodu, prepletite prste iza leđa, blago otvorite ramena i napravite deset stabilnih koraka. Zadržite ovaj stav dok koračate dalje ako vam prija to nežno otvaranje. Kičma se prirodno izdužuje, a disanje dobija punu širinu i slobodu.",
+            "Koračajući umerenim tempom, stisnite šake u labave pesnice na dve sekunde, pa ih široko pružite na dve sekunde. Ponovite najmanje osam puta, ili duž cele staze do sledeće tačke. Ova jednostavna pumpa podstiče protok krvi i oslobađa šake od ukočenosti.",
+            "U laganom hodu, podižite ruke do visine ramena dve sekunde, pa ih lagano spuštajte dve sekunde. Ponovite vežbu bar šest puta, usklađujući pokret sa hodom. Mišići gornjeg dela leđa se nežno aktiviraju, donoseći snagu bez imalo zamora.",
+            "Dok hodate, spojite jagodice svih prstiju ispred grudi i blago ih pritisnite tri sekunde. Ponovite ovu vežbu pet puta, ili kad god poželite da se centrirate na ovoj stazi. Primetite kako se u telu uspostavlja sklad i smirenost između leve i desne strane.",
+            "Koračajući opušteno, nežno otresajte šake pored tela tokom šest koraka, kao da skidate kapi vode. Ponavljajte ovaj pokret povremeno sve do sledeće tačke. Šake i podlaktice se trenutno oslobađaju grča, a u rukama se stvara prijatna lakoća.",
+            "U umerenom hodu, položite dlanove na ramena i pravite lagane krugove laktovima ka napred. Ponovite najmanje šest puta, ili nastavite u ritmu hoda. Rameni zglobovi dobijaju potpunu slobodu pokreta, a mišići vrata se meko opuštaju.",
+            "Dok koračate, ispružite desnu ruku napred na dve sekunde, pa je opustite, a zatim ponovite levom rukom. Ponovite po pet puta svakom rukom, prateći ritam svojih koraka do cilja. Ovaj koordinisani pokret olakšava kretanje i čini hod stabilnim.",
+            "U laganom hodu, kružite obema šakama u zglobovima u jednom pa u drugom smeru. Ponavljajte ove krugove opušteno dok koračate ka sledećoj tački. Zglobovi šaka postaju gipki i zagrejani, što posebno prija nakon dugotrajnog rada za računarom ili telefonom.",
+            "Koračajući ravnomerno, tiho i meko pljesnite dlanom o dlan na svaki četvrti korak. Ponovite ovo bar pet puta, ili dok ne uhvatite ugodan unutrašnji ritam hoda. Zvuk i pokret se stapaju u jedno, čisteći um od suvišnih misli.",
+            "U umerenom hodu, oslonite šake na donji deo leđa i napravite deset uspravnih i odmerenih koraka. Zadržite ruke na leđima onoliko dugo koliko vam prija do sledeće tačke. Donji deo leđa dobija sigurnu podršku, toplinu i preko potrebno rasterećenje.",
+            "Dok hodate ravnomerno, ispružite ruke i držite podignute palčeve ispred sebe tokom šest koraka. Ponavljajte ovo povremeno tokom prelaska ove deonice. Ovaj jasan i siguran gest stabilizuje vaš fokus i unosi osećaj samopouzdanja u telo.",
+            "U laganom hodu, dodirnite desnom šakom levo rame na dve sekunde, pa levom šakom desno rame na dve sekunde. Ponovite bar pet puta, usklađujući pokrete sa koracima. Ova unakrsna vežba povezuje telo u skladnu celinu i osvežava rad mozga.",
+            "Koračajući umereno, podignite oba ramena ka ušima na jednu sekundu, pa ih svesno pustite da naglo i meko padnu. Ponovite najmanje pet puta dok hodate ka cilju. Ovaj pokret trenutno topi nakupljenu tenziju iz vrata i gornjeg dela leđa.",
+            "U laganom hodu, blago raširite ruke u stranu i pravite male krugove dlanovima u visini struka. Ponovite bar osam puta, ili nastavite lagano dok koračate dalje. Osetite kako se mišići oko lopatica prirodno bude i stvaraju stabilan oslonac leđima.",
+            "Pustite ruke da se potpuno slobodno i tromo njišu pored tela tokom petnaestak koraka. Zadržite ovo prirodno njihanje sve do sledeće tačke. Čim se ruke prepuste inerciji, hod postaje mekan, rasterećen i potpuno prirodan.",
+            "Dok hodate, spojite dlanove u visini grudi i napravite četiri polaka, duboka udaha. Ostanite u ovom mirnom stavu dok koračate ka narednoj tački. Grudni koš se smiruje, dah postaje ravnomerniji, a unutrašnji tempo dobija stabilnost.",
+            "U laganom hodu, pružite ruke ispred sebe, pa ih lagano otvorite u stranu poput krila i vratite ispred. Ponovite najmanje šest puta dok koračate stazom. Grudni koš se puni vazduhom, lopatice dobijaju mekoću, a ramena se ugodno otvaraju.",
+            "Koračajući umereno, kružnim pokretima palca masirajte dlan druge ruke desetak sekundi, pa zamenite ruke. Možete nastaviti ovu masažu celim putem do sledeće tačke. Brojni nervni završeci u dlanu se aktiviraju, donoseći bistrinu i toplotu.",
+            "U laganom hodu, podignite ruke iznad glave i nežno se istegnite ka nebu tri sekunde, pa ih spustite. Ponovite ovo bar četiri puta dok prelazite ovu stazu. Celo telo se izdužuje, kičma dobija više prostora, a pluća pun kapacitet za vazduh.",
+            "Dok hodate umerenim tempom, stavite desnu šaku na levo rame i prstima blago izmasirajte mišić, pa zamenite strane. Ponavljajte ovu samomasažu sve do sledeće tačke. Prijatan pritisak opušta ukočeni trapez i vraća osećaj topline i pokretljivosti.",
+            "U laganom hodu, pružite ruke u stranu, pa ih savijte u laktovima dotičući ramena i ponovo ispružite. Ponovite najmanje šest puta prateći korak. Mišići ruku se ugodno zagrevaju, a laktovi i ramena ostaju meki i gipki."
         ],
         'umgym_nivo3': [
-            "U laganom hodu, blago zarotirajte ramena malo ulevo, pa udesno. Ponovite 6 puta. Meka rotacija masira kičmu i podstiče gipkost trupa.",
-            "Uskladite korak i dah u umerenom hodu: 3 koraka udišite vazduh, a 3 koraka mirno izdišite. Uradite 5 ciklusa. Pluća se ravnomerno pune kiseonikom.",
-            "U laganom hodu, spustite ruku na stomak i osetite kako se stomak širi pri udahu. Ponovite 5 dubokih udaha. Trbušno disanje prirodno rasterećuje srce i relaksira telo.",
-            "Koračajući ujednačeno, na svaki šesti korak blago uvucite stomak i ispravite leđa. Ponovite 5 puta. Aktivacija dubokih mišića štiti kičmu pri svakom koraku.",
-            "U umerenom hodu, zamahnite desnom rukom napred dok koračate levom nogom, pa obrnuto. Ponovite 8 puta. Unakrsno kretanje je osnova prirodnog i zdravog hoda.",
-            "U laganom hodu, blago nagnite gornji deo tela za centimetar ulevo, pa udesno. Ponovite 6 puta. Bočni mišići trupa se nežno bude i istežu.",
-            "Koračajući mirno, udahnite duboko šireći rebra u stranu, pa polako izdahnite kroz blago skupljene usne. Uradite 4 puta. Ovo poboljšava provetravanje pluća.",
-            "U umerenom hodu, napravite 10 koraka zamišljajući da nosite knjigu na glavi. Ponovite dva puta. Trup automatski pronalazi idealnu ravnotežu.",
-            "Koračajući ravnomerno, svesno opustite donji deo leđa tokom 15 koraka. Rasterećenje lumbalnog dela smanjuje zamor pri dužoj šetnji.",
-            "U laganom hodu, stavite ruke na bokove i napravite 8 koraka sa jasnim prenosom težine. Stabilna karlica omogućava siguran oslonac.",
-            "Dok hodate umerenim tempom, dodirnite desnom šakom levi kuk, pa levom šakom desni kuk. Ponovite 6 puta. Ova rotacija budi kose trbušne mišiće.",
-            "Koračajući umereno, udahnite kroz 4 koraka, zadržite dah 2 koraka, pa izdahnite kroz 4 koraka. Ponovite 3 puta. Vežba jača plućni kapacitet.",
-            "U laganom hodu, okrenite dlanove ka spolja i blago podignite grudni koš tokom 8 koraka. Ovo poništava posledice dugog sedenja.",
-            "Koračajući mirno, pogledajte blago preko levog ramena unazad na trenutak, pa preko desnog. Ponovite po 3 puta. Odličan trening za rotaciju gornjeg dela tela.",
-            "U umerenom hodu, zamislite da sa svakim izdahom izbacujete umor iz tela. Ponovite 5 svesnih udaha i izdaha. Povezanost uma i daha vraća snagu.",
-            "U laganom hodu, ispružite ruke polukružno ispred sebe kao da grlite veliko drvo tokom 8 koraka. Deo leđa oko lopatica dobija prijatno istezanje.",
-            "Koračajući ravnomerno, blago privucite pupak ka kičmi na tri sekunde, pa opustite. Ponovite 5 puta. Odličan način za održavanje tonusa trbušnog zida u hodu.",
-            "Ubrzajte blago korak na tri sekunde, pa usporite na pet sekundi. Ponovite 5 krugova. Promena brzine kretanja stimuliše motornu kontrolu u mozgu.",
-            "Koračajući mirno, napravite 10 koraka dok u sebi odbrojavate od 10 unazad do 1. Spoj misaonog zadatka i hoda jača radnu memoriju.",
-            "U umerenom hodu, duboko udahnite na nos, ispravite se i recite sebi: osećam se dobro. Ponovite 3 puta. Pozitivna misao dokazano smanjuje doživljaj napora."
+            "U laganom hodu, blago zarotirajte ramena ulevo na dve sekunde, pa udesno na dve sekunde. Ponovite ovo bar šest puta, ili nastavite u ugodnom ritmu do sledeće tačke. Ova meka rotacija budi gipkost duž čitave kičme i oslobađa napetost u leđima.",
+            "Uskladite dah i korake u umerenom hodu: tri koraka udišite, a tri koraka mirno izdišite. Zadržite ovaj ujednačeni ritam dok koračate ka sledećoj tački. Pluća se ravnomerno provetravaju, a telo pronalazi svoj najlepši prirodni tempo.",
+            "U laganom hodu, položite jedan dlan na stomak i napravite pet polakih udaha, osećajući kako se stomak nežno podiže. Dišite na ovaj način sve do sledeće tačke. Dijafragmalno disanje smiruje nervni sistem i donosi duboki unutrašnji spokoj.",
+            "Koračajući ujednačeno, na svaki šesti korak blago uvucite donji deo stomaka na dve sekunde i ispravite leđa. Ponavljajte ovu vežbu duž ove deonice. Vaši stomačni mišići i kičma stvaraju snažan, stabilan oslonac pri svakom koraku.",
+            "U umerenom hodu, svesno zamahnite desnom rukom napred dok istovremeno koračate levom nogom, pa obrnuto. Ponavljajte ovaj unakrsni pokret celim putem do sledeće tačke. Ovaj prirodni obrazac kretanja povezuje leđa i noge u savršen sklad.",
+            "U laganom hodu, blago nagnite gornji deo tela ulevo na dve sekunde, pa udesno na dve sekunde. Ponovite ovo bar šest puta, prateći stabilan korak. Bočni mišići trupa se nežno izdužuju, otvarajući više prostora za slobodan dah.",
+            "Koračajući, duboko udahnite šireći rebra u stranu, pa polako izdahnite kroz blago skupljene usne. Ponovite bar četiri puta, ili nastavite kad god osetite potrebu na ovoj stazi. Ovakav izdah oslobađa zaostali vazduh i unosi svežinu u pluća.",
+            "U umerenom hodu, napravite desetak koraka zamišljajući da na temenu nosite laganu knjigu. Slobodno hodajte tako sve do sledeće tačke. Vaš trup potpuno samostalno i bez napora pronalazi besprekornu ravnotežu i pravilno držanje.",
+            "Koračajući ravnomerno, usmerite pažnju na donji deo leđa i svesno mu dozvolite da se opusti tokom petnaest koraka. Zadržite taj meki osećaj do naredne tačke. Pritisak u krsnom delu popušta, a korak postaje lagan i elastičan.",
+            "U laganom hodu, stavite šake na bokove i napravite osam koraka sa jasnim i mirnim prenosom težine. Koračajte tako dok god vam prija ka sledećoj tački. Karlica dobija siguran oslonac, hod postaje stabilan, a telo usklađeno sa tlom.",
+            "Dok hodate umerenim tempom, dodirnite desnom šakom levi kuk pri koraku, pa levom šakom desni kuk. Ponovite bar šest puta dok prelazite ovu stazu. Ova jednostavna rotacija budi kose trbušne mišiće i čini hod dinamičnim i lakim.",
+            "Koračajući, lagano udišite četiri koraka, zadržite dah dve sekunde, pa mirno izdišite tokom četiri koraka. Ponovite tri do četiri ciklusa, prateći svoj ritam. Pluća jačaju svoj kapacitet, a kiseonik stiže do svake ćelije u telu.",
+            "U laganom hodu, okrenite dlanove blago ka napred i držite grudni koš otvoreno tokom desetak koraka. Nosite ovaj otvoren stav celim putem do sledeće tačke. Telo se prirodno oslobađa pogrbljenosti i vraća u stanje budne vitalnosti.",
+            "Na ravnom i bezbednom delu staze, pogledajte preko levog ramena unazad na dve sekunde, pa preko desnog. Ponovite po tri puta na svaku stranu dok hodate. Gornji deo tela zadržava punu pokretljivost, a kičma se meko oslobađa krutosti.",
+            "U umerenom hodu, napravite pet dubokih udaha, zamišljajući da sa svakim izdahom svesno otpuštate sve brige i napetost. Nastavite u ovom dahu sve do sledeće tačke. Povezanost misli i daha donosi unutrašnje rasterećenje i bistrinu.",
+            "U laganom hodu, postavite ruke u blagi polukrug ispred sebe, kao da obgrljujete veliko stablo drveta, tokom osam koraka. Ponovite ovo kad god vam prija na stazi. Mišići gornjeg dela leđa i lopatice se nežno istežu i opuštaju.",
+            "Koračajući ravnomerno, blago privucite pupak ka kičmi na tri sekunde, pa lagano otpustite. Ponovite najmanje pet puta dok koračate dalje. Duboki mišići trupa se aktiviraju, pružajući stabilnu i sigurnu potporu kičmenom stubu.",
+            "Ubrzajte korak na tri sekunde, pa ga usporite na pet sekundi, osluškujući promenu tempa. Ponavljajte ovu smenu brzine dok hodate ka sledećoj tački. Mozak se prilagođava novom ritmu, što izuzetno jača motoričku kontrolu i reflekse.",
+            "Koračajući, napravite deset koraka dok u sebi polako odbrojavate od deset unazad do jedan, prateći svaki korak. Ovu vežbu možete ponoviti više puta duž staze. Spajanje ritma koračanja i pažnje utišava misli i izoštrava fokus.",
+            "U umerenom hodu, duboko udahnite na nos, ispravite telo i u sebi tiho recite: osećam se dobro, pa lagano izdahnite. Ponavljajte ovu afirmaciju u ritmu hoda do sledeće tačke. Telo i um prihvataju poruku spokoja i lakoće.",
+            "U laganom hodu, zamislite kako se vaša kičma nežno izdužuje sa svakim korakom, pršljen po pršljen. Zadržite taj unutrašnji osećaj dužine sve do sledeće tačke. Leđa postaju rasterećena, a hod poprima prirodnu eleganciju.",
+            "Koračajući umereno, udahnite kroz nos tokom četiri koraka, a polako izdišite kroz usta tokom šest koraka. Dišite na ovaj način dok god vam prija ka narednoj tački. Duži izdah aktivira prirodni mehanizam opuštanja i spušta napetost.",
+            "U umerenom hodu, položite dlanove sa strane na donja rebra i osetite kako se grudni koš širi pri udahu. Napravite pet svesnih udaha, prateći korak do cilja. Osvestićete pun kapacitet svojih pluća i lakoću dubokog disanja.",
+            "Dok hodate, lagano zarotirajte gornji deo tela ulevo pri iskoraku desnom nogom, pa udesno pri iskoraku levom nogom. Nastavite u ovom ritmu dok prelazite ovu deonicu. Kičma se meko uvija poput spirale, vraćajući prirodnu gipkost.",
+            "U laganom hodu, svesno spustite lopatice niz leđa ka struku i zadržite taj položaj dok koračate. Nosite ovu prostranost u leđima celim putem do naredne tačke. Vrat se trenutno oslobađa težine, a grudni koš ostaje širok i slobodan."
         ],
         'umgym_nivo4': [
-            "U umerenom hodu, podignite koleno malo više nego obično pri svakom drugom koraku. Uradite to 8 puta. Ovo jača pregibače kuka i smanjuje rizik od saplitanja.",
-            "U laganom hodu, svesno spustite petu, pa polako prenesite težinu celim stopalom ka prstima. Ponovite 10 koraka. Stopala dobijaju prirodnu elastičnu masažu.",
-            "Koračajući ravnomerno, napravite 4 malo duža koraka, a zatim 4 kraća koraka. Ponovite 4 puta. Promena dužine koraka čuva pokretljivost zglobova nogu.",
-            "Na ravnom i bezbednom delu staze, koračajte u laganom hodu 8 koraka oslanjajući se više na pete. Ova vežba jača prednje mišiće potkolenice i čuva skočne zglobove.",
-            "U laganom hodu, pređite na prste i napravite 6 pažljivih koraka. Listovi i Ahilove tetive postaju snažniji i elastičniji.",
-            "Koračajući mirno, postavljajte stopala u pravoj liniji, jedno ispred drugog, tokom 8 koraka. Vrhunska vežba za ravnotežu i stabilan korak.",
-            "Na trenutak usporite, prenesite težinu na levu nogu na sekundu, pa na desnu, dok nastavljate hod. Ponovite 5 puta. Jačamo osećaj sigurnosti u zglobovima.",
-            "U laganom hodu, pri svakom koraku nežno savijte prste unutar obuće, pa ih opustite. Ponovite 8 puta. Budi se svod stopala i popravlja stabilnost baze.",
-            "Koračajući umereno, blago savijte kolena praveći mekši korak tokom 10 koraka. Zglobovi uče kako da prirodno ublaže udarce o tlo.",
-            "U umerenom hodu, na svaki peti korak blago zategnite mišiće sedalnog dela na jednu sekundu. Ponovite 6 puta. Ovi mišići su glavni čuvari stabilnosti karlice.",
-            "Pokušajte da u laganom hodu koračate potpuno tiho i meko tokom 12 koraka. Meki hod čuva kičmene pršljenove od potresa.",
-            "U umerenom hodu, napravite 8 koraka sa blago raširenim stopalima za širu bazu oslonca. Širi stav daje osećaj stabilnosti i rasterećuje mišiće nogu.",
-            "Koračajući lagano, podignite desnu petu ka zadnjici pri koraku, pa levu. Ponovite 6 puta. Vežba blago isteže prednju ložu butine.",
-            "U umerenom hodu, usmerite pažnju na tlo i osetite čvrstinu podloge tokom 10 koraka. Jasna svest o tlu smanjuje strah od nestabilnosti.",
-            "Koračajući mirno, napravite tri koraka, napravite malu pauzu od sekunde, pa nastavite. Ponovite 4 puta. Kontrolisano usporavanje vežba reflekse zaustavljanja.",
-            "U laganom hodu, napravite mali kružni pokret stopalom u skočnom zglobu pri svakom podizanju noge, 4 puta po nozi. Ovo čuva gipkost skočnog zgloba.",
-            "Koračajte ujednačenim tempom umerenog hoda brojeći u sebi do 20 bez prekida. Ravnomeran tempo hoda čuva energiju i rasterećuje srce.",
-            "U umerenom hodu, pri svakom koraku zamislite da se blago odgurnete palcem stopala ka napred. Ponovite 10 puta. Pravilan odraz daje telu lakoću kretanja.",
-            "U laganom hodu, opustite ruke i oslonite se samo na snagu i stabilnost nogu tokom 8 koraka. Mozak automatski fino podešava ravnotežu tela.",
-            "Za kraj ove deonice, udahnite duboko u laganom hodu, opustite noge i nastavite najprijatnijim tempom. Telo je razgibano, a zglobovi spremni za nastavak."
+            "U umerenom hodu, podignite koleno malo više pri svakom drugom koraku i zadržite ga sekundu u vazduhu. Ponovite najmanje osam puta, ili nastavite u ovom ritmu dok hodate dalje. Zglobovi kukova se podmazuju, a noge postaju snažne i stabilne.",
+            "U laganom hodu, spustite meko petu, pa tokom dve sekunde prenesite težinu duž tabana sve do prstiju. Nastavite ovako tokom desetak koraka, ili celim putem do sledeće tačke. Stopala dobijaju elastičnu masažu koja podstiče cirkulaciju.",
+            "Koračajući ravnomerno, napravite četiri malo duža koraka, a zatim četiri kraća i mekša koraka. Ponavljajte ovu promenu koraka dok se krećete stazom. Zglobovi nogu vežbaju prilagodljivost, a hod postaje elastičan i gibak.",
+            "Na ravnom delu staze, koračajte u laganom hodu desetak koraka oslanjajući se više na pete. Ovu vežbu radite povremeno dok koračate ka cilju. Prednji mišići potkolenice jačaju, a skočni zglobovi postaju stabilniji i sigurniji.",
+            "U laganom hodu, podignite se blago na prste i napravite nekoliko pažljivih i tihih koraka. Ponovite ovo kad god naiđete na ravan deo staze. Listovi i Ahilove tetive se aktiviraju, postajući elastičniji i spremniji za duži hod.",
+            "Koračajući mirno, postavljajte stopala u zamišljenu pravu liniju, jedno ispred drugog, tokom osam koraka. Ponovite ovaj izazov duž ove staze ako vam prija. Ova vežba sjajno trenira centar za ravnotežu i donosi stabilnost u kukovima.",
+            "Usporite korak, pa svesno prenesite težinu na levu nogu na dve sekunde, a zatim na desnu nogu na dve sekunde. Nastavite da osećate ovaj stabilan prenos do sledeće tačke. Zglobovi kolena i skočni zglobovi postaju sigurni i usklađeni.",
+            "U laganom hodu, pri svakom koraku blago savijte prste unutar obuće na sekundu, pa ih opustite i raširite. Ponavljajte ovaj pokret dok koračate stazom. Svodovi stopala se bude, mišići tabana jačaju, a oslonac postaje čvrst.",
+            "Koračajući umereno, blago savijte kolena praveći mek, skoro nečujan korak tokom desetak koraka. Održavajte ovaj elastičan hod do sledeće tačke. Vaši zglobovi prirodno uče da upijaju kontakt sa tlom bez opterećenja za kičmu.",
+            "U umerenom hodu, na svaki peti korak blago zategnite mišiće zadnjice na dve sekunde, pa ih opustite. Ponovite najmanje šest puta dok hodate. Ovi snažni mišići stabilizuju karlicu i daju dodatnu snagu i lakoću svakom novom iskoraku.",
+            "Pokušajte da u laganom hodu koračate potpuno tiho, meko i nečujno tokom desetak koraka. Nastavite u ovom bešumnom hodu sve do sledeće tačke. Kičmeni pršljenovi uživaju u glatkom hodu bez ijednog tvrdog i neprijatnog udarca.",
+            "U umerenom hodu, napravite desetak koraka sa nešto širim razmakom između stopala. Ponavljajte ovaj stabilan hod duž ove deonice. Širi stav pruža telu izuzetnu stabilnost i omogućava mišićima karlice da se lepo opuste.",
+            "Koračajući lagano, podignite desnu petu ka zadnjici pri koraku na jednu sekundu, pa isto ponovite levom nogom. Uradite ovo bar šest puta dok hodate dalje. Mišići prednje strane butine se blago i prijatno istežu, vraćajući pokretljivost nogama.",
+            "U umerenom hodu, usmerite pažnju na tlo i svesno osetite čvrstinu i podršku podloge pod nogama. Zadržite ovaj osećaj sigurnog tla sve do sledeće tačke. U vama raste unutrašnji mir, stabilnost i osećaj povezanosti sa prirodom.",
+            "Koračajući, napravite tri mirna koraka, pa zastanite dve sekunde u mestu i lagano nastavite. Ponovite ovaj ritam četiri do pet puta dok hodate ka cilju. Kontrolisano zastajkivanje i kretanje izoštrava reflekse i smiruje ubrzane misli.",
+            "U laganom hodu, napravite mali kružni pokret stopalom u vazduhu pri svakom podizanju noge. Ponovite nekoliko puta sa obe noge duž ove staze. Skočni zglobovi ostaju topli i pokretljivi, sprečavajući svaki osećaj umora u stopalima.",
+            "Koračajte ujednačenim tempom i u sebi lagano brojte korake do dvadeset, bez prekidanja. Nastavite ovo ritmično brojanje sve do sledeće tačke. Mozak se oslobađa briga, srce kuca u ujednačenom ritmu, a energija teče slobodno.",
+            "U umerenom hodu, pri svakom koraku zamislite kako se palcem stopala elastično odgurujete od tla ka napred. Radite ovo tokom desetak koraka, ili celim putem do cilja. Svaki korak dobija prirodno ubrzanje i lakoću, kao da lebdite stazom.",
+            "U laganom hodu, opustite ramena i ruke u potpunosti, oslanjajući se samo na stabilnu snagu svojih nogu. Koračajte ovako slobodno sve do naredne tačke. Telo fino podešava unutrašnji centar za ravnotežu i korača sa punim poverenjem.",
+            "U laganom hodu, spuštajte stopalo punom površinom, od pete preko spoljne ivice do prstiju, tokom deset koraka. Održavajte ovaj puni kontakt sa tlom do sledeće tačke. Zglobovi su zaštićeni, a hod postaje skladan i anatomski pravilan.",
+            "Koračajući umereno, napravite šest kraćih i življih koraka, pa šest dužih i sporijih koraka. Ponovite ovo nekoliko puta dok prelazite ovu stazu. Noge se uče prilagođavanju na različite terene, a zglobovi zadržavaju punu elastičnost.",
+            "U laganom hodu, tokom desetak koraka obratite pažnju da vam kolena pri svakom iskoraku gledaju ravno napred. Nastavite u ovom položaju dok god vam prija. Pravilno usmerena kolena štite ligamente i omogućavaju dug hod bez ikakvog zamora.",
+            "Dok hodate umerenim tempom, na svaki treći korak malo svesnije pritisnite tlo prstima stopala. Ponovite najmanje šest puta dok koračate ka sledećoj tački. Mali mišići stopala i listovi se jačaju, pružajući čvrst odskok pri hodu.",
+            "U umerenom hodu, zamislite da koračate po mekom, mahovinom prekrivenom šumskom tlu i opustite svaki korak. Ostanite u ovoj prijatnoj vizualizaciji sve do sledeće tačke. Zglobovi reaguju mekoćom, a celo telo se prepušta ugodnom hodu.",
+            "Za kraj, napravite nekoliko polakih, dubokih udaha u laganom hodu, pustite celo telo da se opusti i nastavite u svom najlepšem ritmu. Vaše telo je sada potpuno razgibano, um je osvežen i spremni ste za sve što dan donosi."
         ]
     },
-
-    // ENGLESKA BAZA ZADATAKA
-    bazaZadataka_en: {
-        'umgym_nivo1': [
-            "While walking slowly, look up at the sky, then calmly lower your gaze to the ground. Repeat 5 times. This relaxes the neck and improves posture.",
-            "Walking at a moderate pace, gently turn your head to the left, hold for two seconds, then to the right. Repeat 6 times. This exercise improves blood flow to the head.",
-            "In a slow walk, without moving your head, look up, down, left, and right with your eyes. Do this 4 times. This rests the eye muscles and awakens focus.",
-            "While walking calmly, tilt your head slightly towards your left shoulder, inhale, then repeat to the right. Do this 4 times on each side. You will feel a pleasant relief in your neck.",
-            "In a moderate walk, smile, relax your jaw, and take 5 calm breaths through your nose. Smiling sends a signal to the nervous system that the body is safe and relaxed.",
-            "Walking steadily, look far ahead into the distance, then down at the tips of your shoes. Repeat 6 times. This sharpens your vision and adjusts eye focus.",
-            "In a slow walk, gently pull your chin towards your chest 5 times without bending your back. This exercise relieves the vertebrae and strengthens neck muscles.",
-            "Slow your pace, listen to the sounds around you, and identify three different sounds from nature. This exercise develops auditory attention and calms the mind.",
-            "In a slow walk, make a semicircle with your head from one shoulder to the other, across your chest. Repeat 4 times. This gently massages the neck muscles.",
-            "Walking on flat ground, close your eyes for just one step, then open them and continue calmly. Repeat 5 times. This awakens the inner balance center.",
-            "In a moderate walk, take a deep breath through your nose and exhale through a slightly open mouth with a soft sigh. Repeat 5 times. This releases tension and fills the brain with oxygen.",
-            "While walking steadily, look to the left and find 3 green details on the path, then repeat to the right. This trains peripheral vision and spatial orientation.",
-            "In a slow walk, gently raise your eyebrows and relax your forehead 6 times. Facial tension disappears, and circulation immediately improves.",
-            "Keep your gaze straight at eye level and take 10 calm steps without lowering your head. This restores the spine's natural and correct position.",
-            "Walking moderately, gently tighten your facial muscles for two seconds, then completely relax them. Do this 4 times. Conscious facial relaxation breaks fatigue.",
-            "In a slow walk, look at a tree on the left while your body moves straight, then repeat on the right. Repeat 4 times each. Excellent training for orientation while walking.",
-            "Walking steadily, inhale calmly, say the word 'peace' to yourself, and exhale slowly. Repeat 5 times. The combination of breath and steps creates inner harmony.",
-            "In a moderate walk, hold your head upright as if an invisible thread is pulling you upwards, and take 12 stable steps. The body adopts an easy and natural posture.",
-            "In a slow walk, swallow your saliva, relax your tongue, and take 6 calm steps. Relaxing the jaw reduces pressure in the back of the head.",
-            "Walking relaxedly, take in the wide space around you with your gaze and take 3 deep breaths. A wide field of vision naturally calms the pulse."
-        ],
-        'umgym_nivo2': [
-            "In a slow walk, roll your shoulders backward 8 times. This opens the chest and makes breathing easier.",
-            "Walking calmly, touch your thumb to each finger on the same hand in order, back and forth. Repeat 6 rounds. Fine motor skills directly stimulate brain activity.",
-            "In a moderate walk, gently massage the fingers of one hand with the other, from the base to the top, on both hands. This improves peripheral circulation.",
-            "While walking steadily, stretch your arms in front of you, turn your palms up, then down. Repeat 8 times. This movement restores flexibility to elbows and forearms.",
-            "In a slow walk, interlock your fingers behind your back, slightly open your shoulders, and take 10 steps. Your spine stretches and frees itself from a slouched posture.",
-            "Walking at a moderate pace, squeeze your hands into a light fist, then open them wide and spread your fingers. Repeat 8 times. This accelerates venous circulation in the arms.",
-            "In a slow walk, raise your arms to shoulder height, then slowly lower them. Do this 6 times. This gently activates your back muscles without fatigue.",
-            "While walking calmly, bring the fingertips of both hands together in front of your chest and press them gently 5 times. This synchronizes the left and right sides of the body.",
-            "Walking relaxedly, shake your hands as if flicking water drops off your fingers for 6 steps. The arm muscles are immediately relieved of tension.",
-            "In a moderate walk, place your hands on your shoulders and make 6 light circles forward with your elbows. This preserves shoulder joint mobility.",
-            "While walking steadily, extend your right arm forward then lower it, followed by your left arm. Do 5 repetitions each. Alternating movements create a nice walking rhythm.",
-            "In a slow walk, rotate your wrists clockwise 8 times. Maintaining wrist flexibility prevents stiffness.",
-            "Walking calmly, softly clap your hands in front of you on every fourth step, 5 times in total. The rhythm of sound and movement perfectly coordinates attention.",
-            "In a moderate walk, place both hands on your lower back and take 10 upright steps. This posture rests the lumbar region and improves stability.",
-            "While walking evenly, point both thumbs up and hold your hands in front of you for 6 steps. A clear hand position strengthens muscle tone and focus.",
-            "In a slow walk, touch your left shoulder with your right hand, and your right shoulder with your left hand, then relax. Repeat 5 times. Cross-body touches encourage brain hemisphere cooperation.",
-            "Walking moderately, raise your shoulders high towards your ears for one second, then drop them suddenly. Repeat 5 times. A great way to quickly remove weight from your neck.",
-            "In a slow walk, extend your arms to the sides at waist height and make small circles with your palms 8 times. Light endurance that strengthens the muscles around the shoulder blades.",
-            "Let your arms swing freely by your sides for 15 steps of moderate walking. Natural arm swinging reduces effort and makes stepping easier.",
-            "While walking calmly, bring your palms together in front of your chest and take 4 deep breaths. This exercise stabilizes the rib cage and calms your inner rhythm."
-        ],
-        'umgym_nivo3': [
-            "In a slow walk, slightly rotate your shoulders a bit to the left, then to the right. Repeat 6 times. A soft rotation massages the spine and encourages torso flexibility.",
-            "Synchronize your step and breath in a moderate walk: inhale for 3 steps, and exhale calmly for 3 steps. Do 5 cycles. The lungs fill evenly with oxygen.",
-            "In a slow walk, place your hand on your stomach and feel it expand as you inhale. Repeat 5 deep breaths. Belly breathing naturally relieves the heart and relaxes the body.",
-            "Walking steadily, on every sixth step slightly pull your stomach in and straighten your back. Repeat 5 times. Activating deep muscles protects the spine with every step.",
-            "In a moderate walk, swing your right arm forward as you step with your left leg, and vice versa. Repeat 8 times. Cross-body movement is the foundation of natural, healthy walking.",
-            "In a slow walk, slightly lean your upper body a centimeter to the left, then to the right. Repeat 6 times. The lateral torso muscles are gently awakened and stretched.",
-            "Walking calmly, inhale deeply expanding your ribs to the sides, then slowly exhale through slightly pursed lips. Do this 4 times. This improves lung ventilation.",
-            "In a moderate walk, take 10 steps imagining you are carrying a book on your head. Repeat twice. The torso automatically finds its ideal balance.",
-            "Walking evenly, consciously relax your lower back for 15 steps. Relieving the lumbar area reduces fatigue during a longer walk.",
-            "In a slow walk, place your hands on your hips and take 8 steps with a clear weight transfer. A stable pelvis allows for a secure foundation.",
-            "While walking at a moderate pace, touch your left hip with your right hand, then your right hip with your left hand. Repeat 6 times. This rotation awakens the oblique abdominal muscles.",
-            "Walking moderately, inhale over 4 steps, hold your breath for 2 steps, then exhale over 4 steps. Repeat 3 times. This exercise strengthens lung capacity.",
-            "In a slow walk, turn your palms outward and slightly lift your chest for 8 steps. This reverses the effects of prolonged sitting.",
-            "Walking calmly, look slightly over your left shoulder backward for a moment, then over your right. Repeat 3 times each. Excellent training for upper body rotation.",
-            "In a moderate walk, imagine you are expelling fatigue from your body with every exhale. Repeat 5 conscious inhales and exhales. Mind-breath connection restores strength.",
-            "In a slow walk, extend your arms in a semicircle in front of you as if hugging a large tree for 8 steps. The area around your shoulder blades gets a pleasant stretch.",
-            "Walking evenly, gently pull your navel towards your spine for three seconds, then relax. Repeat 5 times. A great way to maintain abdominal tone while walking.",
-            "Slightly quicken your pace for three seconds, then slow down for five seconds. Repeat 5 rounds. Changing walking speed stimulates motor control in the brain.",
-            "Walking calmly, take 10 steps while counting down from 10 to 1 in your head. Combining a mental task with walking strengthens working memory.",
-            "In a moderate walk, take a deep breath through your nose, straighten up, and tell yourself: I feel good. Repeat 3 times. A positive thought demonstrably reduces the perception of effort."
-        ],
-        'umgym_nivo4': [
-            "In a moderate walk, lift your knee a little higher than usual on every second step. Do this 8 times. This strengthens the hip flexors and reduces the risk of tripping.",
-            "In a slow walk, consciously land on your heel, then slowly transfer your weight through the whole foot to your toes. Repeat for 10 steps. Your feet get a natural elastic massage.",
-            "Walking evenly, take 4 slightly longer steps, followed by 4 shorter steps. Repeat 4 times. Changing stride length preserves leg joint mobility.",
-            "On a flat and safe part of the path, walk slowly for 8 steps relying more on your heels. This exercise strengthens the front shin muscles and protects the ankles.",
-            "In a slow walk, switch to walking on your toes and take 6 careful steps. Your calves and Achilles tendons become stronger and more elastic.",
-            "Walking calmly, place your feet in a straight line, one in front of the other, for 8 steps. A superb exercise for balance and a stable stride.",
-            "Slow down for a moment, shift your weight to your left leg for a second, then to your right, as you continue walking. Repeat 5 times. We strengthen the feeling of security in the joints.",
-            "In a slow walk, gently curl your toes inside your shoes with each step, then relax them. Repeat 8 times. This awakens the foot arch and improves base stability.",
-            "Walking moderately, slightly bend your knees making a softer step for 10 steps. The joints learn how to naturally absorb impacts from the ground.",
-            "In a moderate walk, slightly tighten your glute muscles for one second on every fifth step. Repeat 6 times. These muscles are the main guardians of pelvic stability.",
-            "Try to walk completely silently and softly in a slow walk for 12 steps. A soft walk protects the spinal vertebrae from shocks.",
-            "In a moderate walk, take 8 steps with your feet slightly spread apart for a wider base of support. A wider stance gives a sense of stability and relieves leg muscles.",
-            "Walking slowly, lift your right heel towards your buttocks as you step, then your left. Repeat 6 times. This exercise gently stretches the front of the thigh.",
-            "In a moderate walk, focus your attention on the ground and feel the firmness of the surface for 10 steps. A clear awareness of the ground reduces the fear of instability.",
-            "Walking calmly, take three steps, make a small one-second pause, then continue. Repeat 4 times. Controlled deceleration trains stopping reflexes.",
-            "In a slow walk, make a small circular movement with your ankle as you lift your leg, 4 times per leg. This preserves ankle flexibility.",
-            "Walk at an even, moderate pace, counting up to 20 continuously in your head. An even walking pace conserves energy and relieves the heart.",
-            "In a moderate walk, imagine gently pushing off forward with your big toe on each step. Repeat 10 times. A proper push-off gives the body ease of movement.",
-            "In a slow walk, relax your arms and rely only on the strength and stability of your legs for 8 steps. The brain automatically fine-tunes the body's balance.",
-            "To finish this section, take a deep breath in a slow walk, relax your legs, and continue at your most comfortable pace. Your body is limber and joints ready to continue."
-        ]
-    },
+ 
 
     // 1. IZVLAČENJE ZADATKA NA OSNOVU JEZIKA
     izvuciZadatak: function(sifraKategorije) {
@@ -8003,7 +8260,7 @@ window.UMGYM_Fabrika = {
         return zadaci[nasumicniIndeks];
     },
 
-    // 2. AKTIVACIJA I PREVOD META LOKACIJE
+   // 2. AKTIVACIJA I PREVOD META LOKACIJE
     aktivirajZonu: function(sifraKategorije) {
         let isEn = window.trenutniJezik === 'en';
         let zadatakTekst = this.izvuciZadatak(sifraKategorije);
@@ -8014,10 +8271,81 @@ window.UMGYM_Fabrika = {
             imeSledeceLokacije = window.potragaPodaci.pinovi[sledeciIndeks].imeLokacije || imeSledeceLokacije;
         }
 
-        // Dvojezična uvodna rečenica
-        let punTekst = isEn 
-            ? "Great, we have arrived. Now heading to " + imeSledeceLokacije + ". Our task is: " + zadatakTekst
-            : "Bravo, stigli smo. Sada idemo ka " + imeSledeceLokacije + ". Naš zadatak je: " + zadatakTekst;
+        let sifraStaze = (window.potragaPodaci.sifra || "").toLowerCase();
+        let jeKucna = sifraStaze.includes('umgymin');
+        let danUNedelji = new Date().getDay();
+        let punTekst = "";
+
+        // NLP brendirani prelazi izvučeni izvan petlje kako bi radili i za kućnu i za spoljnu stazu
+        let prelaziNas = [
+            ". Novi zadatak koji preporučuju vežbe mentalne gimnastike je: ", 
+            ". Mentalna gimnastika podrazumeva i pažljivo slušanje, zato smo za vas pripremili sledeće: ", 
+            ". Zadržite ovaj prijatan osećaj, dok prelazimo na novu vežbu mentalne gimnastike: ", 
+            ". Mentalna gimnastika je lagana aktivnost, a danas je praktikujemo kroz ovaj mali izazov: ", 
+            ". Dozvolite sebi da potpuno uživate u sledećem zadatku mentalne gimnastike: ", 
+            ". Svaki vaš korak može biti deo mentalne gimnastike, a vaša sledeća vežba glasi: ", 
+            ". Osetite lakoću pokreta dok usmeravate pažnju na vaš sledeći izazov mentalne gimnastike: "
+        ];
+
+        let prelaziEn = [
+            ". The new task recommended by mental gymnastics exercises is: ", 
+            ". Mental gymnastics also involves careful listening, so we have prepared the following for you: ", 
+            ". Keep this pleasant feeling as we move on to a new mental gymnastics exercise: ", 
+            ". Mental gymnastics is a light activity, and today we practice it through this small challenge: ", 
+            ". Allow yourself to fully enjoy the next mental gymnastics task: ", 
+            ". Every step you take can be part of mental gymnastics, and your next exercise is: ", 
+            ". Feel the ease of movement as you focus your attention on your next mental gymnastics challenge: "
+        ];
+
+        if (jeKucna) {
+            let uvodiKuca = [
+                "Odlično, tu smo. Koračajte lagano u mestu i pripremite se za ",
+                "Sjajno. Zadržite ritam u mestu, slušamo i pratimo uputstva za ",
+                "Bravo. Nastavite da koračate u mestu, sledeća je ",
+                "Odličan posao. Udobno koračajte u mestu, fokus je na ",
+                "Super. Ostanite u pokretu tu gde ste, spremili smo vam ",
+                "Tako je. Dišite i koračajte u mestu, prelazimo na ",
+                "Sve ide po planu. Lagani korak u mestu, slušajte "
+            ];
+            
+            let uvodiKucaEn = [
+                "Great, we are here. Step lightly in place and get ready for ",
+                "Awesome. Keep the rhythm in place, listen and follow instructions for ",
+                "Well done. Continue stepping in place, next is ",
+                "Great job. Step comfortably in place, focus on ",
+                "Super. Keep moving where you are, we have prepared ",
+                "That's right. Breathe and step in place, transitioning to ",
+                "Everything is going well. Light steps in place, listen to "
+            ];
+
+            punTekst = isEn 
+                ? uvodiKucaEn[danUNedelji] + imeSledeceLokacije + prelaziEn[danUNedelji] + zadatakTekst
+                : uvodiKuca[danUNedelji] + imeSledeceLokacije + prelaziNas[danUNedelji] + zadatakTekst;
+        } else {
+            let uvodiPolje = [
+                "Odlično, tu smo. Mentalna gimnastika nas uči da svesno uživamo u prirodi oko sebe, dok idemo ka ",
+                "Sjajno, stigli ste na lokaciju. Mentalna gimnastika nas podseća da budemo svesni svakog svog koraka, pa odvažno nastavljamo prema ",
+                "Bravo, na pravom ste mestu. Osetite stabilnost tla kroz vežbe mentalne gimnastike, dok idemo dalje ka ",
+                "Uspešno smo stigli. Zadržite opušten ritam disanja jer je i to deo mentalne gimnastike, pravac ",
+                "Odličan posao, tu smo. Mentalna gimnastika nam pomaže da održimo jasan fokus i unutrašnji mir, zato se usmeravamo ka ",
+                "Super, lokacija je pronađena. Mentalna gimnastika je i smešak na vašem licu, pa sa osmehom nastavljamo do ",
+                "Tako je, stigli smo. Udahnite duboko i opustite ramena, jer mentalna gimnastika donosi lakoću, i idemo dalje prema "
+            ];
+            
+            let uvodiPoljeEn = [
+                "Great, we are here. Mental gymnastics teaches us to consciously enjoy the nature around us, as we head to ",
+                "Awesome, location reached. Mental gymnastics reminds us to be aware of every step, so let's boldly continue to ",
+                "Well done, you are in the right place. Feel the stability of the ground through mental gymnastics exercises, as we move on to ",
+                "Successfully arrived. Keep a relaxed breathing rhythm because that's also part of mental gymnastics, heading to ",
+                "Great job, we are here. Mental gymnastics helps us maintain clear focus and inner peace, so we head towards ",
+                "Super, location found. Mental gymnastics is also a smile on your face, so with a smile we continue to ",
+                "That's right, we made it. Take a deep breath and relax your shoulders, as mental gymnastics brings lightness, and let's go to "
+            ];
+
+            punTekst = isEn 
+                ? uvodiPoljeEn[danUNedelji] + imeSledeceLokacije + prelaziEn[danUNedelji] + zadatakTekst
+                : uvodiPolje[danUNedelji] + imeSledeceLokacije + prelaziNas[danUNedelji] + zadatakTekst;
+        }
         
         window.sesijaPodaci.umGymSavladano = (window.sesijaPodaci.umGymSavladano || 0) + 1;
         
@@ -8060,11 +8388,17 @@ window.UMGYM_Fabrika = {
             
             govor.rate = 0.95;
 
+            govor.onstart = () => {
+                window.AudioPodlogaModul.postaviStanjeGovora(true);
+            };
+
             govor.onend = () => {
+                window.AudioPodlogaModul.postaviStanjeGovora(false);
                 if (typeof window.uspehZadatka === 'function') window.uspehZadatka();
             };
 
             govor.onerror = () => {
+                window.AudioPodlogaModul.postaviStanjeGovora(false);
                 this.prikaziVizuelniZadatak(meta, zadatakTekst, isEn);
             };
 
